@@ -7,9 +7,6 @@ from core import find_chars
 
 init(autoreset=True)
 
-#logger = logging.getLogger("cf_cli")
-#logging.basicConfig(level=logging.INFO, format="%(message)s")
-
 if sys.platform == "win32":
     os.system("chcp 65001 > nul")
     sys.stdout.reconfigure(encoding='utf-8')
