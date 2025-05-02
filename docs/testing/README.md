@@ -78,8 +78,3 @@ build_name_cache(force_rebuild=True)
 ```
 
 ---
-
-## 🔗 Related
-
-- 🔬 To run automated tests: `pytest tests --disable-warnings -v`
-- 📄 Return to main [README.md](../../README.md)
