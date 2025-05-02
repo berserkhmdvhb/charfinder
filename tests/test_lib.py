@@ -92,9 +92,7 @@ def test_non_string_query_raises_typeerror() -> None:
         list(find_chars(123, verbose=False))
 
 @pytest.mark.parametrize("query", ["arrow", "face", "hand", "circle", "star", "square"])
-def test_large_batch_query_execution() -> None:
-    queries: List[str] = ["arrow", "face", "hand", "circle", "star", "square"]
-    for query in queries:
-        results = list(find_chars(query, verbose=False))
-        assert isinstance(results, list)
-        assert len(results) > 0
+def test_large_batch_query_execution(query):
+    results = list(find_chars(query, verbose=False))
+    assert isinstance(results, list)
+    assert len(results) > 0
