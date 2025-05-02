@@ -1,0 +1,35 @@
+[project]
+name = "charfinder"
+version = "0.1.0"
+description = "A Unicode character finder with strict and fuzzy search, colorized CLI, and cached performance."
+authors = [
+    { name = "HMDV" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "colorama>=0.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff",
+    "black"
+]
+
+[project.scripts]
+charfinder = "charfinder.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
