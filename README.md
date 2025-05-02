@@ -123,17 +123,17 @@ pip install -e .[dev]
 
 ## 🛠 Roadmap
 
-| Feature                            | Status |
-|-----------------------------------|--------|
-| Strict Unicode search             | ✅     |
-| Fuzzy search (difflib)            | ✅     |
-| Unicode normalization (NFKD)      | ✅     |
-| Local cache for performance       | ✅     |
-| CLI options: threshold, quiet     | ✅     |
-| Type hints + logging              | ✅     |
-| Pytest coverage                   | ✅     |
-| `pyproject.toml` support          | ✅     |
-| Publish to PyPI                   | 🔜     |
-| CLI autocomplete support          | 🔜     |
+| Feature                                       | Status |
+|-----------------------------------------------|--------|
+| Strict Unicode search                         | ✅     |
+| Fuzzy search (difflib)                        | ✅     |
+| Unicode normalization (NFKD)                  | ✅     |
+| Local cache for performance                   | ✅     |
+| CLI options: threshold, quiet                 | ✅     |
+| Type hints + logging                          | ✅     |
+| Pytest coverage                               | ✅     |
+| `pyproject.toml` support                      | ✅     |
+| Equip with multiple fuzzy matching alg.s      | 🔜     |
+| CLI autocomplete support                      | 🔜     |
 
 ---
