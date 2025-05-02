@@ -129,7 +129,7 @@ pip install -e .[dev]
 | Fuzzy search (difflib)                        | ✅     |
 | Unicode normalization (NFKD)                  | ✅     |
 | Local cache for performance                   | ✅     |
-| CLI options: threshold, quiet                 | ✅     |
+| CLI options: threshold, quiet, no-color       | ✅     |
 | Type hints + logging                          | ✅     |
 | Pytest coverage                               | ✅     |
 | `pyproject.toml` support                      | ✅     |
