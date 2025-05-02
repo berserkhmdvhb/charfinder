@@ -3,7 +3,7 @@ import sys
 import os
 import pytest
 
-CLI_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'cf_cli.py'))
+CLI_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'cli.py'))
 
 def run_cli(args):
     result = subprocess.run(

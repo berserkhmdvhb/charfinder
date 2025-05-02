@@ -2,7 +2,7 @@
 Unicode Character Finder CLI
 
 This script provides a command-line interface for searching Unicode
-characters by name using strict and fuzzy matching via cf_lib.py.
+characters by name using strict and fuzzy matching via core.py.
 
 Features:
 - Colorized and aligned output using colorama
@@ -10,19 +10,19 @@ Features:
 - UTF-8 handling for Windows
 
 Usage:
-    python cf_cli.py -q "heart"
-    python cf_cli.py -q "smilng" --fuzzy --threshold 0.6
+    python cli.py -q "heart"
+    python cli.py -q "smilng" --fuzzy --threshold 0.6
 """
 import sys
 import argparse
 import os
 import logging
 from colorama import init, Fore, Style
-from cf_lib import find_chars
+from core import find_chars
 
 init(autoreset=True)
 
-logger = logging.getLogger("cf_cli")
+logger = logging.getLogger("core")
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 if sys.platform == "win32":
@@ -40,8 +40,8 @@ def main():
         description="Find Unicode characters by name using substring or fuzzy search.",
         epilog="""
 Examples:
-  python cf_cli.py -q heart
-  python cf_cli.py -q smilng --fuzzy --threshold 0.6
+  python core.py -q heart
+  python core.py -q smilng --fuzzy --threshold 0.6
         """,
         formatter_class=argparse.RawTextHelpFormatter
     )

@@ -3,7 +3,7 @@ import unicodedata
 import os
 import json
 import re
-from cf_lib import find_chars, normalize, build_name_cache, CACHE_FILE
+from core import find_chars, normalize, build_name_cache, CACHE_FILE
 
 def test_strict_match():
     results = list(find_chars("snowman", verbose=False))

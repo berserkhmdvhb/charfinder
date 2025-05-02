@@ -7,7 +7,7 @@ import sys
 import logging
 from typing import Generator, Dict, Optional
 
-logger = logging.getLogger("cf_lib")
+logger = logging.getLogger("core")
 logger.setLevel(logging.INFO)
 if not logger.hasHandlers():
     handler = logging.StreamHandler(sys.stdout)
