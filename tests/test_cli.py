@@ -2,10 +2,11 @@ import subprocess
 import sys
 import os
 import pytest
+from typing import List, Tuple
 
-CLI_SCRIPT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'cli.py'))
+CLI_SCRIPT: str = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'cli.py'))
 
-def run_cli(args):
+def run_cli(args: List[str]) -> Tuple[str, str, int]:
     result = subprocess.run(
         [sys.executable, CLI_SCRIPT] + args + ['--no-color'],
         capture_output=True,
@@ -14,43 +15,43 @@ def run_cli(args):
     )
     return result.stdout.strip(), result.stderr.strip(), result.returncode
 
-def test_cli_strict_match():
+def test_cli_strict_match() -> None:
     out, err, code = run_cli(['-q', 'heart'])
     assert "WHITE HEART SUIT" in out
     assert code == 0
 
-def test_cli_fuzzy_match():
+def test_cli_fuzzy_match() -> None:
     out, err, code = run_cli(['-q', 'grnning', '--fuzzy'])
     assert "GRINNING FACE" in out
     assert code == 0
 
-def test_cli_threshold_loose():
+def test_cli_threshold_loose() -> None:
     out, err, code = run_cli(['-q', 'grnning', '--fuzzy', '--threshold', '0.5'])
     assert "GRINNING FACE" in out
     assert code == 0
 
-def test_cli_threshold_strict():
+def test_cli_threshold_strict() -> None:
     out, err, code = run_cli(['-q', 'grnning', '--fuzzy', '--threshold', '0.95'])
     assert code == 0
     assert "GRINNING" not in out
 
-def test_cli_invalid_threshold():
+def test_cli_invalid_threshold() -> None:
     out, err, code = run_cli(['-q', 'heart', '--fuzzy', '--threshold', '1.5'])
     assert code != 0
     assert "Threshold must be between 0.0 and 1.0" in err
 
-def test_cli_empty_query():
+def test_cli_empty_query() -> None:
     out, err, code = run_cli(['-q', ''])
     assert code != 0
     assert "empty" in err.lower()
 
-def test_cli_unknown_flag():
+def test_cli_unknown_flag() -> None:
     out, err, code = run_cli(['--doesnotexist'])
     assert code != 0
     assert "usage" in err.lower()
 
-def test_cli_output_alignment():
-    out, _, code = run_cli(['-q', 'heart', '--quiet', '--no-color'])
+def test_cli_output_alignment() -> None:
+    out, _, code = run_cli(['-q', 'heart', '--quiet'])
     assert code == 0, "CLI did not exit cleanly"
 
     lines = [line for line in out.splitlines() if line.strip()]
@@ -58,5 +59,6 @@ def test_cli_output_alignment():
 
     for line in lines:
         assert line.startswith("U+"), f"Line does not start with 'U+': {line}"
-        parts = line.split('\t')
-        assert len(parts) >= 3, f"Line has fewer than 3 tab-separated columns: {line}"
+
+    col_lengths = [len(line.split('\t')) for line in lines]
+    assert all(length >= 3 for length in col_lengths)
