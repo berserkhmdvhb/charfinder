@@ -5,11 +5,23 @@ import logging
 from colorama import init, Fore, Style
 from core import find_chars
 
+# Initialize color output
 init(autoreset=True)
 
+# Windows-specific UTF-8 setup
 if sys.platform == "win32":
     os.system("chcp 65001 > nul")
     sys.stdout.reconfigure(encoding='utf-8')
+
+# Setup CLI-specific logger
+logger = logging.getLogger("charfinder.cli")
+logger.propagate = False  # Prevent double logging from root
+if not logger.hasHandlers():
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(levelname)s: %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 def threshold_range(value: str) -> float:
     val = float(value)
@@ -17,7 +29,7 @@ def threshold_range(value: str) -> float:
         raise argparse.ArgumentTypeError("Threshold must be between 0.0 and 1.0")
     return val
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Find Unicode characters by name using substring or fuzzy search.",
         epilog="""
@@ -33,10 +45,19 @@ Examples:
                         help='Fuzzy match threshold (0.0 to 1.0)')
     parser.add_argument('--no-color', action='store_true', help='Disable colorized output (useful for tests).')
     parser.add_argument('--quiet', action='store_true', help='Suppress info messages.')
+
+    # Optional autocomplete
+    try:
+        import argcomplete
+        argcomplete.autocomplete(parser)
+    except ImportError:
+        pass
+
     args = parser.parse_args()
 
     if not args.query.strip():
-        print(f"{'[ERROR]' if args.no_color else Fore.RED + '[ERROR]' + Style.RESET_ALL} Query string is empty.", file=sys.stderr)
+        error_msg = f"[ERROR] Query string is empty." if args.no_color else f"{Fore.RED}[ERROR]{Style.RESET_ALL} Query string is empty."
+        logger.error(error_msg)
         sys.exit(1)
 
     try:
