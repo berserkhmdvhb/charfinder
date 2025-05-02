@@ -100,7 +100,7 @@ pytest tests --disable-warnings -v
 ```
 
 Make sure to activate your virtual environment first.
-
+For manual tests and having visibility on outputs, visit the page [testing](docs/testing/README.md).
 ---
 
 ## 📦 Dependencies
