@@ -32,7 +32,7 @@ def test_cli_threshold_loose() -> None:
 
 def test_cli_threshold_strict() -> None:
     out, err, code = run_cli(['-q', 'grnning', '--fuzzy', '--threshold', '0.95'])
-    assert code == 0
+    assert code == 2
     assert "GRINNING" not in out
 
 def test_cli_invalid_threshold() -> None:

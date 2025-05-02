@@ -1,18 +1,3 @@
-"""
-Unicode Character Finder CLI
-
-This script provides a command-line interface for searching Unicode
-characters by name using strict and fuzzy matching via core.py.
-
-Features:
-- Colorized and aligned output using colorama
-- Configurable fuzzy threshold
-- UTF-8 handling for Windows
-
-Usage:
-    python cli.py -q "heart"
-    python cli.py -q "smilng" --fuzzy --threshold 0.6
-"""
 import sys
 import argparse
 import os
@@ -22,8 +7,8 @@ from core import find_chars
 
 init(autoreset=True)
 
-logger = logging.getLogger("core")
-logging.basicConfig(level=logging.INFO, format="%(message)s")
+#logger = logging.getLogger("cf_cli")
+#logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 if sys.platform == "win32":
     os.system("chcp 65001 > nul")
@@ -40,8 +25,8 @@ def main():
         description="Find Unicode characters by name using substring or fuzzy search.",
         epilog="""
 Examples:
-  python core.py -q heart
-  python core.py -q smilng --fuzzy --threshold 0.6
+  python cli.py -q heart
+  python cli.py -q smilng --fuzzy --threshold 0.6
         """,
         formatter_class=argparse.RawTextHelpFormatter
     )
@@ -51,11 +36,10 @@ Examples:
                         help='Fuzzy match threshold (0.0 to 1.0)')
     parser.add_argument('--no-color', action='store_true', help='Disable colorized output (useful for tests).')
     parser.add_argument('--quiet', action='store_true', help='Suppress info messages.')
-    parser.add_argument('--version', action='version', version="Unicode Finder 1.0")
     args = parser.parse_args()
 
     if not args.query.strip():
-        print(f"{Fore.RED}[ERROR]{Style.RESET_ALL} Query string is empty.", file=sys.stderr)
+        print(f"{'[ERROR]' if args.no_color else Fore.RED + '[ERROR]' + Style.RESET_ALL} Query string is empty.", file=sys.stderr)
         sys.exit(1)
 
     try:
@@ -67,9 +51,7 @@ Examples:
         ))
 
         if not results:
-            if not args.quiet:
-                logger.info("No matching results.")
-            sys.exit(0)
+            sys.exit(2)  # distinct exit code for no match found
 
         for line in results:
             parts = line.split('\t')
@@ -84,11 +66,10 @@ Examples:
                 print(line)
 
     except KeyboardInterrupt:
-        logger.info("\nSearch cancelled by user.")
-        sys.exit(0)
+        logger.error("\nSearch cancelled by user.")
     except Exception as e:
-        logger.error(f"{Fore.RED}[ERROR]{Style.RESET_ALL} {e}")
-        sys.exit(1)
+        error_msg = f"[ERROR] {e}" if args.no_color else f"{Fore.RED}[ERROR]{Style.RESET_ALL} {e}"
+        logger.error(error_msg)
 
 if __name__ == '__main__':
     main()
