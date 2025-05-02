@@ -133,6 +133,7 @@ pip install -e .[dev]
 | Type hints + logging                          | ✅     |
 | Pytest coverage                               | ✅     |
 | `pyproject.toml` support                      | ✅     |
+| Display fuzzy match's scores in output        | 🔜     |
 | Equip with multiple fuzzy matching alg.s      | 🔜     |
 | CLI autocomplete support                      | 🔜     |
 
