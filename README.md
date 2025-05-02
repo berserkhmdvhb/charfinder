@@ -136,8 +136,3 @@ pip install -e .[dev]
 | CLI autocomplete support          | 🔜     |
 
 ---
-
-
-## 📝 License
-
-MIT License. See `LICENSE` file.
