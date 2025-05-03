@@ -1,4 +1,4 @@
-![PackageDev](https://img.shields.io/badge/Package%20Development-%20R%20|%20Unit%20Tests%20-blue)
+![PackageDev](https://img.shields.io/badge/Package%20Development|%20Unit%20Tests%20-blue)
 ![CLI](https://img.shields.io/badge/CLI-Terminal%20Tool-blue)
 ![Language](https://img.shields.io/badge/Language-Python%203.10+-yellow)
 
