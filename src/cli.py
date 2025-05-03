@@ -86,7 +86,8 @@ def main() -> None:
             args.query,
             fuzzy=args.fuzzy,
             threshold=args.threshold,
-            verbose=not args.quiet
+            verbose=not args.quiet,
+            use_color=use_color
         ))
 
         if not results:
