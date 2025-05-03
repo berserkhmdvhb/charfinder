@@ -72,7 +72,7 @@ def find_chars(
     query: str,
     fuzzy: bool = False,
     threshold: float = 0.7,
-    name_cache: Optional[Dict[str, Dict[str, str]]] = None,
+    name_cache: dict[str, dict[str, str]] | None = None,
     verbose: bool = True
 ) -> Generator[str, None, None]:
     """

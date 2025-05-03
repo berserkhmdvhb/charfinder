@@ -7,8 +7,10 @@ from typing import List, Tuple
 CLI_SCRIPT: str = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'cli.py'))
 
 def run_cli(args: List[str]) -> Tuple[str, str, int]:
+    if not any(arg.startswith("--color") for arg in args):
+        args += ["--color=never"]
     result = subprocess.run(
-        [sys.executable, CLI_SCRIPT] + args + ['--no-color'],
+        [sys.executable, CLI_SCRIPT] + args,
         capture_output=True,
         text=True,
         encoding="utf-8"
