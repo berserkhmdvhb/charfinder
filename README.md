@@ -87,7 +87,7 @@ from core import find_chars
 for line in find_chars("snowman"):
     print(line)
 ```
-For a demo of using the library in a notebook, visit [demo.ipynb](docs/testing/demo.ipynb).
+For a demo of using the library in a notebook, visit [demo.ipynb](tests/manual/demo.ipynb).
 
 ---
 
@@ -100,7 +100,7 @@ pytest tests --disable-warnings -v
 ```
 
 Make sure to activate your virtual environment first.
-For manual tests and having visibility on outputs, visit the page [testing](docs/testing/README.md).
+For manual tests and having visibility on outputs, visit the page [testing](tests/manual/README.md).
 
 ---
 
