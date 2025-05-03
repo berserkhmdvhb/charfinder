@@ -61,7 +61,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--color", choices=["auto", "always", "never"],
-        default="auto", help="Color output: 'auto' (default), 'always', or 'never'."
+        default="always", help="Color output: 'auto' (default), 'always', or 'never'."
     )
     parser.add_argument(
         "--quiet", action="store_true", help="Suppress info messages."
@@ -105,7 +105,7 @@ def main() -> None:
                 print(line)
 
     except KeyboardInterrupt:
-        logger.error("Search cancelled by user.")
+        logger.error(f"{Fore.RED if use_color else ''}[ERROR]{Style.RESET_ALL if use_color else ''} Search cancelled by user.")
     except Exception as e:
         logger.error(f"{Fore.RED if use_color else ''}[ERROR]{Style.RESET_ALL if use_color else ''} {e}")
 

@@ -5,6 +5,7 @@ import os
 import sys
 import logging
 from typing import Generator, Dict, Optional
+from colorama import init, Fore, Style
 
 CACHE_FILE = "unicode_name_cache.json"
 
@@ -25,7 +26,7 @@ def normalize(text: str) -> str:
     return unicodedata.normalize('NFKD', text).upper()
 
 
-def build_name_cache(force_rebuild: bool = False, verbose: bool = True) -> Dict[str, Dict[str, str]]:
+def build_name_cache(force_rebuild: bool = False, verbose: bool = True, use_color: bool = True) -> Dict[str, Dict[str, str]]:
     """
     Build and return a cache dictionary of characters to original and normalized names.
     Optionally force cache regeneration even if the file exists.
@@ -33,6 +34,7 @@ def build_name_cache(force_rebuild: bool = False, verbose: bool = True) -> Dict[
     Args:
         force_rebuild (bool): Force rebuilding the cache even if file exists.
         verbose (bool): If True, show info messages.
+        use_color (bool): Enable color in logging.
 
     Returns:
         dict: Mapping of characters to original and normalized names.
@@ -41,11 +43,15 @@ def build_name_cache(force_rebuild: bool = False, verbose: bool = True) -> Dict[
         with open(CACHE_FILE, 'r', encoding='utf-8') as f:
             cache = json.load(f)
         if verbose:
-            logger.info(f"[INFO] Loaded Unicode name cache from: {CACHE_FILE}")
+            logger.info(
+                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} Loaded Unicode name cache from: {CACHE_FILE}"
+            )
         return cache
 
     if verbose:
-        logger.info("[INFO] Rebuilding Unicode name cache. This may take a few seconds...")
+        logger.info(
+            f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} Rebuilding Unicode name cache. This may take a few seconds..."
+        )
 
     cache = {}
     for code in range(sys.maxunicode + 1):
@@ -61,9 +67,13 @@ def build_name_cache(force_rebuild: bool = False, verbose: bool = True) -> Dict[
         with open(CACHE_FILE, 'w', encoding='utf-8') as f:
             json.dump(cache, f, ensure_ascii=False)
         if verbose:
-            logger.info(f"[INFO] Cache written to: {CACHE_FILE}")
+            logger.info(
+                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} Cache written to: {CACHE_FILE}"
+            )
     except Exception as e:
-        logger.error(f"[ERROR] Failed to write cache: {e}")
+        logger.error(
+            f"{Fore.RED if use_color else ''}[ERROR]{Style.RESET_ALL if use_color else ''} Failed to write cache: {e}"
+        )
 
     return cache
 
@@ -73,7 +83,8 @@ def find_chars(
     fuzzy: bool = False,
     threshold: float = 0.7,
     name_cache: dict[str, dict[str, str]] | None = None,
-    verbose: bool = True
+    verbose: bool = True,
+    use_color: bool = True
 ) -> Generator[str, None, None]:
     """
     Generate a list of Unicode characters matching a query.
@@ -84,6 +95,7 @@ def find_chars(
         threshold (float): Similarity threshold for fuzzy match.
         name_cache (dict): Optional preloaded cache.
         verbose (bool): Show info messages.
+        use_color (bool): Enable color in logging.
 
     Yields:
         str: Formatted string with Unicode info.
@@ -94,7 +106,7 @@ def find_chars(
         return
 
     if name_cache is None:
-        name_cache = build_name_cache(verbose=verbose)
+        name_cache = build_name_cache(verbose=verbose, use_color=use_color)
 
     norm_query = normalize(query)
     matches = []
@@ -105,7 +117,9 @@ def find_chars(
 
     if not matches and fuzzy:
         if verbose:
-            logger.info(f"[INFO] No exact match found for '{query}', trying fuzzy matching (threshold={threshold})...")
+            logger.info(
+                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} No exact match found for '{query}', trying fuzzy matching (threshold={threshold})..."
+            )
         norm_names = {char: data['normalized'] for char, data in name_cache.items()}
         close = difflib.get_close_matches(norm_query, norm_names.values(), n=20, cutoff=threshold)
         for char, data in name_cache.items():
@@ -114,9 +128,13 @@ def find_chars(
 
     if verbose:
         if matches:
-            logger.info(f"[INFO] Found {len(matches)} match(es) for query: '{query}'")
+            logger.info(
+                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} Found {len(matches)} match(es) for query: '{query}'"
+            )
         else:
-            logger.info(f"[INFO] No matches found for query: '{query}'")
+            logger.info(
+                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} No matches found for query: '{query}'"
+            )
 
     for code, char, name in matches:
         code_str = f"U+{code:04X}"
