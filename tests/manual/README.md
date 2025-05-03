@@ -66,6 +66,8 @@ list(find_chars("grnning", fuzzy=True, verbose=False))
 list(find_chars("grnning", fuzzy=True, threshold=0.6, verbose=False))
 ```
 
+For a more thorough demo of using the library with multiple examples, visit [demo.ipynb](tests/manual/demo.ipynb).
+
 ---
 
 ## 🔁 Rebuild Cache (if needed)
