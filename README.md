@@ -93,6 +93,8 @@ For a demo of using the library in a notebook, visit [demo.ipynb](tests/manual/d
 
 ## 🧪 Running Tests
 
+### Unit Tests: pytest
+
 Run all unit tests using:
 
 ```bash
@@ -100,7 +102,10 @@ pytest tests --disable-warnings -v
 ```
 
 Make sure to activate your virtual environment first.
+
+### Manual Tests
 For manual tests and having visibility on outputs, visit the page [testing](tests/manual/README.md).
+For a demo of using the library in a notebook, visit [demo.ipynb](tests/manual/demo.ipynb).
 
 ---
 
