@@ -70,7 +70,7 @@ Optional flags:
 - `--fuzzy` → enable fuzzy search
 - `--threshold` → set fuzzy match threshold (default `0.7`)
 - `--quiet` → suppress logs
-- `--no-color` → disable colored output
+- `--color` → enable/disable colored output
 
 Example:
 
