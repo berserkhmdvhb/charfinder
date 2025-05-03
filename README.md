@@ -1,6 +1,5 @@
 ![CLI](https://img.shields.io/badge/CLI-Terminal%20Tool-blue)
 ![Language](https://img.shields.io/badge/Language-Python%203.10+-yellow)
-![Unicode](https://img.shields.io/badge/Unicode-NFKD%20Search-green)
 
 # 🔎 charfinder
 
