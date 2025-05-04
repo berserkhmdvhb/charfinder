@@ -11,6 +11,8 @@ license = { text = "MIT" }
 
 dependencies = [
     "colorama>=0.4.0",
+    "RapidFuzz>=3.13.0",
+    "Levenshtein>=0.27.1"
 ]
 
 [project.optional-dependencies]

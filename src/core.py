@@ -1,23 +1,32 @@
 import unicodedata
-import difflib
 import json
 import os
 import sys
 import logging
-from typing import Generator, Dict, Optional
-from colorama import init, Fore, Style
+from typing import Generator
+from colorama import Fore, Style
 
-CACHE_FILE = "unicode_name_cache.json"
+from fuzzymatchlib import compute_similarity
+
+CACHE_FILE = os.getenv("CHARFINDER_CACHE", "unicode_name_cache.json")
+
+VALID_ALGOS = {"sequencematcher", "rapidfuzz", "levenshtein"}
+VALID_MODES = {"single", "hybrid"}
+
+FIELD_WIDTHS = {
+    "code": 10,
+    "char": 3,
+    "name": 45,
+}
 
 logger = logging.getLogger("charfinder")
 logger.setLevel(logging.INFO)
 
 if not logger.hasHandlers():
     handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(message)s')
+    formatter = logging.Formatter('%(message)s')  # Remove redundant level name
     handler.setFormatter(formatter)
     logger.addHandler(handler)
-
 
 def normalize(text: str) -> str:
     """
@@ -25,32 +34,36 @@ def normalize(text: str) -> str:
     """
     return unicodedata.normalize('NFKD', text).upper()
 
-
-def build_name_cache(force_rebuild: bool = False, verbose: bool = True, use_color: bool = True) -> Dict[str, Dict[str, str]]:
+def build_name_cache(
+    force_rebuild: bool = False,
+    verbose: bool = True,
+    use_color: bool = True,
+    cache_file: str = CACHE_FILE
+) -> dict[str, dict[str, str]]:
     """
     Build and return a cache dictionary of characters to original and normalized names.
-    Optionally force cache regeneration even if the file exists.
 
     Args:
-        force_rebuild (bool): Force rebuilding the cache even if file exists.
-        verbose (bool): If True, show info messages.
-        use_color (bool): Enable color in logging.
+        force_rebuild (bool): Force rebuilding even if cache file exists.
+        verbose (bool): Show logging messages.
+        use_color (bool): Colorize log output.
+        cache_file (str): Path to the cache file. Defaults to CACHE_FILE/global default.
 
     Returns:
-        dict: Mapping of characters to original and normalized names.
+        dict[str, dict[str, str]]: Character to name mapping.
     """
-    if not force_rebuild and os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, 'r', encoding='utf-8') as f:
+    if not force_rebuild and os.path.exists(cache_file):
+        with open(cache_file, 'r', encoding='utf-8') as f:
             cache = json.load(f)
         if verbose:
             logger.info(
-                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} Loaded Unicode name cache from: {CACHE_FILE}"
+                f"{Fore.CYAN if use_color else ''}Loaded Unicode name cache from: {cache_file}{Style.RESET_ALL if use_color else ''}"
             )
         return cache
 
     if verbose:
         logger.info(
-            f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} Rebuilding Unicode name cache. This may take a few seconds..."
+            f"{Fore.CYAN if use_color else ''}Rebuilding Unicode name cache. This may take a few seconds...{Style.RESET_ALL if use_color else ''}"
         )
 
     cache = {}
@@ -64,19 +77,18 @@ def build_name_cache(force_rebuild: bool = False, verbose: bool = True, use_colo
             }
 
     try:
-        with open(CACHE_FILE, 'w', encoding='utf-8') as f:
+        with open(cache_file, 'w', encoding='utf-8') as f:
             json.dump(cache, f, ensure_ascii=False)
         if verbose:
             logger.info(
-                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} Cache written to: {CACHE_FILE}"
+                f"{Fore.CYAN if use_color else ''}Cache written to: {cache_file}{Style.RESET_ALL if use_color else ''}"
             )
     except Exception as e:
         logger.error(
-            f"{Fore.RED if use_color else ''}[ERROR]{Style.RESET_ALL if use_color else ''} Failed to write cache: {e}"
+            f"{Fore.RED if use_color else ''}Failed to write cache: {e}{Style.RESET_ALL if use_color else ''}"
         )
 
     return cache
-
 
 def find_chars(
     query: str,
@@ -84,22 +96,18 @@ def find_chars(
     threshold: float = 0.7,
     name_cache: dict[str, dict[str, str]] | None = None,
     verbose: bool = True,
-    use_color: bool = True
+    use_color: bool = True,
+    fuzzy_algo: str = "sequencematcher",
+    match_mode: str = "single"
 ) -> Generator[str, None, None]:
     """
     Generate a list of Unicode characters matching a query.
-
-    Args:
-        query (str): Search term.
-        fuzzy (bool): Enable fuzzy matching if no strict matches.
-        threshold (float): Similarity threshold for fuzzy match.
-        name_cache (dict): Optional preloaded cache.
-        verbose (bool): Show info messages.
-        use_color (bool): Enable color in logging.
-
-    Yields:
-        str: Formatted string with Unicode info.
     """
+    if fuzzy_algo not in VALID_ALGOS:
+        raise ValueError(f"Invalid fuzzy algorithm: '{fuzzy_algo}'. Must be one of: {', '.join(VALID_ALGOS)}")
+    if match_mode not in VALID_MODES:
+        raise ValueError(f"Invalid match mode: '{match_mode}'. Must be 'single' or 'hybrid'.")
+
     if not isinstance(query, str):
         raise TypeError("Query must be a string.")
     if not query.strip():
@@ -109,35 +117,42 @@ def find_chars(
         name_cache = build_name_cache(verbose=verbose, use_color=use_color)
 
     norm_query = normalize(query)
-    matches = []
+    matches: list[tuple[int, str, str, float | None]] = []
 
     for char, names in name_cache.items():
         if norm_query in names['normalized']:
-            matches.append((ord(char), char, names['original']))
+            matches.append((ord(char), char, names['original'], None))
 
     if not matches and fuzzy:
         if verbose:
             logger.info(
-                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} No exact match found for '{query}', trying fuzzy matching (threshold={threshold})..."
+                f"{Fore.CYAN if use_color else ''}No exact match found for '{query}', trying fuzzy matching (threshold={threshold})...{Style.RESET_ALL if use_color else ''}"
             )
-        norm_names = {char: data['normalized'] for char, data in name_cache.items()}
-        close = difflib.get_close_matches(norm_query, norm_names.values(), n=20, cutoff=threshold)
-        for char, data in name_cache.items():
-            if data['normalized'] in close:
-                matches.append((ord(char), char, data['original']))
+        for char, names in name_cache.items():
+            score = compute_similarity(norm_query, names['normalized'], fuzzy_algo, match_mode)
+            if score >= threshold:
+                matches.append((ord(char), char, names['original'], score))
 
     if verbose:
-        if matches:
-            logger.info(
-                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} Found {len(matches)} match(es) for query: '{query}'"
-            )
-        else:
-            logger.info(
-                f"{Fore.CYAN if use_color else ''}[INFO]{Style.RESET_ALL if use_color else ''} No matches found for query: '{query}'"
-            )
+        logger.info(
+            f"{Fore.CYAN if use_color else ''}{'Found ' + str(len(matches)) + ' match(es)' if matches else 'No matches found'} for query: '{query}'{Style.RESET_ALL if use_color else ''}"
+        )
 
-    for code, char, name in matches:
+    if not matches:
+        return  # Avoid yielding headers when no match is found
+
+    if matches[0][3] is not None:
+        header = f"{'CODE':<{FIELD_WIDTHS['code']}} {'CHAR':<{FIELD_WIDTHS['char']}} {'NAME':<{FIELD_WIDTHS['name']}} SCORE"
+        divider = "-" * len(header)
+    else:
+        header = f"{'CODE':<{FIELD_WIDTHS['code']}} {'CHAR':<{FIELD_WIDTHS['char']}} {'NAME'}"
+        divider = "-" * 50
+
+    yield header
+    yield divider
+
+    for code, char, name, score in matches:
         code_str = f"U+{code:04X}"
-        char_str = char
         name_str = f"{name}  (\\u{code:04x})"
-        yield f"{code_str}\t{char_str}\t{name_str}"
+        score_str = f"{score:>6.3f}" if score is not None else ""
+        yield f"{code_str:<{FIELD_WIDTHS['code']}} {char:<{FIELD_WIDTHS['char']}} {name_str:<{FIELD_WIDTHS['name']}} {score_str}".rstrip()
