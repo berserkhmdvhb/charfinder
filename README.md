@@ -164,5 +164,6 @@ make publish      # Upload to PyPI (requires config)
 | Fuzzy score shown in output                   | ✅     |
 | `demo.ipynb` manual test interface            | ✅     |
 | Hybrid fuzzy matching mode                    | ✅     |
+| Containerize with Docker                     | 🔜     |
 
 ---
