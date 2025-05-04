@@ -38,7 +38,10 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "build",
-    "twine"
+    "twine",
+    "coverage",
+    "coveralls",
+    "pytest-cov"
 ]
 
 [project.scripts]
