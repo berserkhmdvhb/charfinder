@@ -2,12 +2,14 @@
 ![Python](https://img.shields.io/pypi/pyversions/charfinder)
 ![License](https://img.shields.io/github/license/berserkhmdvhb/charfinder)
 ![Tests](https://github.com/berserkhmdvhb/charfinder/actions/workflows/tests.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/berserkhmdvhb/charfinder/badge.svg?branch=main)](https://coveralls.io/github/berserkhmdvhb/charfinder?branch=main)
+
 
 # 🔎 charfinder
 
 **charfinder** is a terminal and Python-based tool to search Unicode characters by name—strictly or fuzzily—with normalization, caching, logging, and colorful output.  
 
-Ever tried to find the Unicode character for "shrug" or "grinning face"? `charfinder` helps you locate them effortlessly from the command line or programmatically.
+Ever tried to find an emoji using name of it, or more technically, the Unicode character for "shrug" or "grinning face"? `charfinder` helps you locate them effortlessly from the command line or programmatically.
 
 ---
 
