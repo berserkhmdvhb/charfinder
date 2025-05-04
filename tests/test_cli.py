@@ -3,15 +3,16 @@ import sys
 import os
 import pytest
 from typing import List, Tuple
-
-CLI_SCRIPT: str = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src', 'cli.py'))
-
+import subprocess
+import sys
+import pytest
+from typing import List, Tuple
 
 def run_cli(args: List[str]) -> Tuple[str, str, int]:
-    if not any(arg.startswith("--color") for arg in args):
+    if "--color=never" not in args:
         args += ["--color=never"]
     result = subprocess.run(
-        [sys.executable, CLI_SCRIPT] + args,
+        ["charfinder"] + args,
         capture_output=True,
         text=True,
         encoding="utf-8"
@@ -42,7 +43,7 @@ def test_cli_threshold_loose() -> None:
 def test_cli_threshold_strict() -> None:
     out, err, code = run_cli(['-q', 'zzxxyyq', '--fuzzy', '--threshold', '0.95'])
     assert code == 2
-    assert all(not line.startswith("U+") for line in out.splitlines())
+    assert "No matches found" in out
 
 
 def test_cli_invalid_threshold() -> None:

@@ -1,6 +1,8 @@
 import pytest
 import os
-from core import find_chars, normalize, build_name_cache, CACHE_FILE
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+from charfinder.core import find_chars, normalize, build_name_cache, CACHE_FILE
 
 
 def test_strict_match_heart() -> None:

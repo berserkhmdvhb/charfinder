@@ -2,7 +2,7 @@ import sys
 import argparse
 import logging
 from colorama import init, Fore, Style
-from core import find_chars
+from .core import find_chars
 
 # Exit code constants
 EXIT_SUCCESS = 0

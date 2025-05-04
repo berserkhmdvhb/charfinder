@@ -6,7 +6,7 @@ import logging
 from typing import Generator
 from colorama import Fore, Style
 
-from fuzzymatchlib import compute_similarity
+from .fuzzymatchlib import compute_similarity
 
 CACHE_FILE = os.getenv("CHARFINDER_CACHE", "unicode_name_cache.json")
 
