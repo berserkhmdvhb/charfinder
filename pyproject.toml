@@ -1,28 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "charfinder"
-version = "0.1.0"
-description = "CLI tool to search Unicode characters by name with fuzzy matching support."
-authors = [
-    { name = "HMDV" }
-]
+version = "1.0.0"
+description = "A command-line Unicode character finder with fuzzy matching support."
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
+authors = [
+    { name = "HMDV", email = "hamed.vaheb@protonmail.com" }
+]
+keywords = ["unicode", "cli", "fuzzy", "search", "character", "text"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Text Processing",
+    "Topic :: Utilities"
+]
 
 dependencies = [
     "colorama>=0.4.0",
     "RapidFuzz>=3.13.0",
-    "Levenshtein>=0.27.1"
+    "Levenshtein>=0.27.1",
+    "argcomplete>=3.1.0"
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "build",
+    "twine"
 ]
 
 [project.scripts]
-charfinder = "charfinder.cf_cli:main"
-
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+charfinder = "charfinder.cli:main"
