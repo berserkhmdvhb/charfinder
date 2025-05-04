@@ -1,6 +1,7 @@
-![Tests](https://img.shields.io/badge/Tests-Pytest-blue)
-![CLI](https://img.shields.io/badge/CLI-Terminal%20Tool-blue)
-![Python](https://img.shields.io/badge/Python-3.8%2B-yellow)
+![PyPI](https://img.shields.io/pypi/v/charfinder)
+![Python](https://img.shields.io/pypi/pyversions/charfinder)
+![License](https://img.shields.io/github/license/berserkhmdvhb/charfinder)
+![Tests](https://github.com/berserkhmdvhb/charfinder/actions/workflows/tests.yml/badge.svg)
 
 # 🔎 charfinder
 
