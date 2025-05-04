@@ -1,12 +1,9 @@
-import subprocess
 import sys
 import os
 import pytest
 from typing import List, Tuple
 import subprocess
-import sys
-import pytest
-from typing import List, Tuple
+
 
 def run_cli(args: List[str]) -> Tuple[str, str, int]:
     if "--color=never" not in args:
