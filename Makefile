@@ -30,7 +30,8 @@ build:
 
 # Clean build artifacts
 clean:
-	rm -rf dist build *.egg-info
+	python -c "import shutil; [shutil.rmtree(p, ignore_errors=True) for p in ['dist', 'build']]"
+	del /q /s *.egg-info 2>nul || exit 0
 
 # Publish to TestPyPI
 publish-test:
