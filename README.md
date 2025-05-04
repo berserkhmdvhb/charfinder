@@ -1,4 +1,4 @@
-![PyPI](https://img.shields.io/pypi/v/charfinder)
+[![PyPI](https://img.shields.io/pypi/v/charfinder)](https://pypi.org/project/charfinder/)
 ![Python](https://img.shields.io/pypi/pyversions/charfinder)
 ![License](https://img.shields.io/github/license/berserkhmdvhb/charfinder)
 ![Tests](https://github.com/berserkhmdvhb/charfinder/actions/workflows/tests.yml/badge.svg)
