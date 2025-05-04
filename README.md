@@ -113,7 +113,7 @@ pytest tests -v
 
 ### Manual Notebook
 
-Use [`demo.ipynb`](tests/manual/demo.ipynb) for CLI + core function exploration.
+Use [`demo.ipynb`](https://github.com/berserkhmdvhb/charfinder/blob/main/tests/manual/demo.ipynb) for CLI + core function exploration.
 
 ---
 
