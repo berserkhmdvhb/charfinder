@@ -205,4 +205,4 @@ pip install -e .[dev]
 
 ## 🧾 License
 
-MIT License © 2025 [Your Name / GitHub Handle]
+MIT License © 2025 [Hamed V / GitHub Handle]
