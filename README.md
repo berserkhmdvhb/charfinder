@@ -1,19 +1,23 @@
 ![PackageDev](https://img.shields.io/badge/Package%20Development|%20Unit%20Tests%20-blue)
 ![CLI](https://img.shields.io/badge/CLI-Terminal%20Tool-blue)
-![Language](https://img.shields.io/badge/Language-Python%203.10+-yellow)
+![Language](https://img.shields.io/badge/Language-Python%203.8%2B-yellow)
 
 # 🔎 charfinder
 
 **charfinder** is a command-line and Python-based tool for searching Unicode characters by name.  
-It supports strict and fuzzy matching, Unicode normalization, and a local cache for performance.
+It supports strict and fuzzy matching (with multiple algorithms), Unicode normalization, logging, colored CLI output, and a local cache for performance.
+
+---
 
 ## ✨ Features
 
 - 🔍 Search Unicode characters by name (strict or fuzzy match)
-- 📚 Uses Unicode NFKD normalization for accurate results
-- 🚀 Fast name-based lookup using a local cache (`unicode_name_cache.json`)
-- 🌈 Colorized CLI output (optional)
-- ✅ Includes full unit tests with `pytest`
+- ⚡ Supports multiple fuzzy matching algorithms: SequenceMatcher, RapidFuzz, Levenshtein
+- 📚 Unicode NFKD normalization for accurate comparison
+- 💾 Caches all Unicode names to speed up repeated lookups
+- 🧪 Full unit + CLI tests via `pytest`
+- 🖥 CLI color support with `colorama`
+- 📦 PEP 621 compliant (`pyproject.toml`)
 
 ---
 
@@ -22,32 +26,34 @@ It supports strict and fuzzy matching, Unicode normalization, and a local cache 
 ```
 charfinder/
 ├── src/
-│   ├── cli.py            # CLI interface
-│   └── core.py           # Main logic (normalization, search, cache)
+│   └── charfinder/
+│       ├── __init__.py
+│       ├── __main__.py
+│       ├── cli.py         # CLI interface
+│       └── core.py        # Search logic, normalization, caching
 ├── tests/
-│   ├── test_cli.py       # CLI integration tests
-│   └── test_lib.py       # Library unit tests
-├── unicode_name_cache.json  # Cached Unicode name mapping (auto-generated)
-├── pyproject.toml        # Build system and dependencies
-├── .gitignore
-└── README.md
+│   ├── test_cli.py        # CLI tests (subprocess-based)
+│   ├── test_lib.py        # Library tests (direct function calls)
+│   └── manual/demo.ipynb  # Interactive notebook demo
+├── unicode_name_cache.json  # Auto-generated cache
+├── pyproject.toml         # Build config & dependencies
+├── Makefile               # Development workflow automation
+└── README.md              # This file
 ```
 
 ---
 
 ## ⚙️ Installation
 
-### Using `git`:
-
 ```bash
 git clone https://github.com/yourusername/charfinder.git
 cd charfinder
 python -m venv .venv
-.venv\Scripts\activate  # or source .venv/bin/activate on Linux/macOS
-pip install .
+.venv\Scripts\activate    # or source .venv/bin/activate
+pip install -e .[dev]     # includes test + dev tools
 ```
 
-Or directly install with:
+Or install directly via:
 
 ```bash
 pip install git+https://github.com/yourusername/charfinder.git
@@ -59,67 +65,67 @@ pip install git+https://github.com/yourusername/charfinder.git
 
 ### 🖥 CLI Mode
 
-Run from the terminal:
+Run via installed CLI:
 
 ```bash
-python src/cli.py -q "heart"
+charfinder -q heart
+```
+
+Or directly (if running from source):
+
+```bash
+python -m charfinder -q heart
 ```
 
 Optional flags:
 
-- `--fuzzy` → enable fuzzy search
-- `--threshold` → set fuzzy match threshold (default `0.7`)
-- `--quiet` → suppress logs
-- `--color` → enable/disable colored output
+- `--fuzzy` → enable fuzzy search fallback
+- `--threshold` → fuzzy threshold (0.0–1.0, default: `0.7`)
+- `--fuzzy-algo` → `sequencematcher`, `rapidfuzz`, `levenshtein`
+- `--match-mode` → `single` or `hybrid`
+- `--quiet` → suppress logging
+- `--color` → `auto`, `never`, `always`
 
 Example:
 
 ```bash
-python src/cli.py -q "grnning" --fuzzy --threshold 0.6
+charfinder -q grnning --fuzzy --threshold 0.6 --fuzzy-algo rapidfuzz
 ```
 
-### 🐍 Library Mode
-
-Use it directly in Python:
+### 🐍 Python Library Mode
 
 ```python
-from core import find_chars
+from charfinder.core import find_chars
 
 for line in find_chars("snowman"):
     print(line)
 ```
-For a demo of using the library in a notebook, visit [demo.ipynb](tests/manual/demo.ipynb).
 
 ---
 
-## 🧪 Running Tests
+## 🧪 Testing
 
-### Unit Tests: pytest
-
-Run all unit tests using:
+### Unit & CLI Tests
 
 ```bash
-pytest tests --disable-warnings -v
+pytest tests -v
 ```
 
-Make sure to activate your virtual environment first.
+### Manual Notebook
 
-### Manual Tests
-For manual tests and having visibility on outputs, visit the page [testing](tests/manual/README.md).
-For a demo of using the library in a notebook, visit [demo.ipynb](tests/manual/demo.ipynb).
+Use [`demo.ipynb`](tests/manual/demo.ipynb) for CLI + core function exploration.
 
 ---
 
 ## 📦 Dependencies
 
-Managed with [PEP 621](https://peps.python.org/pep-0621/) via `pyproject.toml`.
-
-Key packages:
-
 - `colorama`
-- `pytest`
+- `argcomplete`
+- `rapidfuzz`
+- `python-Levenshtein`
+- `pytest` (for dev/test)
 
-Install with:
+Install them via:
 
 ```bash
 pip install -e .[dev]
@@ -127,20 +133,36 @@ pip install -e .[dev]
 
 ---
 
-## 🛠 Roadmap
+## 🛠 Development & Build
+
+The Makefile includes common commands:
+
+```bash
+make help         # Show all targets
+make install      # Install with dev dependencies
+make test         # Run all tests
+make build        # Build distribution
+make publish-test # Upload to TestPyPI
+make publish      # Upload to PyPI (requires config)
+```
+
+---
+
+## 📌 Roadmap
 
 | Feature                                       | Status |
 |-----------------------------------------------|--------|
 | Strict Unicode search                         | ✅     |
-| Fuzzy search (difflib)                        | ✅     |
 | Unicode normalization (NFKD)                  | ✅     |
 | Local cache for performance                   | ✅     |
-| CLI options: threshold, quiet, no-color       | ✅     |
+| Fuzzy search (difflib / rapidfuzz / Levenshtein) | ✅  |
+| CLI options: quiet, color, threshold          | ✅     |
 | Type hints + logging                          | ✅     |
-| Pytest coverage                               | ✅     |
-| `pyproject.toml` support                      | ✅     |
-| Display fuzzy match's scores in output        | 🔜     |
-| Equip with multiple fuzzy matching alg.s      | 🔜     |
-| CLI autocomplete support                      | 🔜     |
+| Pytest CLI + lib test coverage                | ✅     |
+| `pyproject.toml` packaging                    | ✅     |
+| CLI via `charfinder` entry point              | ✅     |
+| Fuzzy score shown in output                   | ✅     |
+| `demo.ipynb` manual test interface            | ✅     |
+| Hybrid fuzzy matching mode                    | ✅     |
 
 ---
