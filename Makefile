@@ -1,11 +1,12 @@
 # Makefile for CharFinder
-.PHONY: help install test lint build clean publish publish-test
+.PHONY: help install test lint build clean publish publish-test publish coverage
 
 # Show available commands
 help:
 	@echo "CharFinder Makefile Commands:"
 	@echo "  install        Install package and dev dependencies"
 	@echo "  test           Run all tests with pytest"
+	@echo "  coverage       Run tests with coverage report in terminal"
 	@echo "  lint           Run basic syntax checks"
 	@echo "  build          Build the distribution (wheel and sdist)"
 	@echo "  clean          Remove build artifacts"
@@ -19,6 +20,10 @@ install:
 # Run tests
 test:
 	pytest tests --maxfail=1 -v
+
+# Run tests with coverage
+coverage:
+	pytest --cov=charfinder --cov-report=term
 
 # Check syntax only
 lint:

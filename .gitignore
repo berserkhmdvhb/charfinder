@@ -29,6 +29,8 @@ dist/
 
 # === Test artifacts ===
 .pytest_cache/
+.coverage
+htmlcov/
 
 # === OS files ===
 .DS_Store
