@@ -1,5 +1,5 @@
 # Makefile for CharFinder
-.PHONY: help install test lint build clean publish publish-test publish coverage
+.PHONY: help install test lint build clean publish publish-test coverage
 
 # Show available commands
 help:
@@ -11,7 +11,7 @@ help:
 	@echo "  build          Build the distribution (wheel and sdist)"
 	@echo "  clean          Remove build artifacts"
 	@echo "  publish-test   Upload to TestPyPI (safe dry run)"
-	@echo "  publish        Disabled for safety (enable manually)"
+	@echo "  publish        Upload to PyPI (requires credentials)"
 
 # Install dependencies in editable mode + dev
 install:
@@ -42,7 +42,6 @@ clean:
 publish-test:
 	twine upload --repository testpypi dist/*
 
-# Disable accidental PyPI publishing
+# Publish to PyPI
 publish:
-	@echo "Publishing to PyPI is disabled. Run 'twine upload dist/*' manually if you're sure."
-	@exit 1
+	twine upload dist/*
