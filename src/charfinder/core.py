@@ -101,7 +101,20 @@ def find_chars(
     match_mode: str = "single"
 ) -> Generator[str, None, None]:
     """
-    Generate a list of Unicode characters matching a query.
+    Search for Unicode characters by name using exact or fuzzy matching.
+    
+    Args:
+        query (str): Input query string.
+        fuzzy (bool): Whether to enable fuzzy matching.
+        threshold (float): Fuzzy match threshold between 0.0 and 1.0.
+        name_cache (dict | None): Optional prebuilt Unicode name cache.
+        verbose (bool): Whether to log progress.
+        use_color (bool): Whether to colorize log output.
+        fuzzy_algo (str): Algorithm to use for fuzzy scoring.
+        match_mode (str): 'single' for one algorithm or 'hybrid' to average scores.
+    
+    Yields:
+        str: Each line of the formatted result output (including header and matches).
     """
     if fuzzy_algo not in VALID_ALGOS:
         raise ValueError(f"Invalid fuzzy algorithm: '{fuzzy_algo}'. Must be one of: {', '.join(VALID_ALGOS)}")

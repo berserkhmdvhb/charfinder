@@ -27,12 +27,33 @@ if not logger.hasHandlers():
     logger.addHandler(handler)
 
 def threshold_range(value: str) -> float:
+    """
+    Validate and convert the threshold argument to a float between 0.0 and 1.0.
+    
+    Args:
+        value (str): Threshold string from CLI input.
+    
+    Returns:
+        float: Parsed threshold value.
+    
+    Raises:
+        argparse.ArgumentTypeError: If the value is not in the 0.0–1.0 range.
+    """
     val = float(value)
     if not 0.0 <= val <= 1.0:
         raise argparse.ArgumentTypeError("Threshold must be between 0.0 and 1.0")
     return val
 
 def should_use_color(mode: str) -> bool:
+    """
+    Determine whether to use color output based on the mode and terminal capability.
+    
+    Args:
+        mode (str): One of 'auto', 'always', or 'never'.
+    
+    Returns:
+        bool: True if color should be used.
+    """
     if mode == "never":
         return False
     if mode == "always":
@@ -40,6 +61,13 @@ def should_use_color(mode: str) -> bool:
     return sys.stdout.isatty()
 
 def print_result_lines(lines: list[str], use_color: bool) -> None:
+    """
+    Print the list of result lines with optional color formatting.
+    
+    Args:
+        lines (list[str]): Lines to print.
+        use_color (bool): Whether to use color formatting.
+    """
     for line in lines:
         if not use_color:
             print(line)
@@ -51,6 +79,10 @@ def print_result_lines(lines: list[str], use_color: bool) -> None:
             print(line)
 
 def main() -> None:
+    """
+    Main function for the CLI. Parses arguments, executes the search, and prints results.
+    Handles fuzzy match options, CLI flags, logging, and exit codes.
+    """
     parser = argparse.ArgumentParser(
         description="Find Unicode characters by name using substring or fuzzy search.",
         epilog="""Examples:
