@@ -14,14 +14,6 @@ Ever tried to find an emoji using its name, or more technically, the Unicode cha
 
 ---
 
-# 🎥 Demo Video
-
-
-https://github.com/user-attachments/assets/1d4c4b8c-b4a5-4e0e-8376-e523ad502691
-
-
-
----
 
 ## ✨ Features
 
