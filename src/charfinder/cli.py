@@ -5,10 +5,14 @@ from colorama import init, Fore, Style
 from .core import find_chars
 
 # Exit code constants
-EXIT_SUCCESS = 0
-EXIT_INVALID_USAGE = 1
-EXIT_NO_RESULTS = 2
-EXIT_CANCELLED = 130
+from .constants import (
+    EXIT_SUCCESS,
+    EXIT_INVALID_USAGE,
+    EXIT_NO_RESULTS,
+    EXIT_CANCELLED,
+    VALID_FUZZY_ALGOS,
+    VALID_MATCH_MODES,
+)
 
 # Initialize color output
 init(autoreset=True)

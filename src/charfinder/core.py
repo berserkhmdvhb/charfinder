@@ -3,23 +3,24 @@ import json
 import os
 import sys
 import logging
-from typing import Generator
+from typing import Generator, Literal
 from colorama import Fore, Style
 
 from .fuzzymatchlib import compute_similarity
 
-CACHE_FILE = os.getenv("CHARFINDER_CACHE", "unicode_name_cache.json")
+CACHE_FILE = os.getenv('CHARFINDER_CACHE', 'unicode_name_cache.json')
 
-VALID_ALGOS = {"sequencematcher", "rapidfuzz", "levenshtein"}
-VALID_MODES = {"single", "hybrid"}
+# constants and aliases
+from .constants import (
+    VALID_FUZZY_ALGOS,
+    VALID_MATCH_MODES,
+    FuzzyAlgorithm,
+    MatchMode,
+    FIELD_WIDTHS
+)
 
-FIELD_WIDTHS = {
-    "code": 10,
-    "char": 3,
-    "name": 45,
-}
 
-logger = logging.getLogger("charfinder")
+logger = logging.getLogger('charfinder')
 logger.setLevel(logging.INFO)
 
 if not logger.hasHandlers():
@@ -97,8 +98,8 @@ def find_chars(
     name_cache: dict[str, dict[str, str]] | None = None,
     verbose: bool = True,
     use_color: bool = True,
-    fuzzy_algo: str = "sequencematcher",
-    match_mode: str = "single"
+    fuzzy_algo: FuzzyAlgorithm = 'sequencematcher',
+    match_mode: MatchMode = 'single'
 ) -> Generator[str, None, None]:
     """
     Search for Unicode characters by name using exact or fuzzy matching.
@@ -110,15 +111,15 @@ def find_chars(
         name_cache (dict | None): Optional prebuilt Unicode name cache.
         verbose (bool): Whether to log progress.
         use_color (bool): Whether to colorize log output.
-        fuzzy_algo (str): Algorithm to use for fuzzy scoring.
-        match_mode (str): 'single' for one algorithm or 'hybrid' to average scores.
+        fuzzy_algo (str): Algorithm to use for fuzzy scoring. Accepted values are 'sequencematcher', 'rapidfuzz', or 'levenshtein'.
+        match_mode (str): 'single' for one algorithm or 'hybrid' to average scores. Accepted values are 'single' or 'hybrid'.
     
     Yields:
         str: Each line of the formatted result output (including header and matches).
     """
-    if fuzzy_algo not in VALID_ALGOS:
-        raise ValueError(f"Invalid fuzzy algorithm: '{fuzzy_algo}'. Must be one of: {', '.join(VALID_ALGOS)}")
-    if match_mode not in VALID_MODES:
+    if fuzzy_algo not in VALID_FUZZY_ALGOS:
+        raise ValueError(f"Invalid fuzzy algorithm: '{fuzzy_algo}'. Must be one of: {', '.join(VALID_FUZZY_ALGOS)}")
+    if match_mode not in VALID_MATCH_MODES:
         raise ValueError(f"Invalid match mode: '{match_mode}'. Must be 'single' or 'hybrid'.")
 
     if not isinstance(query, str):
