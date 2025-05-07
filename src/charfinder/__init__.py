@@ -1,1 +1,2 @@
-__version__ = "1.0.0"
+# src/charfinder/__init__.py
+__version__ = "1.0.5"

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "charfinder"
-version = "1.0.4"
+dynamic = ["version"]  # <-- changed
 description = "A command-line and library of normalized Unicode character finder with fuzzy matching support."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -51,3 +51,9 @@ charfinder = "charfinder.cli:main"
 Homepage = "https://github.com/berserkhmdvhb/charfinder"
 Repository = "https://github.com/berserkhmdvhb/charfinder"
 Issues = "https://github.com/berserkhmdvhb/charfinder/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.dynamic]
+version = {attr = "charfinder.__version__"}
