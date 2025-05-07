@@ -185,13 +185,21 @@ pip install -e .[dev]
 
 ## 📦 Dependencies
 
+### Runtime
+
 - [`colorama`](https://pypi.org/project/colorama/)
 - [`argcomplete`](https://pypi.org/project/argcomplete/)
 - [`rapidfuzz`](https://pypi.org/project/rapidfuzz/)
 - [`python-Levenshtein`](https://pypi.org/project/python-Levenshtein/)
-- [`coverage`](https://pypi.org/project/coverage/)
+
+### Development
+
+- [`pytest`](https://pypi.org/project/pytest/)
 - [`pytest-cov`](https://pypi.org/project/pytest-cov/)
-- `pytest` for development
+- [`coverage`](https://pypi.org/project/coverage/)
+- [`coveralls`](https://pypi.org/project/coveralls/)
+- [`build`](https://pypi.org/project/build/)
+- [`twine`](https://pypi.org/project/twine/)
 
 Install all with:
 
@@ -200,7 +208,6 @@ pip install -e .[dev]
 ```
 
 ---
-
 ## 📌 Roadmap
 
 | Feature                              | Status |
