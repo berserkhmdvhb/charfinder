@@ -133,7 +133,7 @@ charfinder/
 ├── tests/
 │   ├── test_cli.py
 │   ├── test_lib.py
-│   ├── test_fuzzymatchlib
+│   ├── test_fuzzymatchlib.py
 │   └── manual/demo.ipynb
 ├── Makefile
 ├── pyproject.toml
