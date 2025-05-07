@@ -29,8 +29,14 @@ jobs:
         run: |
           pytest --cov=charfinder --cov-report=term --cov-report=xml
 
-      - name: Upload to Coveralls
+      - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ./coverage.xml
+
+      # Optional: Keep the report as a GitHub artifact
+      - name: Upload coverage report as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.xml
