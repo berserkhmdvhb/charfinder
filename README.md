@@ -2,7 +2,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/charfinder)](https://pypi.org/project/charfinder/)
 [![License](https://img.shields.io/github/license/berserkhmdvhb/charfinder)](LICENSE)
 [![Downloads](https://static.pepy.tech/badge/charfinder/month)](https://pepy.tech/project/charfinder)
-![Tests](https://github.com/berserkhmdvhb/charfinder/actions/workflows/tests.yml/badge.svg)
+[![Tests](https://github.com/berserkhmdvhb/charfinder/actions/workflows/tests.yml/badge.svg)](https://github.com/berserkhmdvhb/charfinder/actions/workflows/tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/berserkhmdvhb/charfinder/badge.svg?branch=main)](https://coveralls.io/github/berserkhmdvhb/charfinder?branch=main)
 
 # 🔎 charfinder
@@ -189,6 +189,8 @@ pip install -e .[dev]
 - [`argcomplete`](https://pypi.org/project/argcomplete/)
 - [`rapidfuzz`](https://pypi.org/project/rapidfuzz/)
 - [`python-Levenshtein`](https://pypi.org/project/python-Levenshtein/)
+- [`coverage`](https://pypi.org/project/coverage/)
+- [`pytest-cov`](https://pypi.org/project/pytest-cov/)
 - `pytest` for development
 
 Install all with:
