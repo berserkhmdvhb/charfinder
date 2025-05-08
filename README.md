@@ -159,7 +159,7 @@ make coverage
 
 # Static checks
 ## check all
-make check--all
+make check-all
 ## or individually 
 make lint         # runs ruff + mypy
 make check        # runs black --check (skips .ipynb), mypy, ruff, tests
