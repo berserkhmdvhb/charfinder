@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-fast test-watch coverage lint format check mypy ruff precommit precommit-run build clean publish publish-test check-all upload-coverage
+.PHONY: help install install-dev test test-fast coverage lint format check mypy ruff precommit precommit-run build clean publish publish-test check-all upload-coverage
 
 help:
 	@echo "CharFinder Makefile Commands:"
