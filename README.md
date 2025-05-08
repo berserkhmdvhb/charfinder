@@ -83,6 +83,12 @@ $ charfinder -q snowman
 ☃  U+2603  SNOWMAN
 ```
 
+Show all options:
+
+```bash
+charfinder --help
+```
+
 You can also run directly from source:
 
 ```bash
