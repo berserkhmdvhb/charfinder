@@ -133,11 +133,13 @@ charfinder/
 ├── tests/
 │   ├── test_cli.py
 │   ├── test_lib.py
-│   ├── test_fuzzymatchlib.py
-│   └── manual/demo.ipynb
+│   └── test_fuzzymatchlib.py
+├── .github/
+│   └── workflows/tests.yml
+├── .pre-commit-config.yaml
 ├── Makefile
 ├── pyproject.toml
-├── unicode_name_cache.json  # auto-generated
+├── unicode_name_cache.json   # generated at runtime
 └── README.md
 ```
 
@@ -146,9 +148,28 @@ charfinder/
 ## 🧪 Testing
 
 ```bash
-pytest tests -v
-# or:
+# Run full test suite (pytest)
 make test
+
+# Quick rerun of only failed/last tests
+make test-fast
+
+# Coverage report in terminal
+make coverage
+
+# Static checks
+## check all
+make check--all
+## or individually 
+make lint         # runs ruff + mypy
+make check        # runs black --check (skips .ipynb), mypy, ruff, tests
+```
+
+**Pre-commit hooks**
+
+``bash
+make precommit          # install git hooks
+make precommit-run      # run all hooks locally
 ```
 
 For manual exploration, see: [`demo.ipynb`](https://github.com/berserkhmdvhb/charfinder/blob/main/tests/manual/demo.ipynb)
@@ -173,33 +194,52 @@ pip install -e .[dev]
 
 ### Makefile Commands
 
-| Command         | Description                    |
-|----------------|--------------------------------|
-| `make install` | Install with dev dependencies  |
-| `make test`    | Run all tests                  |
-| `make build`   | Build distribution             |
-| `make publish-test` | Upload to TestPyPI       |
-| `make publish` | Upload to PyPI (requires login)|
+
+| Command           | Description                                                         |
+|-------------------|---------------------------------------------------------------------|
+| `help`            | Show this help text with a list of available commands               |
+| `install`         | Install the package in editable mode (no dev dependencies)          |
+| `install-dev`     | Upgrade pip and install package + all dev dependencies              |
+| `test`            | Run the full test suite (`pytest tests --maxfail=1 -v`)            |
+| `test-fast`       | Run only failed or last tests quickly (`pytest --lf -x -v`)        |
+| `coverage`        | Run tests with coverage report in the terminal                      |
+| `lint`            | Run static checks: `ruff` + `mypy`                                  |
+| `format`          | Reformat all Python files using `black src tests`                   |
+| `check`           | Check formatting with Black (`black --check src tests`)            |
+| `mypy`            | Type-check source & tests (excludes `*.ipynb`)                      |
+| `ruff`            | Lint source & tests with `ruff` (excludes `*.ipynb`)               |
+| `check-all`       | Run `check`, `mypy`, `ruff`, then `test`                            |
+| `precommit`       | Install Git pre-commit hooks (`pre-commit install`)                 |
+| `precommit-run`   | Run all configured pre-commit hooks locally                         |
+| `build`           | Build sdist & wheel via `python -m build`                          |
+| `clean`           | Remove build artifacts (`dist/`, `build/`, `*.egg-info/`)          |
+| `publish-test`    | Upload distributions to TestPyPI                                    |
+| `publish`         | Check & upload distributions to PyPI                                |
+| `upload-coverage` | Send coverage report to Coveralls                                   |
 
 ---
 
 ## 📦 Dependencies
 
-### Runtime
+**Runtime**
 
-- [`colorama`](https://pypi.org/project/colorama/)
-- [`argcomplete`](https://pypi.org/project/argcomplete/)
-- [`rapidfuzz`](https://pypi.org/project/rapidfuzz/)
-- [`python-Levenshtein`](https://pypi.org/project/python-Levenshtein/)
+- [argcomplete](https://pypi.org/project/argcomplete/)  
+- [colorama](https://pypi.org/project/colorama/)  
+- [python-Levenshtein](https://pypi.org/project/python-Levenshtein/)  
+- [rapidfuzz](https://pypi.org/project/rapidfuzz/)  
 
-### Development
+**Development**
 
-- [`pytest`](https://pypi.org/project/pytest/)
-- [`pytest-cov`](https://pypi.org/project/pytest-cov/)
-- [`coverage`](https://pypi.org/project/coverage/)
-- [`coveralls`](https://pypi.org/project/coveralls/)
-- [`build`](https://pypi.org/project/build/)
-- [`twine`](https://pypi.org/project/twine/)
+- [black](https://pypi.org/project/black/)  
+- [build](https://pypi.org/project/build/)  
+- [coverage](https://pypi.org/project/coverage/)  
+- [coveralls](https://pypi.org/project/coveralls/) *(Python < 3.13 only)*  
+- [mypy](https://pypi.org/project/mypy/)  
+- [pre-commit](https://pypi.org/project/pre-commit/)  
+- [pytest](https://pypi.org/project/pytest/)  
+- [pytest-cov](https://pypi.org/project/pytest-cov/)  
+- [ruff](https://pypi.org/project/ruff/)  
+- [twine](https://pypi.org/project/twine/)  
 
 Install all with:
 
