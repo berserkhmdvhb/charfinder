@@ -168,9 +168,9 @@ make coverage
 make check-all
 
 # Or run individual checks
-make lint         # ruff + mypy
-make check        # black --check (skips .ipynb), mypy, ruff, tests
-make format       # auto-format with black
+make lint                # ruff + mypy
+make format-check        # black format check (skips .ipynb)
+make format              # auto-format with black
 ```
 
 **Pre-commit hooks**
@@ -205,51 +205,27 @@ pip install -e .[dev]
 
 ### Makefile Commands
 
-
-
-
-
-| Command           | Description                                                         |
-
-|-------------------|---------------------------------------------------------------------|
-
-| `help`            | Show this help text with a list of available commands               |
-
-| `install`         | Install the package in editable mode (no dev dependencies)          |
-
-| `install-dev`     | Upgrade pip and install package + all dev dependencies              |
-
-| `test`            | Run the full test suite (`pytest tests --maxfail=1 -v`)            |
-
-| `test-fast`       | Run only failed or last tests quickly (`pytest --lf -x -v`)        |
-
-| `coverage`        | Run tests with coverage report in the terminal                      |
-
-| `lint`            | Run static checks: `ruff` + `mypy`                                  |
-
-| `format`          | Reformat all Python files using `black src tests`                   |
-
-| `check`           | Check formatting with Black (`black --check src tests`)            |
-
-| `mypy`            | Type-check source & tests (excludes `*.ipynb`)                      |
-
-| `ruff`            | Lint source & tests with `ruff` (excludes `*.ipynb`)               |
-
-| `check-all`       | Run `check`, `mypy`, `ruff`, then `test`                            |
-
-| `precommit`       | Install Git pre-commit hooks (`pre-commit install`)                 |
-
-| `precommit-run`   | Run all configured pre-commit hooks locally                         |
-
-| `build`           | Build sdist & wheel via `python -m build`                          |
-
-| `clean`           | Remove build artifacts (`dist/`, `build/`, `*.egg-info/`)          |
-
-| `publish-test`    | Upload distributions to TestPyPI                                    |
-
-| `publish`         | Check & upload distributions to PyPI                                |
-
-| `upload-coverage` | Send coverage report to Coveralls                                   |
+| Command            | Description                                                         |
+|--------------------|---------------------------------------------------------------------|
+| `help`             | Show this help text with a list of available commands               |
+| `install`          | Install the package in editable mode (no dev dependencies)          |
+| `install-dev`      | Upgrade pip and install package + all dev dependencies              |
+| `format`           | Reformat all Python files using `black`                             |
+| `format-check`     | Check formatting using `black --check` (non-invasive)               |
+| `mypy`             | Type-check source & tests (excludes `*.ipynb`)                      |
+| `ruff`             | Lint source & tests with `ruff` (excludes `*.ipynb`)                |
+| `lint`             | Run static checks: `ruff` + `mypy`                                  |
+| `test`             | Run the full test suite (`pytest tests --maxfail=1 -v`)             |
+| `test-fast`        | Run only failed or last tests quickly (`pytest --lf -x -v`)         |
+| `coverage`         | Run tests with coverage report in the terminal                      |
+| `check-all`        | Run `format-check`, `mypy`, `ruff`, and then `test`                 |
+| `precommit`        | Install Git pre-commit hooks (`pre-commit install`)                 |
+| `precommit-run`    | Run all configured pre-commit hooks locally                         |
+| `build`            | Build sdist & wheel via `python -m build`                           |
+| `clean`            | Remove build artifacts (`dist/`, `build/`, `*.egg-info/`)           |
+| `publish-test`     | Upload distributions to TestPyPI                                    |
+| `publish`          | Check & upload distributions to PyPI                                |
+| `upload-coverage`  | Send coverage report to Coveralls                                   |
 
 
 ## 📦 Dependencies
