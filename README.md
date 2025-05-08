@@ -218,6 +218,7 @@ pip install -e .[dev]
 | `test`             | Run the full test suite (`pytest tests --maxfail=1 -v`)             |
 | `test-fast`        | Run only failed or last tests quickly (`pytest --lf -x -v`)         |
 | `coverage`         | Run tests with coverage report in the terminal                      |
+| `coverage-xml`     | Run tests with coverage and output `coverage.xml` (for CI tools)   |
 | `check-all`        | Run `format-check`, `mypy`, `ruff`, and then `test`                 |
 | `precommit`        | Install Git pre-commit hooks (`pre-commit install`)                 |
 | `precommit-run`    | Run all configured pre-commit hooks locally                         |
