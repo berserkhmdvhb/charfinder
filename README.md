@@ -47,6 +47,8 @@ https://github.com/user-attachments/assets/e19b0bbd-d99b-401b-aa29-0092627f376b
 - 🧪 Full test suite: unit tests + CLI tests via `pytest`
 - 🐍 Usable both as CLI and as Python library
 - 📦 Modern `pyproject.toml`-based packaging (PEP 621)
+- 🔄 GitHub Actions CI with multi-version Python matrix and Coveralls integration
+- 🔧 Pre-commit hooks for formatting, type checking, and linting
 
 ---
 
