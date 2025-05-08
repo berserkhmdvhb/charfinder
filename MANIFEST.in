@@ -1,17 +1,9 @@
 include README.md
 include LICENSE.txt
+include pyproject.toml
 
-# Source files and type hints
-recursive-include src/charfinder *.py
+# Include PEP 561 type hint marker
 include src/charfinder/py.typed
 
-# Include test code and notebooks
-recursive-include tests *.py
-recursive-include tests *.ipynb
-
-# Include CI config
-recursive-include .github *
-
-# Include dev configs and tools
-include Makefile
-include .pre-commit-config.yaml
+# Optional: include the interactive notebook (if showcasing it in docs)
+recursive-include tests/manual *.ipynb
