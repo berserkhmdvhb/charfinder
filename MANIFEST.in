@@ -1,0 +1,17 @@
+include README.md
+include LICENSE.txt
+
+# Source files and type hints
+recursive-include src/charfinder *.py
+include src/charfinder/py.typed
+
+# Include test code and notebooks
+recursive-include tests *.py
+recursive-include tests *.ipynb
+
+# Include CI config
+recursive-include .github *
+
+# Include dev configs and tools
+include Makefile
+include .pre-commit-config.yaml

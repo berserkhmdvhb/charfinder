@@ -1,16 +1,14 @@
 from difflib import SequenceMatcher
-from rapidfuzz.fuzz import ratio as rapidfuzz_ratio
+
 from Levenshtein import ratio as levenshtein_ratio
-from typing import Literal
+from rapidfuzz.fuzz import ratio as rapidfuzz_ratio
 
 # constants and aliases
 from .constants import VALID_FUZZY_ALGOS, VALID_MATCH_MODES, FuzzyAlgorithm, MatchMode
 
+
 def compute_similarity(
-    s1: str,
-    s2: str,
-    algorithm: FuzzyAlgorithm = 'sequencematcher',
-    mode: MatchMode = 'single'
+    s1: str, s2: str, algorithm: FuzzyAlgorithm = "sequencematcher", mode: MatchMode = "single"
 ) -> float:
     """
     Compute similarity between two strings using a specified fuzzy algorithm
@@ -47,15 +45,20 @@ def compute_similarity(
     if s1 == s2:
         return 1.0
 
-    if mode == 'hybrid':
-        return sum((
-            SequenceMatcher(None, s1, s2).ratio(),
-            rapidfuzz_ratio(s1, s2) / 100.0,
-            levenshtein_ratio(s1, s2)
-        )) / 3
+    if mode == "hybrid":
+        return (
+            sum(
+                (
+                    SequenceMatcher(None, s1, s2).ratio(),
+                    rapidfuzz_ratio(s1, s2) / 100.0,
+                    levenshtein_ratio(s1, s2),
+                )
+            )
+            / 3
+        )
 
-    if algorithm == 'sequencematcher':
+    if algorithm == "sequencematcher":
         return SequenceMatcher(None, s1, s2).ratio()
-    if algorithm == 'rapidfuzz':
+    if algorithm == "rapidfuzz":
         return rapidfuzz_ratio(s1, s2) / 100.0
     return levenshtein_ratio(s1, s2)

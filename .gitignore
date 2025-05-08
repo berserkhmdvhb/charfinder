@@ -30,6 +30,7 @@ dist/
 # === Test artifacts ===
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
 
 # === OS files ===
@@ -41,3 +42,6 @@ Thumbs.db
 
 # === Project-specific cache ===
 unicode_name_cache.json
+
+# === Dev-only files (not for release) ===
+MANIFEST-dev.in
