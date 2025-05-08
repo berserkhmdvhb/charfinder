@@ -105,6 +105,8 @@ python -m charfinder -q smile
 | `--match-mode`    | `single` or `hybrid` (aggregated fuzzy scoring)            |
 | `--quiet`         | Suppress logging                                           |
 | `--color`         | `auto`, `never`, or `always`                               |
+| `--help`          | Show command-line help and usage info                     |
+| `--version`       | Show installed version of `charfinder`                    |
 
 🧠 Use `--match-mode hybrid` to combine all 3 algorithms by averaging their scores.
 
@@ -152,7 +154,7 @@ charfinder/
 ├── pyproject.toml                ← PEP 621 config + dependencies
 ├── MANIFEST.in                   ← Includes additional files in distributions
 ├── LICENSE.txt                   ← MIT license
-├── unicode_name_cache.json       ← Generated Unicode name index (on demand)
+├── unicode_name_cache.json       ← Auto-generated at runtime; not tracked in Git
 └── README.md                     ← Project documentation (this file)
 ```
 
