@@ -167,7 +167,7 @@ make check        # runs black --check (skips .ipynb), mypy, ruff, tests
 
 **Pre-commit hooks**
 
-``bash
+```bash
 make precommit          # install git hooks
 make precommit-run      # run all hooks locally
 ```
