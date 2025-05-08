@@ -160,7 +160,7 @@ make coverage
 # Static checks
 ## check all
 make check-all
-## or individually 
+## or individually
 make lint         # runs ruff + mypy
 make check        # runs black --check (skips .ipynb), mypy, ruff, tests
 ```
@@ -223,23 +223,23 @@ pip install -e .[dev]
 
 **Runtime**
 
-- [`argcomplete`](https://pypi.org/project/argcomplete/)  
-- [`colorama`](https://pypi.org/project/colorama/)  
-- [`python-Levenshtein`](https://pypi.org/project/python-Levenshtein/)  
-- [`rapidfuzz`](https://pypi.org/project/rapidfuzz/)  
+- [`argcomplete`](https://pypi.org/project/argcomplete/)
+- [`colorama`](https://pypi.org/project/colorama/)
+- [`python-Levenshtein`](https://pypi.org/project/python-Levenshtein/)
+- [`rapidfuzz`](https://pypi.org/project/rapidfuzz/)
 
 **Development**
 
-- [`black`](https://pypi.org/project/black/)  
-- [`build`](https://pypi.org/project/build/)  
-- [`coverage`](https://pypi.org/project/coverage/)  
-- [`coveralls`](https://pypi.org/project/coveralls/) *(Python < 3.13 only)*  
-- [`mypy`](https://pypi.org/project/mypy/)  
-- [`pre-commit`](https://pypi.org/project/pre-commit/)  
-- [`pytest`](https://pypi.org/project/pytest/)  
-- [`pytest-cov`](https://pypi.org/project/pytest-cov/)  
-- [`ruff`](https://pypi.org/project/ruff/)  
-- [`twine`](https://pypi.org/project/twine/)  
+- [`black`](https://pypi.org/project/black/)
+- [`build`](https://pypi.org/project/build/)
+- [`coverage`](https://pypi.org/project/coverage/)
+- [`coveralls`](https://pypi.org/project/coveralls/) *(Python < 3.13 only)*
+- [`mypy`](https://pypi.org/project/mypy/)
+- [`pre-commit`](https://pypi.org/project/pre-commit/)
+- [`pytest`](https://pypi.org/project/pytest/)
+- [`pytest-cov`](https://pypi.org/project/pytest-cov/)
+- [`ruff`](https://pypi.org/project/ruff/)
+- [`twine`](https://pypi.org/project/twine/)
 
 Install all with:
 
