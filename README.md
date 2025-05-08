@@ -127,22 +127,27 @@ find_chars("snwmn", fuzzy=True, threshold=0.6, fuzzy_algo="rapidfuzz")
 ```
 charfinder/
 ├── src/charfinder/
-│   ├── __init__.py
-│   ├── __main__.py
-│   ├── cli.py
-│   ├── core.py
-│   └── fuzzymatchlib.py
+│   ├── __init__.py               ← Package marker
+│   ├── __main__.py               ← Enables `python -m charfinder` entry point
+│   ├── cli.py                    ← Argument parsing and CLI integration
+│   ├── core.py                   ← Core logic: search, normalize, cache
+│   ├── fuzzymatchlib.py          ← Fuzzy algorithm dispatcher
+│   ├── constants.py              ← Constants, enums, and default settings
+│   └── py.typed                  ← Marker for type-checking consumers
 ├── tests/
-│   ├── test_cli.py
-│   ├── test_lib.py
-│   └── test_fuzzymatchlib.py
+│   ├── test_cli.py               ← CLI integration tests via subprocess
+│   ├── test_lib.py               ← Tests for core `find_chars` function
+│   ├── test_fuzzymatchlib.py     ← Tests for fuzzy similarity scoring logic
+│   └── manual/demo.ipynb         ← Notebook for interactive exploration
 ├── .github/
-│   └── workflows/tests.yml
-├── .pre-commit-config.yaml
-├── Makefile
-├── pyproject.toml
-├── unicode_name_cache.json   # generated at runtime
-└── README.md
+│   └── workflows/tests.yml       ← GitHub Actions workflow (CI/CD)
+├── .pre-commit-config.yaml       ← Hook definitions: lint, format, type-check
+├── Makefile                      ← Automation for common dev tasks
+├── pyproject.toml                ← PEP 621 config + dependencies
+├── MANIFEST.in                   ← Includes additional files in distributions
+├── LICENSE.txt                   ← MIT license
+├── unicode_name_cache.json       ← Generated Unicode name index (on demand)
+└── README.md                     ← Project documentation (this file)
 ```
 
 ---
@@ -150,28 +155,29 @@ charfinder/
 ## 🧪 Testing
 
 ```bash
-# Run full test suite (pytest)
+# Run the full test suite with detailed output
 make test
 
-# Quick rerun of only failed/last tests
+# Re-run only failed or last tests for quicker feedback
 make test-fast
 
-# Coverage report in terminal
+# Run tests and show coverage report in the terminal
 make coverage
 
-# Static checks
-## check all
+# Run all style and type checks
 make check-all
-## or individually
-make lint         # runs ruff + mypy
-make check        # runs black --check (skips .ipynb), mypy, ruff, tests
+
+# Or run individual checks
+make lint         # ruff + mypy
+make check        # black --check (skips .ipynb), mypy, ruff, tests
+make format       # auto-format with black
 ```
 
 **Pre-commit hooks**
 
 ```bash
-make precommit          # install git hooks
-make precommit-run      # run all hooks locally
+make precommit       # install pre-commit hook
+make precommit-run   # manually run hooks on all files
 ```
 
 For manual exploration, see: [`demo.ipynb`](https://github.com/berserkhmdvhb/charfinder/blob/main/tests/manual/demo.ipynb)
@@ -194,32 +200,57 @@ source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 pip install -e .[dev]
 ```
 
+---
+
+
 ### Makefile Commands
 
 
+
+
+
 | Command           | Description                                                         |
+
 |-------------------|---------------------------------------------------------------------|
+
 | `help`            | Show this help text with a list of available commands               |
+
 | `install`         | Install the package in editable mode (no dev dependencies)          |
+
 | `install-dev`     | Upgrade pip and install package + all dev dependencies              |
+
 | `test`            | Run the full test suite (`pytest tests --maxfail=1 -v`)            |
+
 | `test-fast`       | Run only failed or last tests quickly (`pytest --lf -x -v`)        |
+
 | `coverage`        | Run tests with coverage report in the terminal                      |
+
 | `lint`            | Run static checks: `ruff` + `mypy`                                  |
+
 | `format`          | Reformat all Python files using `black src tests`                   |
+
 | `check`           | Check formatting with Black (`black --check src tests`)            |
+
 | `mypy`            | Type-check source & tests (excludes `*.ipynb`)                      |
+
 | `ruff`            | Lint source & tests with `ruff` (excludes `*.ipynb`)               |
+
 | `check-all`       | Run `check`, `mypy`, `ruff`, then `test`                            |
+
 | `precommit`       | Install Git pre-commit hooks (`pre-commit install`)                 |
+
 | `precommit-run`   | Run all configured pre-commit hooks locally                         |
+
 | `build`           | Build sdist & wheel via `python -m build`                          |
+
 | `clean`           | Remove build artifacts (`dist/`, `build/`, `*.egg-info/`)          |
+
 | `publish-test`    | Upload distributions to TestPyPI                                    |
+
 | `publish`         | Check & upload distributions to PyPI                                |
+
 | `upload-coverage` | Send coverage report to Coveralls                                   |
 
----
 
 ## 📦 Dependencies
 
@@ -243,6 +274,7 @@ pip install -e .[dev]
 - [`ruff`](https://pypi.org/project/ruff/)
 - [`twine`](https://pypi.org/project/twine/)
 
+
 Install all with:
 
 ```bash
@@ -250,6 +282,7 @@ pip install -e .[dev]
 ```
 
 ---
+
 ## 📌 Roadmap
 
 | Feature                              | Status |
