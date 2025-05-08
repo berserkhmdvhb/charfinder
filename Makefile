@@ -10,8 +10,8 @@ help:
 	@echo "  lint               Run static checks (ruff + mypy)"
 	@echo "  format             Format code using black"
 	@echo "  check              Check formatting with black --check"
-	@echo "  mypy               Run type checking"
-	@echo "  ruff               Run Ruff linter"
+	@echo "  mypy               Run type checking (excludes *.ipynb)"
+	@echo "  ruff               Run Ruff linter (excludes *.ipynb)"
 	@echo "  precommit          Install pre-commit hook"
 	@echo "  precommit-run      Run all pre-commit hooks"
 	@echo "  build              Build package for distribution"
@@ -40,10 +40,10 @@ coverage:
 lint: ruff mypy
 
 mypy:
-	mypy src tests
+	mypy src tests --exclude '.*\.ipynb'
 
 ruff:
-	ruff check src tests
+	ruff check src tests --exclude '*.ipynb'
 
 format:
 	black src tests

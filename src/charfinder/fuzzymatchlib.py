@@ -60,5 +60,5 @@ def compute_similarity(
     if algorithm == "sequencematcher":
         return SequenceMatcher(None, s1, s2).ratio()
     if algorithm == "rapidfuzz":
-        return rapidfuzz_ratio(s1, s2) / 100.0
-    return levenshtein_ratio(s1, s2)
+        return float(rapidfuzz_ratio(s1, s2) / 100.0)
+    return float(levenshtein_ratio(s1, s2))

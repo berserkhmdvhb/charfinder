@@ -36,15 +36,9 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest
+          pytest --cov=charfinder
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload coverage report as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report-${{ matrix.python-version }}-${{ github.run_id }}
-          path: coverage.xml
