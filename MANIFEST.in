@@ -5,5 +5,5 @@ include pyproject.toml
 # Include PEP 561 type hint marker
 include src/charfinder/py.typed
 
-# Optional: include the interactive notebook (if showcasing it in docs)
+# Optional: include the demo notebook
 recursive-include tests/manual *.ipynb
