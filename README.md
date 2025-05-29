@@ -211,25 +211,30 @@ pip install -e .[dev]
 ---
 
 
-### 🛠 Makefile Commands
+### Makefile Commands
 
-| Command              | Description                                 |
-|----------------------|---------------------------------------------|
-| `make help`          | Show available commands                     |
-| `make install`       | Install package (editable mode)             |
-| `make develop`       | Install with dev dependencies               |
-| `make lint`          | Run Ruff and MyPy                           |
-| `make format`        | Auto-format with Ruff                       |
-| `make test`          | Run all tests                               |
-| `make test-fast`     | Re-run only last failed tests               |
-| `make coverage`      | Show test coverage in terminal              |
-| `make coverage-xml`  | Generate XML for CI or Coveralls            |
-| `make check-all`     | Run format, lint, and test coverage         |
-| `make precommit`     | Install pre-commit hooks                    |
-| `make precommit-run` | Run all pre-commit hooks                    |
-| `make build`         | Build package for distribution              |
-| `make clean`         | Remove dist/build artifacts                 |
-
+| Command            | Description                                                         |
+|--------------------|---------------------------------------------------------------------|
+| `help`             | Show this help text with a list of available commands               |
+| `install`          | Install the package in editable mode (no dev dependencies)          |
+| `install-dev`      | Upgrade pip and install package + all dev dependencies              |
+| `format`           | Reformat all Python files using `black`                             |
+| `format-check`     | Check formatting using `black --check` (non-invasive)               |
+| `mypy`             | Type-check source & tests (excludes `*.ipynb`)                      |
+| `ruff`             | Lint source & tests with `ruff` (excludes `*.ipynb`)                |
+| `lint`             | Run static checks: `ruff` + `mypy`                                  |
+| `test`             | Run the full test suite (`pytest tests --maxfail=1 -v`)             |
+| `test-fast`        | Run only failed or last tests quickly (`pytest --lf -x -v`)         |
+| `coverage`         | Run tests with coverage report in the terminal                      |
+| `coverage-xml`     | Run tests with coverage and output `coverage.xml` (for CI tools)   |
+| `check-all`        | Run `format-check`, `mypy`, `ruff`, and then `test`                 |
+| `precommit`        | Install Git pre-commit hooks (`pre-commit install`)                 |
+| `precommit-run`    | Run all configured pre-commit hooks locally                         |
+| `build`            | Build sdist & wheel via `python -m build`                           |
+| `clean`            | Remove build artifacts (`dist/`, `build/`, `*.egg-info/`)           |
+| `publish-test`     | Upload distributions to TestPyPI                                    |
+| `publish`          | Check & upload distributions to PyPI                                |
+| `upload-coverage`  | Send coverage report to Coveralls                                   |
 
 
 ## 📦 Dependencies
