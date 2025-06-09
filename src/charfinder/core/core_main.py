@@ -35,7 +35,14 @@ from charfinder.constants import (
 )
 from charfinder.fuzzymatchlib import compute_similarity
 from charfinder.types import CharMatch, FuzzyMatchContext
-from charfinder.utils.formatter import format_info, format_result_header, format_result_row
+from charfinder.utils.formatter import (
+    echo,
+    format_debug,
+    format_error,
+    format_info,
+    format_result_header,
+    format_result_row,
+)
 
 __all__ = [
     "build_name_cache",
@@ -64,6 +71,7 @@ def build_name_cache(
     *,
     force_rebuild: bool = False,
     verbose: bool = True,
+    use_color: bool = True,
     cache_file: str | None = None,
 ) -> dict[str, dict[str, str]]:
     """
@@ -86,14 +94,23 @@ def build_name_cache(
     if not force_rebuild and path.exists():
         with path.open(encoding="utf-8") as f:
             cache = cast("dict[str, dict[str, str]]", json.load(f))
+        message = f"Loaded Unicode name cache from: {cache_file}"
+        logger.info(message)
         if verbose:
-            message = f"Loaded Unicode name cache from: {cache_file}"
-            sys.stdout.write(format_info(message) + "\n")
+            echo(
+                message,
+                style=lambda m: format_info(m, use_color=use_color),
+            )
+            
         return cache
 
-    if verbose:
-        msg = "Rebuilding Unicode name cache. This may take a few seconds..."
-        logger.info(msg)
+    message = "Rebuilding Unicode name cache. This may take a few seconds..."
+    logger.info(message)
+    if verbose:    
+        echo(
+            message,
+            style=lambda m: format_info(m, use_color=use_color),
+        )
 
     cache = {}
     for code in range(sys.maxunicode + 1):
@@ -105,12 +122,18 @@ def build_name_cache(
     try:
         with path.open("w", encoding="utf-8") as f:
             json.dump(cache, f, ensure_ascii=False)
+        message = f"Cache written to: {cache_file}"
+        logger.info(message)
         if verbose:
-            msg = f"Cache written to: {cache_file}"
-            logger.info(msg)
+            echo(
+                message,
+                style=lambda m: format_info(m, use_color=use_color),
+            )
+
     except Exception:
-        msg = "Failed to write cache."
-        logger.exception(msg)
+        message = "Failed to write cache."
+        echo(message, style=lambda m: format_error(m, use_color=use_color))
+        logger.exception(message)
 
     return cache
 
@@ -162,7 +185,7 @@ def find_chars(
         raise ValueError(msg)
 
     if name_cache is None:
-        name_cache = build_name_cache(verbose=verbose)
+        name_cache = build_name_cache(verbose=verbose, use_color=use_color)
 
     norm_query = normalize(query)
     matches: list[tuple[int, str, str, float | None]] = _find_exact_matches(
@@ -180,10 +203,11 @@ def find_chars(
         )
         matches.extend(_find_fuzzy_matches(norm_query, name_cache, context))
 
+    match_info = f"Found {len(matches)} match(es)" if matches else "No matches found"
+    message = f"{match_info} for query: '{query}'"
+    logger.info(message)
     if verbose:
-        match_info = f"Found {len(matches)} match(es)" if matches else "No matches found"
-        message = f"{match_info} for query: '{query}'"
-        sys.stdout.write(format_info(message) + "\n")
+        echo(message, style=lambda m: format_info(m, use_color=use_color))
 
     if not matches:
         return
@@ -222,7 +246,7 @@ def find_chars_raw(
         List of dicts: [{code, char, name, (score)}]
     """
     if name_cache is None:
-        name_cache = build_name_cache(verbose=verbose)
+        name_cache = build_name_cache(verbose=verbose, use_color=False)
 
     norm_query = normalize(query)
     matches: list[tuple[int, str, str, float | None]] = _find_exact_matches(
@@ -240,10 +264,11 @@ def find_chars_raw(
         )
         matches.extend(_find_fuzzy_matches(norm_query, name_cache, context))
 
+    match_info = f"Found {len(matches)} match(es)" if matches else "No matches found"
+    message = f"{match_info} for query: '{query}'"
+    logger.info(message)
     if verbose:
-        match_info = f"Found {len(matches)} match(es)" if matches else "No matches found"
-        message = f"{match_info} for query: '{query}'"
-        sys.stdout.write(format_info(message) + "\n")
+        echo(message, style=lambda m: format_info(m, use_color=False))
 
     results: list[CharMatch] = []
     for code, char, name, score in matches:
@@ -315,9 +340,11 @@ def _find_fuzzy_matches(
 
     if context.verbose:
         message = f"No exact match found for '{context.query}', "
-        sys.stdout.write(format_info(message) + "\n")
+        echo(message, style=lambda m: format_info(m, use_color=context.use_color))
+        logger.info(message)
         message = f"Trying fuzzy matching (threshold={context.threshold})..."
-        sys.stdout.write(format_info(message) + "\n")
+        echo(message, style=lambda m: format_info(m, use_color=context.use_color))
+        logger.info(message)
 
     for char, names in name_cache.items():
         score = compute_similarity(
@@ -325,8 +352,9 @@ def _find_fuzzy_matches(
         )
         if score is None:
             if context.verbose:
-                msg = f"Skipped char '{char}' (no valid score computed)."
-                logger.debug(msg)
+                message = f"Skipped char '{char}' (no valid score computed)."
+                echo(message, format_debug)
+                logger.debug(message)
             continue
         if score >= context.threshold:
             matches.append((ord(char), char, names["original"], score))

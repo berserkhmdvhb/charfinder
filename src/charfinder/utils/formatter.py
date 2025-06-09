@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from typing import Final
+from typing import Final, TextIO
 
 from colorama import Fore, Style, init
 
@@ -104,7 +104,7 @@ def should_use_color(mode: str) -> bool:
 # ---------------------------------------------------------------------
 
 
-def echo(msg: str, style: Callable[[str], str]) -> None:
+def echo(msg: str, style: Callable[[str], str], stream: TextIO = sys.stdout) -> None:
     """
     Write a formatted message to stdout.
 
@@ -112,7 +112,7 @@ def echo(msg: str, style: Callable[[str], str]) -> None:
         msg: The message text.
         style: The formatting function to apply (e.g. format_info, format_settings).
     """
-    sys.stdout.write(style(msg) + "\n")
+    stream.write(style(msg) + "\n")
 
 
 def format_debug(message: str, *, use_color: bool = True) -> str:

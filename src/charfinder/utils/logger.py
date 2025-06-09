@@ -3,49 +3,111 @@ Custom logging setup utilities for CharFinder.
 
 - Centralized `charfinder` logger with consistent format and handlers
 - Rotating file logging (charfinder.log + rotated backups)
-- Console logging with DEBUG/INFO level
-- Optional debug logging of .env file and settings
+- Console logging:
+    - WARNING+ by default (prevents terminal duplication)
+    - DEBUG if `log_level=logging.DEBUG` passed (for --debug flag)
+- Environment name (e.g., DEV, UAT, PROD) injected into each log record
 
 Typical Usage:
-    from charfinder.cli.utils_logger import setup_logging
+    from charfinder.utils.logger import setup_logging
     setup_logging()
 
 Exports:
     - LOGGER_NAME: Central logger identifier
     - setup_logging: Attach console/file handlers
     - teardown_logger: Cleanly detach all logging handlers
+    - EnvironmentFilter: Injects `record.env` into each log message
+    - CustomRotatingFileHandler: Renames rotated logs as `charfinder_1.log`, etc.
 """
 
 from __future__ import annotations
 
 import contextlib
 import logging
-import os
-import sys
+import re
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from charfinder import constants as const
-from charfinder.settings import load_settings, safe_int
-from charfinder.utils.formatter import format_debug
+from charfinder.settings import get_environment, get_log_dir, load_settings, safe_int
 
 LOGGER_NAME = "charfinder"
 
 __all__ = [
     "LOGGER_NAME",
+    "CustomRotatingFileHandler",
+    "EnvironmentFilter",
+    "get_default_formatter",
     "setup_logging",
     "teardown_logger",
 ]
+
+
+class CustomRotatingFileHandler(RotatingFileHandler):
+    """Custom handler with renamed rotated logs:
+    charfinder.log, charfinder_1.log, charfinder_2.log."""
+
+    def rotation_filename(self, default_name: str) -> str:
+        """Rename rotated files: charfinder.log.1 → charfinder_1.log"""
+        if default_name.endswith(".log"):
+            return default_name
+        if ".log." in default_name:
+            base, suffix = default_name.rsplit(".log.", maxsplit=1)
+            return f"{base}_{suffix}.log"
+        return default_name
+
+    def do_rollover(self) -> None:
+        """Override base class to support custom filename logic."""
+        if self.stream:
+            self.stream.close()
+            self.stream = None  # type: ignore[assignment]
+
+        if self.backupCount > 0:
+            for path in self.get_files_to_delete():
+                with contextlib.suppress(OSError):
+                    path.unlink()
+
+            for i in range(self.backupCount - 1, 0, -1):
+                src = Path(self.rotation_filename(f"{self.baseFilename}.{i}"))
+                dst = Path(self.rotation_filename(f"{self.baseFilename}.{i + 1}"))
+                if src.exists():
+                    if dst.exists():
+                        dst.unlink()
+                    src.rename(dst)
+
+            rollover_path = Path(self.rotation_filename(f"{self.baseFilename}.1"))
+            current_log = Path(self.baseFilename)
+            if current_log.exists():
+                current_log.rename(rollover_path)
+
+        if not self.delay:
+            self.stream = self._open()
+
+    def get_files_to_delete(self) -> list[Path]:
+        """Return rotated log files to delete to enforce backup count."""
+        base_path = Path(self.baseFilename)
+        prefix = base_path.stem
+        ext = base_path.suffix
+        pattern = re.compile(rf"^{re.escape(prefix)}_(\d+){re.escape(ext)}$")
+
+        return sorted(
+            [p for p in base_path.parent.iterdir() if pattern.match(p.name)],
+            key=lambda p: p.stat().st_mtime,
+        )[: -self.backupCount]
 
 
 class EnvironmentFilter(logging.Filter):
     """Injects the current environment (e.g., DEV, UAT, PROD) into log records."""
 
     def filter(self, record: logging.LogRecord) -> bool:
-        from charfinder.settings import get_environment
-
         record.env = get_environment()
         return True
+
+
+def ensure_filter(handler: logging.Handler, filt: logging.Filter) -> None:
+    """Ensure the filter is applied only once to a handler."""
+    if not any(isinstance(existing, type(filt)) for existing in handler.filters):
+        handler.addFilter(filt)
 
 
 def get_default_formatter() -> logging.Formatter:
@@ -63,9 +125,16 @@ def setup_logging(
     """
     Set up logging to both console and file.
 
+    Console handler:
+        - WARNING+ by default to avoid terminal duplication
+        - DEBUG if `log_level=logging.DEBUG` passed (for --debug flag)
+
+    File handler:
+        - Always DEBUG+
+
     Args:
         log_dir: Optional directory to store the log file.
-        log_level: Optional log level for console output.
+        log_level: Optional log level for console output (for --debug).
         reset: If True, clears existing handlers before reconfiguring.
         return_handlers: If True, returns the list of attached handlers.
 
@@ -74,7 +143,7 @@ def setup_logging(
     """
     load_settings()  # Ensure .env is loaded
 
-    logger = logging.getLogger("charfinder")
+    logger = logging.getLogger(LOGGER_NAME)
 
     if logger.hasHandlers() and not reset:
         return None
@@ -86,25 +155,27 @@ def setup_logging(
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
 
-    resolved_dir = log_dir or const.DEFAULT_LOG_ROOT
+    resolved_dir = log_dir or get_log_dir()
     resolved_dir.mkdir(parents=True, exist_ok=True)
     log_file_path = resolved_dir / const.LOG_FILE_NAME
 
     formatter = get_default_formatter()
     env_filter = EnvironmentFilter()
-    # Console handler
+
+    # Console handler — WARNING+ by default, DEBUG if log_level param passed
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
-    stream_handler.addFilter(env_filter)
-    stream_handler.setLevel(
-        log_level
-        if log_level is not None
-        else (logging.DEBUG if _is_debug_mode() else logging.INFO)
-    )
+    ensure_filter(stream_handler, env_filter)
+
+    console_level = logging.WARNING  # default
+    if log_level is not None:
+        console_level = log_level
+
+    stream_handler.setLevel(console_level)
     logger.addHandler(stream_handler)
 
-    # Rotating file handler
-    file_handler = RotatingFileHandler(
+    # Custom rotating file handler — always DEBUG
+    custom_file_handler = CustomRotatingFileHandler(
         filename=str(log_file_path),
         mode="a",
         maxBytes=safe_int(const.ENV_LOG_MAX_BYTES, 1_000_000),
@@ -112,16 +183,15 @@ def setup_logging(
         encoding=const.DEFAULT_ENCODING,
         delay=True,
     )
-    file_handler.setFormatter(formatter)
-    file_handler.addFilter(env_filter)
-    file_handler.setLevel(logging.DEBUG)
-    logger.addHandler(file_handler)
+    custom_file_handler.setFormatter(formatter)
+    ensure_filter(custom_file_handler, env_filter)
+    custom_file_handler.setLevel(logging.DEBUG)
+    logger.addHandler(custom_file_handler)
 
-    if _is_debug_mode():
-        message = f"Logging initialized in %s with level DEBUG, {resolved_dir}"
-        sys.stdout.write(format_debug(message) + "\n")
+    # Confirm setup to log file only (not echoed)
+    logger.debug("Logging initialized in %s with level DEBUG", resolved_dir)
 
-    return [stream_handler, file_handler] if return_handlers else None
+    return [stream_handler, custom_file_handler] if return_handlers else None
 
 
 def teardown_logger(logger: logging.Logger | None = None) -> None:
@@ -131,15 +201,10 @@ def teardown_logger(logger: logging.Logger | None = None) -> None:
     Args:
         logger: Target logger to tear down. Defaults to project logger.
     """
-    logger = logger or logging.getLogger("charfinder")
+    logger = logger or logging.getLogger(LOGGER_NAME)
     for handler in logger.handlers[:]:
         with contextlib.suppress(Exception):
             handler.flush()
         with contextlib.suppress(Exception):
             handler.close()
         logger.removeHandler(handler)
-
-
-def _is_debug_mode() -> bool:
-    """Return True if CHARFINDER_DEBUG_ENV_LOAD=1."""
-    return os.getenv(const.ENV_DEBUG_ENV_LOAD) == "1"

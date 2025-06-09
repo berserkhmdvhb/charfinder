@@ -15,8 +15,8 @@ from typing import cast
 
 from dotenv import dotenv_values, load_dotenv
 
-from charfinder.constants import ENV_ENVIRONMENT
-from charfinder.utils.formatter import echo, format_settings
+from charfinder.constants import DEFAULT_LOG_ROOT, ENV_ENVIRONMENT
+from charfinder.utils.formatter import echo, format_debug, format_settings
 
 logger = logging.getLogger("charfinder")
 
@@ -130,7 +130,7 @@ def safe_int(env_var: str, default: int) -> int:
 # ---------------------------------------------------------------------
 
 
-def load_settings(*, verbose: bool = False) -> list[Path]:
+def load_settings(*, debug: bool = False, verbose: bool = False) -> list[Path]:
     """
     Load environment variables from .env file if present.
 
@@ -145,12 +145,12 @@ def load_settings(*, verbose: bool = False) -> list[Path]:
 
     if dotenv_path and dotenv_path.is_file():
         load_dotenv(dotenv_path=dotenv_path)
-        if verbose or os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
-            echo(f"Loaded environment variables from: {dotenv_path}", style=format_settings)
         loaded.append(dotenv_path)
-
-    if not loaded and (verbose or os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1"):
-        echo("No .env file loaded — using system env or defaults.", style=format_settings)
+    
+    if not loaded and (debug or verbose):
+        message = "No .env file loaded — using system env or defaults."
+        echo(message, style=format_settings)
+        logger.info(message)
 
     return loaded
 
@@ -162,36 +162,39 @@ def load_settings(*, verbose: bool = False) -> list[Path]:
 
 def print_dotenv_debug() -> None:
     """
-    Print details of the resolved .env file and its contents to stdout,
-    and log them if appropriate.
+    Print details of the resolved .env file and its contents to stdout.
 
-    Intended for CLI `--debug` output.
+    Intended for CLI `--debug` output (diagnostics only).
     """
     dotenv_path = _resolve_dotenv_path()
 
+    echo("=== DOTENV DEBUG ===", style=format_debug)
+
     if not dotenv_path:
-        echo("No .env file found or resolved.", style=format_settings)
-        echo("Environment variables may only be coming from the OS.", style=format_settings)
+        echo("No .env file found or resolved.", style=format_debug)
+        echo("Environment variables may only be coming from the OS.", style=format_debug)
+        echo("=== END DOTENV DEBUG ===", style=format_debug)
         return
 
-    echo(f"Selected .env file: {dotenv_path}", style=format_settings)
+    echo(f"Selected .env file: {dotenv_path}", style=format_debug)
 
     try:
         values = dotenv_values(dotenv_path=dotenv_path)
 
         if not values:
             echo(
-                ".env file exists but is empty or contains no key-value pairs.",
-                style=format_settings,
+                ".env file exists but is empty or contains no key-value pairs.", style=format_debug
             )
+            echo("=== END DOTENV DEBUG ===", style=format_debug)
             return
 
-        echo("Loaded key-value pairs:", style=format_settings)
-        for key, value in values.items():
-            echo(f"  {key}={value}", style=format_settings)
+        pairs_str = ", ".join(f"{key}={value}" for key, value in values.items())
+        echo(f"Loaded key-value pairs: {pairs_str}", style=format_debug)
 
     except (OSError, UnicodeDecodeError) as exc:
-        echo(f"Failed to read .env file: {exc}", style=format_settings)
+        echo(f"Failed to read .env file: {exc}", style=format_debug)
+
+    echo("=== END DOTENV DEBUG ===", style=format_debug)
 
 
 # ---------------------------------------------------------------------
@@ -201,3 +204,17 @@ def print_dotenv_debug() -> None:
 
 def get_cache_file() -> str:
     return os.getenv("CHARFINDER_CACHE", "unicode_name_cache.json")
+
+
+# ---------------------------------------------------------------------
+# Logging Config
+# ---------------------------------------------------------------------
+
+
+def get_log_dir() -> Path:
+    """
+    Return per-environment log directory path.
+
+    Example: logs/DEV/, logs/PROD/
+    """
+    return DEFAULT_LOG_ROOT / get_environment()

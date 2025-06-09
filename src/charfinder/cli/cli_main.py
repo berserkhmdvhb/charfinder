@@ -23,8 +23,14 @@ from charfinder.cli.diagnostics import print_debug_diagnostics
 from charfinder.cli.handlers import get_version, handle_find_chars
 from charfinder.cli.parser import create_parser
 from charfinder.constants import EXIT_CANCELLED, EXIT_ERROR, EXIT_SUCCESS
-from charfinder.settings import load_settings
-from charfinder.utils.formatter import format_error, format_info, format_warning
+from charfinder.settings import get_environment, load_settings
+from charfinder.utils.formatter import (
+    echo,
+    format_error,
+    format_info,
+    format_settings,
+    format_warning,
+)
 from charfinder.utils.logger import setup_logging, teardown_logger
 
 __all__ = ["main"]
@@ -46,19 +52,31 @@ def main() -> None:
         args.debug = True
 
     # Load .env settings
-    load_settings(verbose=args.verbose)
+    load_settings(verbose=args.verbose, debug=args.debug)
 
     # Setup logging (after loading settings, before printing debug diagnostics)
-    setup_logging()
-
+    log_level = logging.DEBUG if args.debug else None
+    setup_logging(log_level=log_level)
     logger = logging.getLogger("charfinder")
     use_color = args.color != "never"
 
     try:
         # Show banner and environment info
+        message1 = f"Using environment: {get_environment()}"
+        logger.info(message1)
+        message2 = f"CharFinder {get_version()} CLI started"
+        logger.info(message2)
         if args.verbose:
-            message = f"CharFinder {get_version()} CLI started, "
-            sys.stdout.write(format_info(message, use_color=use_color) + "\n")
+            
+            echo(
+                message1,
+                style=lambda m: format_settings(m, use_color=use_color),
+            )
+
+            echo(
+                message2,
+                style=lambda m: format_info(m, use_color=use_color),
+            )
 
         # Print debug diagnostics if --debug enabled or CHARFINDER_DEBUG_ENV_LOAD=1
         if args.debug:
@@ -66,16 +84,27 @@ def main() -> None:
 
         # Main handler
         handle_find_chars(args)
-
+        final_message = f"Processing finished. Query: '{args.query}'"
+        logger.info(final_message)
         sys.exit(EXIT_SUCCESS)
 
     except KeyboardInterrupt:
-        logger.warning(format_warning("Execution interrupted by user.", use_color=use_color))
+        message = "Execution interrupted by user."
+        echo(
+            message,
+            style=lambda msg: format_warning(msg, use_color=use_color),
+            stream=sys.stderr,
+        )
+        logger.warning(message)
         sys.exit(EXIT_CANCELLED)
 
     except Exception as exc:
         logger.exception("Unhandled error during CLI execution")
-        sys.stderr.write(format_error(f"Error: {exc}", use_color=use_color) + "\n")
+        echo(
+            f"Error: {exc}",
+            style=lambda msg: format_error(msg, use_color=use_color),
+            stream=sys.stderr,
+        )
 
         if args.debug:
             traceback.print_exc()
