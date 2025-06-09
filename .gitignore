@@ -1,17 +1,23 @@
 # === Python cache files ===
 __pycache__/
 *.py[cod]
+*$py.class
 
 # === Virtual environments ===
-env/
 .venv/
+env/
 venv/
 env_train/
+ENV/
+env.bak/
+venv.bak/
 
 # === Environment config ===
 .env
 .env.*
 !.env.example
+.env.override
+.env.test
 
 # === SQLite or test DBs ===
 *.db
@@ -27,11 +33,34 @@ build/
 dist/
 *.egg-info/
 
+# === Installer logs ===
+pip-log.txt
+pip-delete-this-directory.txt
+
 # === Test artifacts ===
-.pytest_cache/
-.coverage
-coverage.xml
 htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.coveralls.yml
+.cache
+pytest_cache/
+.pytest_cache/
+coverage.xml
+
+# === MyPy ===
+.mypy_cache/
+
+# === Ruff ===
+.ruff_cache/
+
+# === Jupyter Notebook ===
+.ipynb_checkpoints/
+
+# === Logs (recursive) ===
+**/*.log
+**/*.log.*
 
 # === OS files ===
 .DS_Store
