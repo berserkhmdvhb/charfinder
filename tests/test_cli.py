@@ -3,8 +3,9 @@ import sys
 from unittest import mock
 
 import pytest
+
 from charfinder.constants import (
-    EXIT_ARGPARSE_ERROR,
+    EXIT_ERROR,
     EXIT_INVALID_USAGE,
     EXIT_NO_RESULTS,
     EXIT_SUCCESS,
@@ -14,7 +15,9 @@ from charfinder.constants import (
 def run_cli(args: list[str]) -> tuple[str, str, int]:
     if "--color=never" not in args:
         args += ["--color=never"]
-    result = subprocess.run(["charfinder"] + args, capture_output=True, text=True, encoding="utf-8")
+    result = subprocess.run(
+        ["charfinder"] + args, capture_output=True, text=True, encoding="utf-8", check=False
+    )
     return result.stdout.strip(), result.stderr.strip(), result.returncode
 
 
@@ -46,7 +49,7 @@ def test_cli_threshold_strict() -> None:
 
 def test_cli_invalid_threshold() -> None:
     out, err, code = run_cli(["-q", "heart", "--fuzzy", "--threshold", "1.5"])
-    assert code == EXIT_ARGPARSE_ERROR
+    assert code == EXIT_ERROR
     assert "Threshold must be between 0.0 and 1.0" in err
 
 
@@ -59,7 +62,7 @@ def test_cli_empty_query() -> None:
 
 def test_cli_unknown_flag() -> None:
     out, err, code = run_cli(["--doesnotexist"])
-    assert code == EXIT_ARGPARSE_ERROR
+    assert code == EXIT_ERROR
     assert "usage" in err.lower()
     assert err.strip() != ""
 

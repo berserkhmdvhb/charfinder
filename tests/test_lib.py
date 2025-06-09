@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+
 from charfinder.constants import DEFAULT_THRESHOLD, VALID_FUZZY_ALGOS, FuzzyAlgorithm
 from charfinder.core import build_name_cache, find_chars, normalize
 
@@ -112,7 +113,7 @@ def test_fuzzy_algorithms_diverge() -> None:
             find_chars(
                 base_query,
                 fuzzy=True,
-                fuzzy_algo=cast(FuzzyAlgorithm, algo),
+                fuzzy_algo=cast("FuzzyAlgorithm", algo),
                 threshold=threshold,
                 verbose=False,
             )

@@ -1,36 +1,33 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 24.3.0
-    hooks:
-      - id: black
-        args: [--target-version=py310]
-        exclude: \.ipynb$
-
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.3.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
     hooks:
       - id: ruff
-        args: [--fix]
-        exclude: \.ipynb$
+        name: Ruff linter
+        args: ["check", "src", "tests"]
+        types: [python]
+        exclude: ^tests/manual/|\.ipynb$
+
+      - id: ruff-format
+        name: Ruff formatter
+        args: ["format", "src", "tests"]
+        types: [python]
+        exclude: ^tests/manual/|\.ipynb$
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.10.0
     hooks:
       - id: mypy
-        language_version: python3
-        additional_dependencies:
-          - pytest
+        name: Mypy type checker
+        args: ["--config-file=pyproject.toml"]
+        types: [python]
         exclude: \.ipynb$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: end-of-file-fixer
-        exclude: \.ipynb$
+        name: Fix missing newline at EOF
+
       - id: trailing-whitespace
-        exclude: \.ipynb$
-      - id: check-added-large-files
-      - id: check-yaml
-      - id: check-merge-conflict
-      - id: debug-statements
-        exclude: \.ipynb$
+        name: Trim trailing whitespace

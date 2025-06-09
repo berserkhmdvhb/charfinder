@@ -1,6 +1,7 @@
 from typing import cast
 
 import pytest
+
 from charfinder.constants import VALID_FUZZY_ALGOS, VALID_MATCH_MODES, FuzzyAlgorithm
 from charfinder.fuzzymatchlib import compute_similarity
 
@@ -15,7 +16,7 @@ def test_similarity_case_insensitive() -> None:
 
 def test_similarity_algorithms_produce_floats() -> None:
     for algo in VALID_FUZZY_ALGOS:
-        score = compute_similarity("smile", "smlie", algorithm=cast(FuzzyAlgorithm, algo))
+        score = compute_similarity("smile", "smlie", algorithm=cast("FuzzyAlgorithm", algo))
         assert isinstance(score, float)
         assert 0.0 <= score <= 1.0
 
