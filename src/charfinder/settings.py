@@ -15,7 +15,12 @@ from typing import cast
 
 from dotenv import dotenv_values, load_dotenv
 
-from charfinder.constants import DEFAULT_LOG_ROOT, ENV_ENVIRONMENT
+from charfinder.constants import (
+    DEFAULT_LOG_ROOT,
+    ENV_ENVIRONMENT,
+    ENV_LOG_BACKUP_COUNT,
+    ENV_LOG_MAX_BYTES,
+)
 from charfinder.utils.formatter import echo, format_debug, format_settings
 
 logger = logging.getLogger("charfinder")
@@ -49,6 +54,14 @@ def is_uat() -> bool:
 def is_prod() -> bool:
     """Check if environment is PROD."""
     return get_environment() == "PROD"
+
+
+def get_log_max_bytes() -> int:
+    return safe_int(ENV_LOG_MAX_BYTES, 1_000_000)
+
+
+def get_log_backup_count() -> int:
+    return safe_int(ENV_LOG_BACKUP_COUNT, 5)
 
 
 # ---------------------------------------------------------------------
@@ -146,7 +159,7 @@ def load_settings(*, debug: bool = False, verbose: bool = False) -> list[Path]:
     if dotenv_path and dotenv_path.is_file():
         load_dotenv(dotenv_path=dotenv_path)
         loaded.append(dotenv_path)
-    
+
     if not loaded and (debug or verbose):
         message = "No .env file loaded — using system env or defaults."
         echo(message, style=format_settings)

@@ -91,7 +91,7 @@ DEFAULT_LOG_ROOT = Path("logs")
 # Environment Variable Names
 # ---------------------------------------------------------------------
 
-ENV_ENVIRONMENT = "MYPROJECT_ENV"
+ENV_ENVIRONMENT = "CHARFINDER_ENV"
 ENV_LOG_MAX_BYTES = "CHARFINDER_LOG_MAX_BYTES"
 ENV_LOG_BACKUP_COUNT = "CHARFINDER_LOG_BACKUP_COUNT"
 ENV_LOG_LEVEL = "CHARFINDER_LOG_LEVEL"

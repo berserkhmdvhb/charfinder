@@ -29,7 +29,13 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from charfinder import constants as const
-from charfinder.settings import get_environment, get_log_dir, load_settings, safe_int
+from charfinder.settings import (
+    get_environment,
+    get_log_backup_count,
+    get_log_dir,
+    get_log_max_bytes,
+    load_settings,
+)
 
 LOGGER_NAME = "charfinder"
 
@@ -178,8 +184,8 @@ def setup_logging(
     custom_file_handler = CustomRotatingFileHandler(
         filename=str(log_file_path),
         mode="a",
-        maxBytes=safe_int(const.ENV_LOG_MAX_BYTES, 1_000_000),
-        backupCount=safe_int(const.ENV_LOG_BACKUP_COUNT, 5),
+        maxBytes=get_log_max_bytes(),
+        backupCount=get_log_backup_count(),
         encoding=const.DEFAULT_ENCODING,
         delay=True,
     )

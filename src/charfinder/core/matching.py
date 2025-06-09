@@ -1,0 +1,119 @@
+"""
+Matching helpers for CharFinder.
+
+This module provides internal helpers for exact and fuzzy matching of
+Unicode character names, including alternate Unicode aliases.
+
+Exports:
+    - find_exact_matches: Perform exact matching.
+    - find_fuzzy_matches: Perform fuzzy matching with scoring.
+"""
+
+import logging
+
+from charfinder.fuzzymatchlib import compute_similarity
+from charfinder.types import FuzzyMatchContext
+from charfinder.utils.formatter import (
+    echo,
+    format_debug,
+    format_info,
+)
+
+__all__ = [
+    "find_exact_matches",
+    "find_fuzzy_matches",
+]
+
+logger = logging.getLogger(__name__)
+
+
+def find_exact_matches(
+    norm_query: str,
+    name_cache: dict[str, dict[str, str]],
+    exact_match_mode: str,
+) -> list[tuple[int, str, str, float | None]]:
+    """
+    Perform exact matching based on the chosen exact match mode,
+    using both official and alternate normalized names.
+
+    Args:
+        norm_query: Normalized query.
+        name_cache: Unicode name cache.
+        exact_match_mode: Exact match mode to use ('substring' or 'word-subset').
+
+    Returns:
+        List of matches as (code point, character, name).
+    """
+    matches: list[tuple[int, str, str, float | None]] = []
+
+    for char, names in name_cache.items():
+        code_point = ord(char)
+        original_name = names["original"]
+        norm_name = names["normalized"]
+        alt_norm = names.get("alternate_normalized")
+
+        if exact_match_mode == "substring":
+            if norm_query in norm_name or (alt_norm and norm_query in alt_norm):
+                matches.append((code_point, char, original_name, None))
+        elif exact_match_mode == "word-subset":
+            query_words = set(norm_query.split())
+            name_words = set(norm_name.split())
+            if alt_norm:
+                name_words |= set(alt_norm.split())
+            if query_words <= name_words:
+                matches.append((code_point, char, original_name, None))
+        else:
+            msg = f"Unknown exact match mode: {exact_match_mode}"
+            raise ValueError(msg)
+
+    return matches
+
+
+def find_fuzzy_matches(
+    norm_query: str,
+    name_cache: dict[str, dict[str, str]],
+    context: FuzzyMatchContext,
+) -> list[tuple[int, str, str, float | None]]:
+    """
+    Perform fuzzy matching using normalized and alternate normalized names.
+
+    Args:
+        norm_query: Normalized query.
+        name_cache: Unicode name cache.
+        context: FuzzyMatchContext instance.
+
+    Returns:
+        List of matches as (code, char, name, score).
+    """
+    matches: list[tuple[int, str, str, float | None]] = []
+
+    if context.verbose:
+        message = f"No exact match found for '{context.query}', "
+        echo(message, style=lambda m: format_info(m, use_color=context.use_color))
+        logger.info(message)
+        message = f"Trying fuzzy matching (threshold={context.threshold})..."
+        echo(message, style=lambda m: format_info(m, use_color=context.use_color))
+        logger.info(message)
+
+    for char, names in name_cache.items():
+        norm_name = names["normalized"]
+        alt_norm = names.get("alternate_normalized")
+
+        score1 = compute_similarity(norm_query, norm_name, context.fuzzy_algo, context.match_mode)
+        score2 = (
+            compute_similarity(norm_query, alt_norm, context.fuzzy_algo, context.match_mode)
+            if alt_norm
+            else None
+        )
+        score = max(filter(None, [score1, score2]), default=None)
+
+        if score is None:
+            if context.verbose:
+                message = f"Skipped char '{char}' (no valid score computed)."
+                echo(message, format_debug)
+                logger.debug(message)
+            continue
+        if score >= context.threshold:
+            matches.append((ord(char), char, names["original"], score))
+
+    return matches

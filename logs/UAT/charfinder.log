@@ -1,6 +1,1 @@
-[2025-06-09 20:08:17,234] [DEBUG] [UAT] Logging initialized in logs\UAT with level DEBUG
-[2025-06-09 20:08:17,234] [INFO] [UAT] Using environment: UAT
-[2025-06-09 20:08:17,234] [INFO] [UAT] CharFinder 1.0.8 CLI started
-[2025-06-09 20:08:17,517] [INFO] [UAT] Loaded Unicode name cache from: unicode_name_cache.json
-[2025-06-09 20:08:17,617] [INFO] [UAT] Found 33 match(es) for query: 'heart'
-[2025-06-09 20:08:17,650] [INFO] [UAT] Processing finished. Query: '['heart']'
+[2025-06-09 22:45:46,060] [INFO] [UAT] Processing finished. Query: 'slash'

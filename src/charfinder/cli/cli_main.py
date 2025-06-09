@@ -47,6 +47,13 @@ def main() -> None:
     parser = create_parser()
     args = parser.parse_args()
 
+    # Support both positional and optional --query/-q args
+    query_list = args.option_query if args.option_query else args.positional_query
+    query_str = " ".join(query_list).strip()
+
+    if not query_str:
+        parser.error("Query must not be empty.")
+
     # Auto-enable --debug if CHARFINDER_DEBUG_ENV_LOAD=1
     if os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1" and not args.debug:
         args.debug = True
@@ -66,17 +73,10 @@ def main() -> None:
         logger.info(message1)
         message2 = f"CharFinder {get_version()} CLI started"
         logger.info(message2)
-        if args.verbose:
-            
-            echo(
-                message1,
-                style=lambda m: format_settings(m, use_color=use_color),
-            )
 
-            echo(
-                message2,
-                style=lambda m: format_info(m, use_color=use_color),
-            )
+        if args.verbose:
+            echo(message1, style=lambda m: format_settings(m, use_color=use_color))
+            echo(message2, style=lambda m: format_info(m, use_color=use_color))
 
         # Print debug diagnostics if --debug enabled or CHARFINDER_DEBUG_ENV_LOAD=1
         if args.debug:
@@ -84,7 +84,8 @@ def main() -> None:
 
         # Main handler
         handle_find_chars(args)
-        final_message = f"Processing finished. Query: '{args.query}'"
+
+        final_message = f"Processing finished. Query: '{query_str}'"
         logger.info(final_message)
         sys.exit(EXIT_SUCCESS)
 
@@ -105,7 +106,6 @@ def main() -> None:
             style=lambda msg: format_error(msg, use_color=use_color),
             stream=sys.stderr,
         )
-
         if args.debug:
             traceback.print_exc()
 

@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from functools import lru_cache
 
-from charfinder.core.core_main import normalize
+from charfinder.utils.normalizer import normalize
 
 __all__ = [
     "MAX_CACHE_SIZE",

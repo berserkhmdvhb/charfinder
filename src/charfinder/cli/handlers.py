@@ -84,11 +84,19 @@ def handle_find_chars(args: Namespace) -> int:
     """
     use_color = should_use_color(args.color)
 
+    # Resolve query: prefer option_query over positional_query
+    query_list = args.option_query if args.option_query else args.positional_query
+    query_str = " ".join(query_list).strip()
+
+    if not query_str:
+        logger.error(format_error("Query must not be empty.", use_color=use_color))
+        return EXIT_INVALID_USAGE
+
     try:
         if args.format == "json":
             # Structured output mode: use find_chars_raw()
             rows = find_chars_raw(
-                query=" ".join(args.query),
+                query=query_str,
                 fuzzy=args.fuzzy,
                 threshold=args.threshold,
                 verbose=args.verbose,
@@ -104,7 +112,7 @@ def handle_find_chars(args: Namespace) -> int:
         # Text output mode → use find_chars() generator
         results = list(
             find_chars(
-                query=" ".join(args.query),
+                query=query_str,
                 fuzzy=args.fuzzy,
                 threshold=args.threshold,
                 verbose=args.verbose,

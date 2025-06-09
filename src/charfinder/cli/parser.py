@@ -78,9 +78,18 @@ def create_parser() -> argparse.ArgumentParser:
     # ---------------------------------------------------------------------
 
     parser.add_argument(
-        "query",
+        "positional_query",
+        nargs="*",
+        help="Search query for Unicode characters (positional).",
+    )
+
+    # Optional query
+    parser.add_argument(
+        "-q",
+        "--query",
+        dest="option_query",
         nargs="+",
-        help="Search query for Unicode characters.",
+        help="Search query for Unicode characters (alternative to positional).",
     )
 
     # ---------------------------------------------------------------------

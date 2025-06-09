@@ -1,16 +1,16 @@
 """
-CharFinder package initializer.
+charfinder: Unicode character search with fuzzy and exact matching.
 
-Defines the public library API:
-
-- build_name_cache
-- find_chars
-- normalize
-
-Also defines __version__.
+This module exposes the main library functions for searching Unicode characters.
 """
 
-from .core.core_main import build_name_cache, find_chars, normalize
+from .core import find_chars, find_chars_raw
+from .core.name_cache import build_name_cache
+from .utils.normalizer import normalize
 
-__all__ = ["build_name_cache", "find_chars", "normalize"]
-__version__ = "1.0.8"
+__all__ = [
+    "build_name_cache",
+    "find_chars",
+    "find_chars_raw",
+    "normalize",
+]
