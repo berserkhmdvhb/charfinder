@@ -71,6 +71,7 @@ Thumbs.db
 
 # === Project-specific cache ===
 unicode_name_cache.json
+UnicodeData.txt
 
 # === Dev-only files (not for release) ===
 MANIFEST-dev.in
