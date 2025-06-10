@@ -18,7 +18,6 @@ interface exposed via `__all__`.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Generator
 
 from charfinder.constants import (
@@ -43,8 +42,6 @@ __all__ = [
     "find_chars",
     "find_chars_raw",
 ]
-
-logger = logging.getLogger(__name__)
 
 
 def find_chars(
@@ -114,9 +111,12 @@ def find_chars(
 
     match_info = f"Found {len(matches)} match(es)" if matches else "No matches found"
     message = f"{match_info} for query: '{query}'"
-    logger.info(message)
-    if verbose:
-        echo(message, style=lambda m: format_info(m, use_color=use_color))
+    echo(
+        message,
+        style=lambda m: format_info(m, use_color=use_color),
+        show=verbose,
+        log_level=20,  # INFO
+    )
 
     if not matches:
         return
@@ -175,9 +175,12 @@ def find_chars_raw(
 
     match_info = f"Found {len(matches)} match(es)" if matches else "No matches found"
     message = f"{match_info} for query: '{query}'"
-    logger.info(message)
-    if verbose:
-        echo(message, style=lambda m: format_info(m, use_color=False))
+    echo(
+        message,
+        style=lambda m: format_info(m, use_color=False),
+        show=verbose,
+        log_level=20,  # INFO
+    )
 
     results: list[CharMatch] = []
     for code, char, name, score in matches:

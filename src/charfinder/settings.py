@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 from typing import cast
 
-from dotenv import dotenv_values, load_dotenv
+from dotenv import load_dotenv
 
 from charfinder.constants import (
     DEFAULT_LOG_ROOT,
@@ -21,9 +21,7 @@ from charfinder.constants import (
     ENV_LOG_BACKUP_COUNT,
     ENV_LOG_MAX_BYTES,
 )
-from charfinder.utils.formatter import echo, format_debug, format_settings
-
-logger = logging.getLogger("charfinder")
+from charfinder.utils.formatter import echo, format_settings
 
 # ---------------------------------------------------------------------
 # Environment Accessors
@@ -32,7 +30,7 @@ logger = logging.getLogger("charfinder")
 
 def get_environment() -> str:
     """
-    Return MYPROJECT_ENV uppercased (default is DEV).
+    Return CHARFINDER_ENV uppercased (default is DEV).
 
     Returns:
         One of DEV, UAT, PROD.
@@ -84,7 +82,7 @@ def get_root_dir() -> Path:
 # ---------------------------------------------------------------------
 
 
-def _resolve_dotenv_path() -> Path | None:
+def resolve_dotenv_path() -> Path | None:
     """
     Determine which .env file to load.
 
@@ -98,14 +96,21 @@ def _resolve_dotenv_path() -> Path | None:
     if custom := os.getenv("DOTENV_PATH"):
         custom_path = Path(custom)
         if not custom_path.exists() and os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
-            logger.warning(
-                "[settings] DOTENV_PATH is set to %s but the file does not exist.",
-                custom_path,
+            echo(
+                f"[settings] DOTENV_PATH is set to {custom_path} but the file does not exist.",
+                style=format_settings,
+                show=True,  # Always show in debug mode if DOTENV_PATH is invalid
+                log_level=logging.WARNING,
             )
         return custom_path
 
     default_env = root_dir / ".env"
     return default_env if default_env.exists() else None
+
+
+def is_test_mode() -> bool:
+    """Return True if running under pytest (PYTEST_CURRENT_TEST env var is set)."""
+    return "PYTEST_CURRENT_TEST" in os.environ
 
 
 # ---------------------------------------------------------------------
@@ -129,11 +134,11 @@ def safe_int(env_var: str, default: int) -> int:
         try:
             return int(val)
         except ValueError:
-            logger.warning(
-                "[settings] Invalid int for %r = %r; using default %d",
-                env_var,
-                val,
-                default,
+            echo(
+                f"[settings] Invalid int for {env_var!r} = {val!r}; using default {default}",
+                style=format_settings,
+                show=True,  # Always show config errors
+                log_level=logging.WARNING,
             )
     return default
 
@@ -143,71 +148,21 @@ def safe_int(env_var: str, default: int) -> int:
 # ---------------------------------------------------------------------
 
 
-def load_settings(*, debug: bool = False, verbose: bool = False) -> list[Path]:
-    """
-    Load environment variables from .env file if present.
-
-    Args:
-        verbose: Log loaded .env path if True or if CHARFINDER_DEBUG_ENV_LOAD=1.
-
-    Returns:
-        List of loaded .env file paths.
-    """
+def load_settings(
+    *, do_load_dotenv: bool = True, debug: bool = False, verbose: bool = False
+) -> list[Path]:
     loaded: list[Path] = []
-    dotenv_path = _resolve_dotenv_path()
+    dotenv_path = resolve_dotenv_path()
 
-    if dotenv_path and dotenv_path.is_file():
+    if do_load_dotenv and dotenv_path and dotenv_path.is_file():
         load_dotenv(dotenv_path=dotenv_path)
         loaded.append(dotenv_path)
 
     if not loaded and (debug or verbose):
         message = "No .env file loaded — using system env or defaults."
-        echo(message, style=format_settings)
-        logger.info(message)
+        echo(message, style=format_settings, show=True)
 
     return loaded
-
-
-# ---------------------------------------------------------------------
-# Debug utilities
-# ---------------------------------------------------------------------
-
-
-def print_dotenv_debug() -> None:
-    """
-    Print details of the resolved .env file and its contents to stdout.
-
-    Intended for CLI `--debug` output (diagnostics only).
-    """
-    dotenv_path = _resolve_dotenv_path()
-
-    echo("=== DOTENV DEBUG ===", style=format_debug)
-
-    if not dotenv_path:
-        echo("No .env file found or resolved.", style=format_debug)
-        echo("Environment variables may only be coming from the OS.", style=format_debug)
-        echo("=== END DOTENV DEBUG ===", style=format_debug)
-        return
-
-    echo(f"Selected .env file: {dotenv_path}", style=format_debug)
-
-    try:
-        values = dotenv_values(dotenv_path=dotenv_path)
-
-        if not values:
-            echo(
-                ".env file exists but is empty or contains no key-value pairs.", style=format_debug
-            )
-            echo("=== END DOTENV DEBUG ===", style=format_debug)
-            return
-
-        pairs_str = ", ".join(f"{key}={value}" for key, value in values.items())
-        echo(f"Loaded key-value pairs: {pairs_str}", style=format_debug)
-
-    except (OSError, UnicodeDecodeError) as exc:
-        echo(f"Failed to read .env file: {exc}", style=format_debug)
-
-    echo("=== END DOTENV DEBUG ===", style=format_debug)
 
 
 # ---------------------------------------------------------------------
@@ -231,3 +186,14 @@ def get_log_dir() -> Path:
     Example: logs/DEV/, logs/PROD/
     """
     return DEFAULT_LOG_ROOT / get_environment()
+
+
+# ---------------------------------------------------------------------
+# Public API for CLI/debug
+# ---------------------------------------------------------------------
+
+
+def resolve_loaded_dotenv_paths() -> list[Path]:
+    """Expose resolved .env paths for CLI debug introspection."""
+    path = resolve_dotenv_path()
+    return [path] if path else []

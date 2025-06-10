@@ -4,9 +4,10 @@ Diagnostics utilities for user-facing CLI debug output.
 Provides human-readable runtime diagnostics when the `--debug` flag is passed.
 
 Behavior:
-- Output is printed directly to stdout (not logging)
+- Output is printed directly to stdout (if show=True)
 - ANSI coloring is applied based on `--color` flag or terminal support
 - Output includes CLI arguments and .env file(s) diagnostics
+- Output is always logged (level DEBUG)
 
 Functions:
     - print_debug_diagnostics: Print args and .env context
@@ -16,8 +17,10 @@ Functions:
 import os
 from argparse import Namespace
 
+from dotenv import dotenv_values
+
 from charfinder.constants import ENV_DEBUG_ENV_LOAD
-from charfinder.settings import print_dotenv_debug as settings_dotenv_debug
+from charfinder.settings import resolve_dotenv_path
 from charfinder.utils.formatter import echo, format_debug
 
 __all__ = [
@@ -30,6 +33,7 @@ def print_debug_diagnostics(
     args: Namespace,
     *,
     use_color: bool,
+    show: bool = True,
 ) -> None:
     """
     Print structured diagnostics when `--debug` is active.
@@ -41,34 +45,141 @@ def print_debug_diagnostics(
     Args:
         args: Parsed CLI arguments (argparse.Namespace)
         use_color: Whether to apply ANSI formatting
+        show: If True, print to terminal; always logged.
     """
     # Diagnostic header
-    echo("=== DEBUG DIAGNOSTICS ===", style=lambda msg: format_debug(msg, use_color=use_color))
+    echo(
+        "=== DEBUG DIAGNOSTICS ===",
+        style=lambda msg: format_debug(msg, use_color=use_color),
+        show=show,
+        log_level=10,  # DEBUG
+    )
 
     # CLI arguments
-    echo("Parsed args:", style=lambda msg: format_debug(msg, use_color=use_color))
+    echo(
+        "Parsed args:",
+        style=lambda msg: format_debug(msg, use_color=use_color),
+        show=show,
+        log_level=10,
+    )
     for key, value in vars(args).items():
-        echo(f"  {key:<20} = {value}", style=lambda msg: format_debug(msg, use_color=use_color))
+        echo(
+            f"  {key:<20} = {value}",
+            style=lambda msg: format_debug(msg, use_color=use_color),
+            show=show,
+            log_level=10,
+        )
 
     # CHARFINDER_DEBUG_ENV_LOAD
     debug_env = os.getenv(ENV_DEBUG_ENV_LOAD, "0")
     echo(
         f"{ENV_DEBUG_ENV_LOAD} = {debug_env}",
         style=lambda msg: format_debug(msg, use_color=use_color),
+        show=show,
+        log_level=10,
     )
 
     # Loaded .env
-    echo("Loaded .env file(s):", style=lambda msg: format_debug(msg, use_color=use_color))
-    print_dotenv_debug()
+    echo(
+        "Loaded .env file(s):",
+        style=lambda msg: format_debug(msg, use_color=use_color),
+        show=show,
+        log_level=10,
+    )
+    print_dotenv_debug(show=show)
 
     # End footer
-    echo("=== END DEBUG DIAGNOSTICS ===", style=lambda msg: format_debug(msg, use_color=use_color))
+    echo(
+        "=== END DEBUG DIAGNOSTICS ===",
+        style=lambda msg: format_debug(msg, use_color=use_color),
+        show=show,
+        log_level=10,
+    )
 
 
-def print_dotenv_debug() -> None:
+def print_dotenv_debug(*, show: bool = True) -> None:
     """
     Print details of the resolved .env file and its contents.
 
-    Calls `settings.print_dotenv_debug()`, which handles formatting.
+    Intended for CLI `--debug` output (diagnostics only).
+
+    Args:
+        show: If True, print to terminal; always logged.
     """
-    settings_dotenv_debug()
+    dotenv_path = resolve_dotenv_path()
+
+    echo(
+        "=== DOTENV DEBUG ===",
+        style=format_debug,
+        show=show,
+        log_level=10,
+    )
+
+    if not dotenv_path:
+        echo(
+            "No .env file found or resolved.",
+            style=format_debug,
+            show=show,
+            log_level=10,
+        )
+        echo(
+            "Environment variables may only be coming from the OS.",
+            style=format_debug,
+            show=show,
+            log_level=10,
+        )
+        echo(
+            "=== END DOTENV DEBUG ===",
+            style=format_debug,
+            show=show,
+            log_level=10,
+        )
+        return
+
+    echo(
+        f"Selected .env file: {dotenv_path}",
+        style=format_debug,
+        show=show,
+        log_level=10,
+    )
+
+    try:
+        values = dotenv_values(dotenv_path=dotenv_path)
+
+        if not values:
+            echo(
+                ".env file exists but is empty or contains no key-value pairs.",
+                style=format_debug,
+                show=show,
+                log_level=10,
+            )
+            echo(
+                "=== END DOTENV DEBUG ===",
+                style=format_debug,
+                show=show,
+                log_level=10,
+            )
+            return
+
+        pairs_str = ", ".join(f"{key}={value}" for key, value in values.items())
+        echo(
+            f"Loaded key-value pairs: {pairs_str}",
+            style=format_debug,
+            show=show,
+            log_level=10,
+        )
+
+    except (OSError, UnicodeDecodeError) as exc:
+        echo(
+            f"Failed to read .env file: {exc}",
+            style=format_debug,
+            show=show,
+            log_level=10,
+        )
+
+    echo(
+        "=== END DOTENV DEBUG ===",
+        style=format_debug,
+        show=show,
+        log_level=10,
+    )

@@ -100,7 +100,7 @@ lint-ruff:
 	ruff check src/ tests/
 
 type-check:
-	mypy src/
+	mypy src/ tests/
 
 lint-all: fmt lint-ruff type-check
 

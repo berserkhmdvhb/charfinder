@@ -34,7 +34,6 @@ from charfinder.settings import (
     get_log_backup_count,
     get_log_dir,
     get_log_max_bytes,
-    load_settings,
 )
 
 LOGGER_NAME = "charfinder"
@@ -147,16 +146,22 @@ def setup_logging(
     Returns:
         List of handlers if return_handlers is True; otherwise None.
     """
-    load_settings()  # Ensure .env is loaded
-
     logger = logging.getLogger(LOGGER_NAME)
 
-    if logger.hasHandlers() and not reset:
-        return None
-
     if reset:
-        for handler in logger.handlers[:]:
-            logger.removeHandler(handler)
+        teardown_logger(logger)
+
+    # Idempotent protection:
+    # Check if already correctly configured
+    existing_handler_types = {type(h) for h in logger.handlers}
+    expected_handler_types = {logging.StreamHandler, CustomRotatingFileHandler}
+
+    if existing_handler_types == expected_handler_types and not reset:
+        return None  # Already configured — skip re-setup
+
+    # Clean existing if partial config detected
+    if logger.hasHandlers():
+        teardown_logger(logger)
 
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
@@ -194,8 +199,13 @@ def setup_logging(
     custom_file_handler.setLevel(logging.DEBUG)
     logger.addHandler(custom_file_handler)
 
-    # Confirm setup to log file only (not echoed)
-    logger.debug("Logging initialized in %s with level DEBUG", resolved_dir)
+    # Final confirmation log after all handlers are attached — avoid using debug()
+    logger.info(
+        "Logging initialized. Log file: %s (maxBytes=%d, backupCount=%d)",
+        log_file_path,
+        get_log_max_bytes(),
+        get_log_backup_count(),
+    )
 
     return [stream_handler, custom_file_handler] if return_handlers else None
 

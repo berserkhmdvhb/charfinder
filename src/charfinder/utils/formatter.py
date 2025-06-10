@@ -19,6 +19,7 @@ The helper `_color_wrap` centralizes color wrapping logic.
 
 from __future__ import annotations
 
+import logging
 import sys
 from collections.abc import Callable
 from typing import Final, TextIO
@@ -43,6 +44,8 @@ __all__ = [
 
 # Initialize colorama once
 init(autoreset=True)
+
+logger = logging.getLogger("charfinder")
 
 # Color constants
 COLOR_HEADER: Final = Fore.CYAN
@@ -104,15 +107,31 @@ def should_use_color(mode: str) -> bool:
 # ---------------------------------------------------------------------
 
 
-def echo(msg: str, style: Callable[[str], str], stream: TextIO = sys.stdout) -> None:
+def echo(
+    msg: str,
+    style: Callable[[str], str],
+    *,
+    stream: TextIO = sys.stdout,
+    show: bool = True,
+    log_level: int | None = None,
+) -> None:
     """
-    Write a formatted message to stdout.
+    Write a formatted message to stdout and optionally to logger.
 
     Args:
         msg: The message text.
-        style: The formatting function to apply (e.g. format_info, format_settings).
+        style: The formatting function to apply.
+        stream: Output stream (default sys.stdout).
+        toshow: If True, print to terminal; if False, suppress terminal output.
+        log_level: If provided, also log the message at this level.
     """
-    stream.write(style(msg) + "\n")
+    styled = style(msg)
+    if show:
+        stream.write(styled + "\n")
+        stream.flush()
+
+    if log_level is not None:
+        logger.log(log_level, msg)
 
 
 def format_debug(message: str, *, use_color: bool = True) -> str:

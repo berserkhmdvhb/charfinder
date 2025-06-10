@@ -58,25 +58,36 @@ def main() -> None:
     if os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1" and not args.debug:
         args.debug = True
 
-    # Load .env settings
+    # === STEP 1: Setup temporary safe logging first (so .env load doesn't create root handlers)
+    setup_logging(reset=True, log_level=logging.INFO)
+
+    # === STEP 2: Load .env settings
     load_settings(verbose=args.verbose, debug=args.debug)
 
-    # Setup logging (after loading settings, before printing debug diagnostics)
+    # === STEP 3: Finalize logging (with correct level now that settings loaded)
     log_level = logging.DEBUG if args.debug else None
-    setup_logging(log_level=log_level)
+    setup_logging(reset=True, log_level=log_level)
+
     logger = logging.getLogger("charfinder")
     use_color = args.color != "never"
 
     try:
         # Show banner and environment info
         message1 = f"Using environment: {get_environment()}"
-        logger.info(message1)
-        message2 = f"CharFinder {get_version()} CLI started"
-        logger.info(message2)
+        echo(
+            message1,
+            style=lambda m: format_settings(m, use_color=use_color),
+            show=args.verbose,
+            log_level=logging.INFO,
+        )
 
-        if args.verbose:
-            echo(message1, style=lambda m: format_settings(m, use_color=use_color))
-            echo(message2, style=lambda m: format_info(m, use_color=use_color))
+        message2 = f"CharFinder {get_version()} CLI started"
+        echo(
+            message2,
+            style=lambda m: format_info(m, use_color=use_color),
+            show=args.verbose,
+            log_level=logging.INFO,
+        )
 
         # Print debug diagnostics if --debug enabled or CHARFINDER_DEBUG_ENV_LOAD=1
         if args.debug:
@@ -86,7 +97,12 @@ def main() -> None:
         handle_find_chars(args)
 
         final_message = f"Processing finished. Query: '{query_str}'"
-        logger.info(final_message)
+        echo(
+            final_message,
+            style=lambda m: format_info(m, use_color=use_color),
+            show=args.verbose,
+            log_level=logging.INFO,
+        )
         sys.exit(EXIT_SUCCESS)
 
     except KeyboardInterrupt:
@@ -95,17 +111,29 @@ def main() -> None:
             message,
             style=lambda msg: format_warning(msg, use_color=use_color),
             stream=sys.stderr,
+            show=True,  # Always show KeyboardInterrupt message
+            log_level=logging.WARNING,
         )
-        logger.warning(message)
         sys.exit(EXIT_CANCELLED)
 
     except Exception as exc:
-        logger.exception("Unhandled error during CLI execution")
+        # Log error message
+        echo(
+            "Unhandled error during CLI execution",
+            style=lambda msg: format_error(msg, use_color=use_color),
+            stream=sys.stderr,
+            show=True,  # Always show errors
+            log_level=logging.ERROR,
+        )
         echo(
             f"Error: {exc}",
             style=lambda msg: format_error(msg, use_color=use_color),
             stream=sys.stderr,
+            show=True,  # Always show errors
+            log_level=logging.ERROR,
         )
+
+        # Optional stack trace for debug mode
         if args.debug:
             traceback.print_exc()
 
