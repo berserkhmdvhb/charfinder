@@ -115,7 +115,8 @@ def find_chars(
         message,
         style=lambda m: format_info(m, use_color=use_color),
         show=verbose,
-        log_level=20,  # INFO
+        log=True,
+        log_method="info",
     )
 
     if not matches:
@@ -155,7 +156,7 @@ def find_chars_raw(
         List of dicts: [{code, char, name, (score)}]
     """
     if name_cache is None:
-        name_cache = build_name_cache(verbose=verbose, use_color=False)
+        name_cache = build_name_cache(verbose=verbose, use_color=True)
 
     norm_query = normalize(query)
     matches: list[tuple[int, str, str, float | None]] = find_exact_matches(
@@ -177,9 +178,10 @@ def find_chars_raw(
     message = f"{match_info} for query: '{query}'"
     echo(
         message,
-        style=lambda m: format_info(m, use_color=False),
+        format_info,
         show=verbose,
-        log_level=20,  # INFO
+        log=True,
+        log_method="info",
     )
 
     results: list[CharMatch] = []

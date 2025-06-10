@@ -21,12 +21,13 @@ from __future__ import annotations
 
 import logging
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from typing import Final, TextIO
 
 from colorama import Fore, Style, init
 
-from charfinder.constants import FIELD_WIDTHS
+from charfinder.constants import FIELD_WIDTHS, VALID_LOG_METHODS
 
 __all__ = [
     "echo",
@@ -103,6 +104,27 @@ def should_use_color(mode: str) -> bool:
 
 
 # ---------------------------------------------------------------------
+# Log Message Management
+# ---------------------------------------------------------------------
+
+
+@contextmanager
+def suppress_console_logging() -> Iterator[None]:
+    # Find StreamHandler
+    stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
+    # Disable them
+    for h in stream_handlers:
+        h.setLevel(logging.CRITICAL + 1)  # Effectively disables normal log levels
+
+    try:
+        yield
+    finally:
+        # Restore normal levels
+        for h in stream_handlers:
+            h.setLevel(logging.NOTSET)
+
+
+# ---------------------------------------------------------------------
 # Standard message formatters
 # ---------------------------------------------------------------------
 
@@ -113,7 +135,8 @@ def echo(
     *,
     stream: TextIO = sys.stdout,
     show: bool = True,
-    log_level: int | None = None,
+    log: bool = True,
+    log_method: str | None = None,  # 'debug', 'info', 'warning', 'error', 'exception'
 ) -> None:
     """
     Write a formatted message to stdout and optionally to logger.
@@ -122,16 +145,25 @@ def echo(
         msg: The message text.
         style: The formatting function to apply.
         stream: Output stream (default sys.stdout).
-        toshow: If True, print to terminal; if False, suppress terminal output.
-        log_level: If provided, also log the message at this level.
+        show: If True, print to terminal; if False, suppress terminal output.
+        log: If False, do not log at all.
+        log_method: If provided, log using the corresponding logger method
+                    ('debug', 'info', 'warning', 'error', 'exception').
     """
     styled = style(msg)
+    if log_method not in VALID_LOG_METHODS:
+        message = f"Invalid log_method: {log_method}"
+        raise ValueError(message)
+
+    if log and log_method:
+        log_func = getattr(logger, log_method, None)
+        if callable(log_func):
+            log_func(msg)
+
     if show:
+        # with suppress_console_logging():
         stream.write(styled + "\n")
         stream.flush()
-
-    if log_level is not None:
-        logger.log(log_level, msg)
 
 
 def format_debug(message: str, *, use_color: bool = True) -> str:

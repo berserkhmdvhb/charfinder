@@ -35,6 +35,7 @@ DEFAULT_ENCODING = "utf-8"
 VALID_FUZZY_ALGOS = ("sequencematcher", "rapidfuzz", "levenshtein")
 VALID_FUZZY_MATCH_MODES = ("single", "hybrid")
 VALID_EXACT_MATCH_MODES = ("substring", "word-subset")
+VALID_LOG_METHODS = {"debug", "info", "warning", "error", "exception"}
 
 # ---------------------------------------------------------------------
 # Typing Aliases

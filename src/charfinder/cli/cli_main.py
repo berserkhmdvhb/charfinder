@@ -73,20 +73,22 @@ def main() -> None:
 
     try:
         # Show banner and environment info
-        message1 = f"Using environment: {get_environment()}"
+        message = f"Using environment: {get_environment()}"
         echo(
-            message1,
+            message,
             style=lambda m: format_settings(m, use_color=use_color),
             show=args.verbose,
-            log_level=logging.INFO,
+            log=True,
+            log_method="info",
         )
 
-        message2 = f"CharFinder {get_version()} CLI started"
+        message = f"CharFinder {get_version()} CLI started"
         echo(
-            message2,
+            message,
             style=lambda m: format_info(m, use_color=use_color),
             show=args.verbose,
-            log_level=logging.INFO,
+            log=True,
+            log_method="info",
         )
 
         # Print debug diagnostics if --debug enabled or CHARFINDER_DEBUG_ENV_LOAD=1
@@ -101,7 +103,8 @@ def main() -> None:
             final_message,
             style=lambda m: format_info(m, use_color=use_color),
             show=args.verbose,
-            log_level=logging.INFO,
+            log=True,
+            log_method="info",
         )
         sys.exit(EXIT_SUCCESS)
 
@@ -112,7 +115,8 @@ def main() -> None:
             style=lambda msg: format_warning(msg, use_color=use_color),
             stream=sys.stderr,
             show=True,  # Always show KeyboardInterrupt message
-            log_level=logging.WARNING,
+            log=True,
+            log_method="error",
         )
         sys.exit(EXIT_CANCELLED)
 
@@ -122,15 +126,17 @@ def main() -> None:
             "Unhandled error during CLI execution",
             style=lambda msg: format_error(msg, use_color=use_color),
             stream=sys.stderr,
-            show=True,  # Always show errors
-            log_level=logging.ERROR,
+            show=True,
+            log=True,
+            log_method="error",
         )
         echo(
             f"Error: {exc}",
             style=lambda msg: format_error(msg, use_color=use_color),
             stream=sys.stderr,
-            show=True,  # Always show errors
-            log_level=logging.ERROR,
+            show=True,
+            log=True,
+            log_method="error",
         )
 
         # Optional stack trace for debug mode

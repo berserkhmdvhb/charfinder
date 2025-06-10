@@ -52,7 +52,8 @@ def print_debug_diagnostics(
         "=== DEBUG DIAGNOSTICS ===",
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
-        log_level=10,  # DEBUG
+        log=True,
+        log_method="debug",
     )
 
     # CLI arguments
@@ -60,14 +61,16 @@ def print_debug_diagnostics(
         "Parsed args:",
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
-        log_level=10,
+        log=True,
+        log_method="debug",
     )
     for key, value in vars(args).items():
         echo(
             f"  {key:<20} = {value}",
             style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
-            log_level=10,
+            log=True,
+            log_method="debug",
         )
 
     # CHARFINDER_DEBUG_ENV_LOAD
@@ -76,7 +79,8 @@ def print_debug_diagnostics(
         f"{ENV_DEBUG_ENV_LOAD} = {debug_env}",
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
-        log_level=10,
+        log=True,
+        log_method="debug",
     )
 
     # Loaded .env
@@ -84,7 +88,8 @@ def print_debug_diagnostics(
         "Loaded .env file(s):",
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
-        log_level=10,
+        log=True,
+        log_method="debug",
     )
     print_dotenv_debug(show=show)
 
@@ -93,7 +98,8 @@ def print_debug_diagnostics(
         "=== END DEBUG DIAGNOSTICS ===",
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
-        log_level=10,
+        log=True,
+        log_method="debug",
     )
 
 
@@ -108,31 +114,25 @@ def print_dotenv_debug(*, show: bool = True) -> None:
     """
     dotenv_path = resolve_dotenv_path()
 
-    echo(
-        "=== DOTENV DEBUG ===",
-        style=format_debug,
-        show=show,
-        log_level=10,
-    )
+    echo("=== DOTENV DEBUG ===", style=format_debug, show=show, log=False, log_method="debug")
 
     if not dotenv_path:
         echo(
             "No .env file found or resolved.",
             style=format_debug,
             show=show,
-            log_level=10,
+            log=True,
+            log_method="debug",
         )
         echo(
             "Environment variables may only be coming from the OS.",
             style=format_debug,
             show=show,
-            log_level=10,
+            log=True,
+            log_method="debug",
         )
         echo(
-            "=== END DOTENV DEBUG ===",
-            style=format_debug,
-            show=show,
-            log_level=10,
+            "=== END DOTENV DEBUG ===", style=format_debug, show=show, log=True, log_method="debug"
         )
         return
 
@@ -140,7 +140,8 @@ def print_dotenv_debug(*, show: bool = True) -> None:
         f"Selected .env file: {dotenv_path}",
         style=format_debug,
         show=show,
-        log_level=10,
+        log=True,
+        log_method="debug",
     )
 
     try:
@@ -151,13 +152,15 @@ def print_dotenv_debug(*, show: bool = True) -> None:
                 ".env file exists but is empty or contains no key-value pairs.",
                 style=format_debug,
                 show=show,
-                log_level=10,
+                log=True,
+                log_method="debug",
             )
             echo(
                 "=== END DOTENV DEBUG ===",
                 style=format_debug,
                 show=show,
-                log_level=10,
+                log=True,
+                log_method="debug",
             )
             return
 
@@ -166,7 +169,8 @@ def print_dotenv_debug(*, show: bool = True) -> None:
             f"Loaded key-value pairs: {pairs_str}",
             style=format_debug,
             show=show,
-            log_level=10,
+            log=True,
+            log_method="debug",
         )
 
     except (OSError, UnicodeDecodeError) as exc:
@@ -174,12 +178,8 @@ def print_dotenv_debug(*, show: bool = True) -> None:
             f"Failed to read .env file: {exc}",
             style=format_debug,
             show=show,
-            log_level=10,
+            log=True,
+            log_method="debug",
         )
 
-    echo(
-        "=== END DOTENV DEBUG ===",
-        style=format_debug,
-        show=show,
-        log_level=10,
-    )
+    echo("=== END DOTENV DEBUG ===", style=format_debug, show=show, log=True, log_method="debug")

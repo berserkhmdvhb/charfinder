@@ -21,7 +21,7 @@ from charfinder.settings import (
     resolve_loaded_dotenv_paths,
     safe_int,
 )
-from charfinder.utils.logger import LOGGER_NAME, teardown_logger
+from charfinder.utils.logger import teardown_logger
 
 # ---------------------------------------------------------------------
 # Basic environment accessors
@@ -170,4 +170,4 @@ def test_load_settings_no_dotenv(
 
 def teardown_module(module: object) -> None:
     """Ensure logger is clean after tests."""
-    teardown_logger(logging.getLogger(LOGGER_NAME))
+    teardown_logger(logging.getLogger("charfinder"))

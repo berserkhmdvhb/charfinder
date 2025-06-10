@@ -92,7 +92,7 @@ ignore = [
   "TC003",   # allow runtime use of typing-only imports like `Path`
   "COM812"   # avoid conflict with Ruff formatter
 ]
-per-file-ignores = {"tests/*" = ["S101", "S603"], "src/charfinder/cli/handlers.py" = ["TRY300", "TRY400"], "src/charfinder/cli/cli_main.py" = ["BLE001"], "src/charfinder/core/utils_color.py" = ["T201", "PLR0913"], "src/charfinder/core/core_main.py" = ["PLR0913"]}
+per-file-ignores = {"tests/*" = ["S101", "S603"], "src/charfinder/cli/handlers.py" = ["TRY300", "TRY400"], "src/charfinder/cli/cli_main.py" = ["BLE001"], "src/charfinder/core/utils_color.py" = ["T201", "PLR0913"], "src/charfinder/core/core_main.py" = ["PLR0913"], "src/charfinder/utils/formatter.py" = ["PLR0913"]}
 
 # ----------------------------
 # Pytest Configuration

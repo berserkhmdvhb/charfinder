@@ -35,11 +35,9 @@ from charfinder.settings import (
     get_log_dir,
     get_log_max_bytes,
 )
-
-LOGGER_NAME = "charfinder"
+from charfinder.utils.formatter import echo, format_info
 
 __all__ = [
-    "LOGGER_NAME",
     "CustomRotatingFileHandler",
     "EnvironmentFilter",
     "get_default_formatter",
@@ -146,8 +144,7 @@ def setup_logging(
     Returns:
         List of handlers if return_handlers is True; otherwise None.
     """
-    logger = logging.getLogger(LOGGER_NAME)
-
+    logger = logging.getLogger("charfinder")
     if reset:
         teardown_logger(logger)
 
@@ -163,7 +160,6 @@ def setup_logging(
     if logger.hasHandlers():
         teardown_logger(logger)
 
-    logger.setLevel(logging.DEBUG)
     logger.propagate = False
 
     resolved_dir = log_dir or get_log_dir()
@@ -178,7 +174,7 @@ def setup_logging(
     stream_handler.setFormatter(formatter)
     ensure_filter(stream_handler, env_filter)
 
-    console_level = logging.WARNING  # default
+    console_level = logging.INFO
     if log_level is not None:
         console_level = log_level
 
@@ -200,13 +196,9 @@ def setup_logging(
     logger.addHandler(custom_file_handler)
 
     # Final confirmation log after all handlers are attached — avoid using debug()
-    logger.info(
-        "Logging initialized. Log file: %s (maxBytes=%d, backupCount=%d)",
-        log_file_path,
-        get_log_max_bytes(),
-        get_log_backup_count(),
-    )
-
+    mb, bc = get_log_max_bytes(), get_log_backup_count()
+    message = f"Logging initialized. Log file: {log_file_path} (maxBytes={mb}, backupCount={bc})"
+    echo(message, style=format_info, show=False, log=True, log_method="info")
     return [stream_handler, custom_file_handler] if return_handlers else None
 
 
@@ -217,7 +209,7 @@ def teardown_logger(logger: logging.Logger | None = None) -> None:
     Args:
         logger: Target logger to tear down. Defaults to project logger.
     """
-    logger = logger or logging.getLogger(LOGGER_NAME)
+    logger = logger or logging.getLogger("charfinder")
     for handler in logger.handlers[:]:
         with contextlib.suppress(Exception):
             handler.flush()

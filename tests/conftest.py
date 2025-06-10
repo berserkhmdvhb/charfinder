@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from charfinder.settings import get_log_dir, load_settings
-from charfinder.utils.logger import LOGGER_NAME, teardown_logger
+from charfinder.utils.logger import teardown_logger
 from tests.helpers.conftest_helpers import invoke_cli  # if you have this helper
 
 if TYPE_CHECKING:
@@ -32,7 +32,7 @@ def clean_charfinder_logger() -> Generator[None, None, None]:
     Clears all logging handlers for 'charfinder' before and after each test
     to avoid log pollution and duplicate handlers.
     """
-    logger = logging.getLogger(LOGGER_NAME)
+    logger = logging.getLogger("charfinder")
     teardown_logger(logger)
     yield
     teardown_logger(logger)
@@ -107,7 +107,7 @@ def temp_log_dir(monkeypatch: MonkeyPatch) -> Generator[Path, None, None]:
         monkeypatch.setattr("charfinder.settings.get_log_dir", lambda: tmp_path)
         yield tmp_path
 
-        teardown_logger(logging.getLogger(LOGGER_NAME))
+        teardown_logger(logging.getLogger("charfinder"))
 
 # ---------------------------------------------------------------------
 # Reload settings fresh from source
@@ -161,7 +161,7 @@ def log_stream() -> Generator[StringIO, None, None]:
     formatter = logging.Formatter("[%(levelname)s] %(message)s")
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger(LOGGER_NAME)
+    logger = logging.getLogger("charfinder")
     logger.addHandler(handler)
 
     yield stream
@@ -196,7 +196,7 @@ def debug_logger(log_stream: StringIO) -> logging.Logger:
     """Configure DEBUG logger attached to log_stream."""
 
     teardown_logger()
-    logger = logging.getLogger(LOGGER_NAME)
+    logger = logging.getLogger("charfinder")
     logger.setLevel(logging.DEBUG)
     logger.handlers.clear()
 

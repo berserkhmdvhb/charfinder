@@ -76,6 +76,9 @@ def build_name_cache(
             echo(
                 message,
                 style=lambda m: format_info(m, use_color=use_color),
+                show=True,
+                log=True,
+                log_method="info",
             )
         return cache
 
@@ -86,6 +89,9 @@ def build_name_cache(
         echo(
             message,
             style=lambda m: format_info(m, use_color=use_color),
+            show=True,
+            log=True,
+            log_method="info",
         )
 
     # Load alternate names once
@@ -120,10 +126,19 @@ def build_name_cache(
             echo(
                 message,
                 style=lambda m: format_info(m, use_color=use_color),
+                show=True,
+                log=True,
+                log_method="info",
             )
     except Exception:
         message = "Failed to write cache."
-        echo(message, style=lambda m: format_error(m, use_color=use_color))
+        echo(
+            message,
+            style=lambda m: format_error(m, use_color=use_color),
+            show=True,
+            log=True,
+            log_method="error",
+        )
         logger.exception(message)
 
     return cache

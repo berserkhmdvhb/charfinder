@@ -8,7 +8,6 @@ Environment and configuration management for CharFinder.
 
 from __future__ import annotations
 
-import logging
 import os
 from pathlib import Path
 from typing import cast
@@ -21,7 +20,7 @@ from charfinder.constants import (
     ENV_LOG_BACKUP_COUNT,
     ENV_LOG_MAX_BYTES,
 )
-from charfinder.utils.formatter import echo, format_settings
+from charfinder.utils.formatter import echo, format_info, format_settings
 
 # ---------------------------------------------------------------------
 # Environment Accessors
@@ -97,10 +96,11 @@ def resolve_dotenv_path() -> Path | None:
         custom_path = Path(custom)
         if not custom_path.exists() and os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
             echo(
-                f"[settings] DOTENV_PATH is set to {custom_path} but the file does not exist.",
+                f"[DOTENV_PATH is set to {custom_path} but the file does not exist.",
                 style=format_settings,
-                show=True,  # Always show in debug mode if DOTENV_PATH is invalid
-                log_level=logging.WARNING,
+                show=True,
+                log=True,
+                log_method="warning",
             )
         return custom_path
 
@@ -135,10 +135,11 @@ def safe_int(env_var: str, default: int) -> int:
             return int(val)
         except ValueError:
             echo(
-                f"[settings] Invalid int for {env_var!r} = {val!r}; using default {default}",
+                f"Invalid int for {env_var!r} = {val!r}; using default {default}",
                 style=format_settings,
-                show=True,  # Always show config errors
-                log_level=logging.WARNING,
+                show=True,
+                log=True,
+                log_method="error",
             )
     return default
 
@@ -158,9 +159,9 @@ def load_settings(
         load_dotenv(dotenv_path=dotenv_path)
         loaded.append(dotenv_path)
 
-    if not loaded and (debug or verbose):
+    if not loaded:
         message = "No .env file loaded — using system env or defaults."
-        echo(message, style=format_settings, show=True)
+        echo(msg=message, style=format_info, show=debug or verbose, log=False, log_method="info")
 
     return loaded
 

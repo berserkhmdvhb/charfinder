@@ -89,10 +89,23 @@ def find_fuzzy_matches(
 
     if context.verbose:
         message = f"No exact match found for '{context.query}', "
-        echo(message, style=lambda m: format_info(m, use_color=context.use_color))
+        echo(
+            message,
+            style=lambda m: format_info(m, use_color=context.use_color),
+            show=True,
+            log=True,
+            log_method="info",
+        )
+
         logger.info(message)
         message = f"Trying fuzzy matching (threshold={context.threshold})..."
-        echo(message, style=lambda m: format_info(m, use_color=context.use_color))
+        echo(
+            message,
+            style=lambda m: format_info(m, use_color=context.use_color),
+            show=True,
+            log=True,
+            log_method="info",
+        )
         logger.info(message)
 
     for char, names in name_cache.items():
@@ -110,8 +123,13 @@ def find_fuzzy_matches(
         if score is None:
             if context.verbose:
                 message = f"Skipped char '{char}' (no valid score computed)."
-                echo(message, format_debug)
-                logger.debug(message)
+                echo(
+                    message,
+                    style=lambda m: format_debug(m, use_color=context.use_color),
+                    show=True,
+                    log=True,
+                    log_method="debug",
+                )
             continue
         if score >= context.threshold:
             matches.append((ord(char), char, names["original"], score))
