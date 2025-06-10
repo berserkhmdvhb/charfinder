@@ -1,9 +1,10 @@
-import logging
 import unicodedata
+
+from charfinder.utils.logger import get_logger
 
 __all__ = ["normalize"]
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 def normalize(text: str) -> str:

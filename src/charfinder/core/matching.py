@@ -9,8 +9,6 @@ Exports:
     - find_fuzzy_matches: Perform fuzzy matching with scoring.
 """
 
-import logging
-
 from charfinder.fuzzymatchlib import compute_similarity
 from charfinder.types import FuzzyMatchContext
 from charfinder.utils.formatter import (
@@ -18,13 +16,14 @@ from charfinder.utils.formatter import (
     format_debug,
     format_info,
 )
+from charfinder.utils.logger import get_logger
 
 __all__ = [
     "find_exact_matches",
     "find_fuzzy_matches",
 ]
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 def find_exact_matches(

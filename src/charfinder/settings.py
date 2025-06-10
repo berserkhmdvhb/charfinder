@@ -20,7 +20,6 @@ from charfinder.constants import (
     ENV_LOG_BACKUP_COUNT,
     ENV_LOG_MAX_BYTES,
 )
-from charfinder.utils.formatter import echo, format_info, format_settings
 
 # ---------------------------------------------------------------------
 # Environment Accessors

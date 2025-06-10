@@ -19,6 +19,7 @@ Defines:
 # ---------------------------------------------------------------------
 
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Literal
 
 # ---------------------------------------------------------------------
@@ -37,6 +38,7 @@ VALID_FUZZY_MATCH_MODES = ("single", "hybrid")
 VALID_EXACT_MATCH_MODES = ("substring", "word-subset")
 VALID_LOG_METHODS = {"debug", "info", "warning", "error", "exception"}
 
+
 # ---------------------------------------------------------------------
 # Typing Aliases
 # ---------------------------------------------------------------------
@@ -45,7 +47,13 @@ FuzzyAlgorithm = Literal["sequencematcher", "rapidfuzz", "levenshtein"]
 MatchMode = Literal["single", "hybrid"]
 ExactMatchMode = Literal["substring", "word-subset"]
 ColorMode = Literal["auto", "always", "never"]
-
+LOG_METHODS = SimpleNamespace(
+    DEBUG="debug",
+    INFO="info",
+    WARNING="warning",
+    ERROR="error",
+    EXCEPTION="exception",
+)
 # ---------------------------------------------------------------------
 # Exit Codes
 # ---------------------------------------------------------------------

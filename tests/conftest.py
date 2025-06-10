@@ -14,9 +14,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 import pytest
-
-from charfinder.settings import get_log_dir, load_settings
-from charfinder.utils.logger import teardown_logger
+from charfinder.utils.logger import get_logger, teardown_logger
 from tests.helpers.conftest_helpers import invoke_cli  # if you have this helper
 
 if TYPE_CHECKING:
@@ -32,7 +30,7 @@ def clean_charfinder_logger() -> Generator[None, None, None]:
     Clears all logging handlers for 'charfinder' before and after each test
     to avoid log pollution and duplicate handlers.
     """
-    logger = logging.getLogger("charfinder")
+    logger = get_logger()
     teardown_logger(logger)
     yield
     teardown_logger(logger)
@@ -161,7 +159,7 @@ def log_stream() -> Generator[StringIO, None, None]:
     formatter = logging.Formatter("[%(levelname)s] %(message)s")
     handler.setFormatter(formatter)
 
-    logger = logging.getLogger("charfinder")
+    logger = get_logger()
     logger.addHandler(handler)
 
     yield stream
@@ -196,7 +194,7 @@ def debug_logger(log_stream: StringIO) -> logging.Logger:
     """Configure DEBUG logger attached to log_stream."""
 
     teardown_logger()
-    logger = logging.getLogger("charfinder")
+    logger = get_logger()
     logger.setLevel(logging.DEBUG)
     logger.handlers.clear()
 

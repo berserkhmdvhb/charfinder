@@ -28,6 +28,7 @@ from typing import Final, TextIO
 from colorama import Fore, Style, init
 
 from charfinder.constants import FIELD_WIDTHS, VALID_LOG_METHODS
+from charfinder.utils.logger import get_logger
 
 __all__ = [
     "echo",
@@ -46,8 +47,6 @@ __all__ = [
 # Initialize colorama once
 init(autoreset=True)
 
-logger = logging.getLogger("charfinder")
-
 # Color constants
 COLOR_HEADER: Final = Fore.CYAN
 COLOR_CODELINE: Final = Fore.YELLOW
@@ -63,6 +62,7 @@ RESET: Final = Style.RESET_ALL
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+logger = get_logger()
 # ---------------------------------------------------------------------
 # Color support utilities
 # ---------------------------------------------------------------------
@@ -107,17 +107,18 @@ def should_use_color(mode: str) -> bool:
 # Log Message Management
 # ---------------------------------------------------------------------
 
+
 @contextmanager
 def suppress_console_logging() -> Iterator[None]:
-    logger = logging.getLogger("charfinder")  # Fresh reference every time
+    logger = get_logger()
     stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
     for h in stream_handlers:
-        h.setLevel(logging.CRITICAL + 1)  # Effectively disables normal log levels
+        h.setLevel(logging.CRITICAL + 1)
 
     try:
         yield
     finally:
-        logger = logging.getLogger("charfinder")  # Refresh again to be safe
+        logger = get_logger()
         stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
         for h in stream_handlers:
             h.setLevel(logging.NOTSET)
@@ -126,6 +127,7 @@ def suppress_console_logging() -> Iterator[None]:
 # ---------------------------------------------------------------------
 # Standard message formatters
 # ---------------------------------------------------------------------
+
 
 def echo(
     msg: str,
@@ -164,6 +166,7 @@ def echo(
     if show:
         stream.write(styled + "\n")
         stream.flush()
+
 
 def format_debug(message: str, *, use_color: bool = True) -> str:
     """Format debug message with [DEBUG] prefix."""

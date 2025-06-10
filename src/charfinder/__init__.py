@@ -16,4 +16,3 @@ __all__ = [
     "find_chars_raw",
     "normalize",
 ]
-

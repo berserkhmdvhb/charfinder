@@ -14,7 +14,6 @@ This module delegates color formatting to `cli/formatter.py` and avoids using pr
 from __future__ import annotations
 
 import json
-import logging
 import sys
 from argparse import Namespace
 from functools import lru_cache
@@ -28,6 +27,7 @@ from charfinder.constants import (
 )
 from charfinder.core.core_main import find_chars, find_chars_raw
 from charfinder.utils.formatter import format_error, format_result_line, should_use_color
+from charfinder.utils.logger import get_logger
 
 __all__ = [
     "get_version",
@@ -36,7 +36,7 @@ __all__ = [
     "should_use_color",
 ]
 
-logger = logging.getLogger("charfinder")
+logger = get_logger()
 
 
 @lru_cache(maxsize=1)

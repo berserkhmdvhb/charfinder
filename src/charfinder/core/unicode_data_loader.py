@@ -8,12 +8,13 @@ Exports:
     - load_alternate_names: Return a mapping of characters to their alternate names.
 """
 
-import logging
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
 
-logger = logging.getLogger(__name__)
+from charfinder.utils.logger import get_logger
+
+logger = get_logger()
 
 UNICODE_DATA_URL = "https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt"
 UNICODE_DATA_FILE = Path(__file__).parent.parent.parent / "data" / "UnicodeData.txt"

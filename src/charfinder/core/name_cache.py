@@ -12,7 +12,6 @@ Exports:
 """
 
 import json
-import logging
 import sys
 import unicodedata
 from pathlib import Path
@@ -24,13 +23,14 @@ from charfinder.utils.formatter import (
     format_error,
     format_info,
 )
+from charfinder.utils.logger import get_logger
 from charfinder.utils.normalizer import normalize
 
 __all__ = [
     "build_name_cache",
 ]
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 def build_name_cache(

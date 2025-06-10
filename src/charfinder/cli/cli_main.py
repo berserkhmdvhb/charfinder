@@ -31,7 +31,7 @@ from charfinder.utils.formatter import (
     format_settings,
     format_warning,
 )
-from charfinder.utils.logger import setup_logging, teardown_logger
+from charfinder.utils.logger import get_logger, setup_logging, teardown_logger
 
 __all__ = ["main"]
 
@@ -68,7 +68,7 @@ def main() -> None:
     log_level = logging.DEBUG if args.debug else None
     setup_logging(reset=True, log_level=log_level)
 
-    logger = logging.getLogger("charfinder")
+    logger = get_logger()
     use_color = args.color != "never"
 
     try:

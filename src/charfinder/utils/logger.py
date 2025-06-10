@@ -24,18 +24,19 @@ from __future__ import annotations
 
 import contextlib
 import logging
-import re
-from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from charfinder import constants as const
 from charfinder.settings import (
-    get_environment,
     get_log_backup_count,
     get_log_dir,
     get_log_max_bytes,
 )
-from charfinder.utils.formatter import echo, format_info
+from charfinder.utils.logger_objects import (
+    CustomRotatingFileHandler,
+    EnvironmentFilter,
+    SafeFormatter,
+)
 
 __all__ = [
     "CustomRotatingFileHandler",
@@ -45,66 +46,12 @@ __all__ = [
     "teardown_logger",
 ]
 
-
-class CustomRotatingFileHandler(RotatingFileHandler):
-    """Custom handler with renamed rotated logs:
-    charfinder.log, charfinder_1.log, charfinder_2.log."""
-
-    def rotation_filename(self, default_name: str) -> str:
-        """Rename rotated files: charfinder.log.1 → charfinder_1.log"""
-        if default_name.endswith(".log"):
-            return default_name
-        if ".log." in default_name:
-            base, suffix = default_name.rsplit(".log.", maxsplit=1)
-            return f"{base}_{suffix}.log"
-        return default_name
-
-    def do_rollover(self) -> None:
-        """Override base class to support custom filename logic."""
-        if self.stream:
-            self.stream.close()
-            self.stream = None  # type: ignore[assignment]
-
-        if self.backupCount > 0:
-            for path in self.get_files_to_delete():
-                with contextlib.suppress(OSError):
-                    path.unlink()
-
-            for i in range(self.backupCount - 1, 0, -1):
-                src = Path(self.rotation_filename(f"{self.baseFilename}.{i}"))
-                dst = Path(self.rotation_filename(f"{self.baseFilename}.{i + 1}"))
-                if src.exists():
-                    if dst.exists():
-                        dst.unlink()
-                    src.rename(dst)
-
-            rollover_path = Path(self.rotation_filename(f"{self.baseFilename}.1"))
-            current_log = Path(self.baseFilename)
-            if current_log.exists():
-                current_log.rename(rollover_path)
-
-        if not self.delay:
-            self.stream = self._open()
-
-    def get_files_to_delete(self) -> list[Path]:
-        """Return rotated log files to delete to enforce backup count."""
-        base_path = Path(self.baseFilename)
-        prefix = base_path.stem
-        ext = base_path.suffix
-        pattern = re.compile(rf"^{re.escape(prefix)}_(\d+){re.escape(ext)}$")
-
-        return sorted(
-            [p for p in base_path.parent.iterdir() if pattern.match(p.name)],
-            key=lambda p: p.stat().st_mtime,
-        )[: -self.backupCount]
+LOGGER_NAME = "charfinder"
 
 
-class EnvironmentFilter(logging.Filter):
-    """Injects the current environment (e.g., DEV, UAT, PROD) into log records."""
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        record.env = get_environment()
-        return True
+def get_logger() -> logging.Logger:
+    """Return the central project logger."""
+    return logging.getLogger(LOGGER_NAME)
 
 
 def ensure_filter(handler: logging.Handler, filt: logging.Filter) -> None:
@@ -115,7 +62,7 @@ def ensure_filter(handler: logging.Handler, filt: logging.Filter) -> None:
 
 def get_default_formatter() -> logging.Formatter:
     """Return default log formatter."""
-    return logging.Formatter(const.LOG_FORMAT)
+    return SafeFormatter(const.LOG_FORMAT)
 
 
 def setup_logging(
@@ -144,7 +91,7 @@ def setup_logging(
     Returns:
         List of handlers if return_handlers is True; otherwise None.
     """
-    logger = logging.getLogger("charfinder")
+    logger = get_logger()
     if reset:
         teardown_logger(logger)
 
@@ -199,7 +146,7 @@ def setup_logging(
     # Final confirmation log after all handlers are attached — avoid using debug()
     mb, bc = get_log_max_bytes(), get_log_backup_count()
     message = f"Logging initialized. Log file: {log_file_path} (maxBytes={mb}, backupCount={bc})"
-    echo(message, style=format_info, show=False, log=True, log_method="info")
+    logger.info(message)
     return [stream_handler, custom_file_handler] if return_handlers else None
 
 
@@ -210,7 +157,7 @@ def teardown_logger(logger: logging.Logger | None = None) -> None:
     Args:
         logger: Target logger to tear down. Defaults to project logger.
     """
-    logger = logger or logging.getLogger("charfinder")
+    logger = get_logger()
     for handler in logger.handlers[:]:
         with contextlib.suppress(Exception):
             handler.flush()

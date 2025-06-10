@@ -14,9 +14,9 @@ This pattern mirrors the `cache.py` module in the ppt project.
 
 from __future__ import annotations
 
-import logging
 from functools import lru_cache
 
+from charfinder.utils.logger import get_logger
 from charfinder.utils.normalizer import normalize
 
 __all__ = [
@@ -27,7 +27,7 @@ __all__ = [
 ]
 
 MAX_CACHE_SIZE = 1024  # normalize() is used VERY often → large cache is safe
-logger = logging.getLogger("charfinder")
+logger = get_logger()
 
 
 @lru_cache(maxsize=MAX_CACHE_SIZE)
