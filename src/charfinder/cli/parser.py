@@ -118,6 +118,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "--verbose",
+        "-v",
         dest="verbose",
         action="store_true",
         default=False,

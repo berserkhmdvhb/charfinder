@@ -161,7 +161,7 @@ def load_settings(
 
     if not loaded:
         message = "No .env file loaded — using system env or defaults."
-        echo(msg=message, style=format_info, show=debug or verbose, log=False, log_method="info")
+        echo(msg=message, style=format_info, show=debug or verbose, log=True, log_method="info")
 
     return loaded
 

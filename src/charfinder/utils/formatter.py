@@ -107,19 +107,18 @@ def should_use_color(mode: str) -> bool:
 # Log Message Management
 # ---------------------------------------------------------------------
 
-
 @contextmanager
 def suppress_console_logging() -> Iterator[None]:
-    # Find StreamHandler
+    logger = logging.getLogger("charfinder")  # Fresh reference every time
     stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
-    # Disable them
     for h in stream_handlers:
         h.setLevel(logging.CRITICAL + 1)  # Effectively disables normal log levels
 
     try:
         yield
     finally:
-        # Restore normal levels
+        logger = logging.getLogger("charfinder")  # Refresh again to be safe
+        stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
         for h in stream_handlers:
             h.setLevel(logging.NOTSET)
 
@@ -127,7 +126,6 @@ def suppress_console_logging() -> Iterator[None]:
 # ---------------------------------------------------------------------
 # Standard message formatters
 # ---------------------------------------------------------------------
-
 
 def echo(
     msg: str,
@@ -151,6 +149,7 @@ def echo(
                     ('debug', 'info', 'warning', 'error', 'exception').
     """
     styled = style(msg)
+
     if log_method not in VALID_LOG_METHODS:
         message = f"Invalid log_method: {log_method}"
         raise ValueError(message)
@@ -158,13 +157,13 @@ def echo(
     if log and log_method:
         log_func = getattr(logger, log_method, None)
         if callable(log_func):
-            log_func(msg)
+            # Always suppress StreamHandler when logging, regardless of show
+            with suppress_console_logging():
+                log_func(msg)
 
     if show:
-        # with suppress_console_logging():
         stream.write(styled + "\n")
         stream.flush()
-
 
 def format_debug(message: str, *, use_color: bool = True) -> str:
     """Format debug message with [DEBUG] prefix."""

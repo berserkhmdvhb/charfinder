@@ -6,8 +6,9 @@
         precommit precommit-run precommit-check \
         env-check env-debug env-clear env-show dotenv-debug env-example \
         safety check-updates check-toml \
-        build clean clean-pyc clean-all \
-        publish publish-test publish-dryrun upload-coverage
+        clean clean-logs clean-cache clean-coverage clean-build clean-pyc clean-all \
+        build publish publish-test publish-dryrun upload-coverage
+
 
 # -------------------------------------------------------------------
 # Configuration
@@ -45,7 +46,6 @@ help::
 	@echo "  test-cov-html          Run tests with HTML coverage report and open it"
 	@echo "  test-coverage-rep      Show full line-by-line coverage report"
 	@echo "  test-coverage-file     Show coverage for a specific file: FILE=... (e.g. make test-coverage-file FILE=src/charfinder/cli/cli_main.py)"
-	@echo "  clean-coverage         Erase cached coverage data"
 	@echo ""
 	@echo "  test-watch             Auto-rerun tests on file changes"
 	@echo "  check-all              Run format-check, lint, and full test suite"
@@ -65,11 +65,14 @@ help::
 	@echo "  check-updates          List outdated pip packages"
 	@echo "  check-toml             Check pyproject.toml for syntax validity"
 	@echo ""
-	@echo "  build                  Build package for distribution"
-	@echo "  clean                  Remove build artifacts"
+	@echo "  clean-logs             Remove logs (logs/DEV/*.log only)"
+	@echo "  clean-cache            Remove cache files (.pytest_cache, .mypy_cache, .ruff_cache, htmlcov)"
+	@echo "  clean-coverage         Remove coverage data (.coverage, coverage.xml)"
+	@echo "  clean-build            Remove build artifacts (build/, dist/, *.egg-info)"
 	@echo "  clean-pyc              Remove .pyc and __pycache__ files"
-	@echo "  clean-all              Remove all build, test, and log artifacts"
+	@echo "  clean-all              Remove all build, test, cache, and log artifacts"
 	@echo ""
+	@echo "  build                  Build package for distribution"
 	@echo "  publish-test           Upload to TestPyPI"
 	@echo "  publish-dryrun         Validate and simulate TestPyPI upload (dry run)"
 	@echo "  publish                Upload to PyPI"
@@ -140,11 +143,6 @@ test-coverage-file:
 	@$(PYTHON) -c "import sys; f = '$(FILE)'; sys.exit(0) if f else (print('Usage: make test-coverage-file FILE=path/to/file.py'), sys.exit(1))"
 	coverage report -m $(FILE)
 
-clean-coverage:
-	coverage erase
-
-testing: test-cov-html
-
 check-all: lint-all-check test-coverage
 
 test-watch:
@@ -203,27 +201,41 @@ check-toml:
 	@$(PYTHON) -c "import tomllib; tomllib.load(open('pyproject.toml', 'rb')); print('pyproject.toml syntax is valid')"
 
 # -------------------------------------------------------------------
-# Build & Distribution
+# Cleaning Targets
 # -------------------------------------------------------------------
-build:
-	$(PYTHON) -m build
 
-clean:
+clean-logs:
+	@echo "Removing DEV log files..."
+	$(PYTHON) -c "import pathlib; [p.unlink() for p in pathlib.Path('logs/DEV').rglob('*.log')]"
+
+clean-cache:
+	@echo "Removing cache files..."
+	$(PYTHON) -c "import pathlib, shutil; [shutil.rmtree(p, ignore_errors=True) for p in map(pathlib.Path, ['.pytest_cache', '.mypy_cache', '.ruff_cache', 'htmlcov']) if p.exists()]"
+
+clean-coverage:
+	@echo "Removing coverage data..."
+	$(PYTHON) -c "import pathlib; [p.unlink() for p in map(pathlib.Path, ['.coverage', 'coverage.xml']) if p.exists()]"
+	coverage erase
+
+clean-build:
+	@echo "Removing build artifacts..."
 	$(PYTHON) -c "import shutil, glob; [shutil.rmtree(p, ignore_errors=True) for p in ['dist', 'build'] + glob.glob('*.egg-info')]"
 
 clean-pyc:
 	@echo "Removing .pyc and __pycache__ files..."
 	$(PYTHON) -c "import pathlib, shutil; [p.unlink() for p in pathlib.Path('.').rglob('*.pyc')]; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]"
 
-clean-all: clean clean-pyc
-	@echo "Removing logs and cache files..."
-	$(PYTHON) -c "import pathlib; [p.unlink() for p in pathlib.Path('.').rglob('*.log')]"
-	$(PYTHON) -c "import pathlib, shutil; [shutil.rmtree(p, ignore_errors=True) for p in map(pathlib.Path, ['.pytest_cache', '.mypy_cache', '.ruff_cache', 'htmlcov']) if p.exists()]"
-	$(PYTHON) -c "import pathlib; [p.unlink() for p in map(pathlib.Path, ['.coverage', 'coverage.xml']) if p.exists()]"
+clean-all: clean-logs clean-cache clean-coverage clean-build clean-pyc
+	@echo ""
+	@echo "All build, test, log, and cache artifacts have been removed."
 
-publish-test:
-	twine check dist/*
-	twine upload --repository testpypi dist/*
+
+
+# -------------------------------------------------------------------
+# Build & Distribution
+# -------------------------------------------------------------------
+build:
+	$(PYTHON) -m build
 
 publish-dryrun:
 	twine check dist/*

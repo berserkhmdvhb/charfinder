@@ -71,15 +71,13 @@ def build_name_cache(
         with path.open(encoding="utf-8") as f:
             cache = cast("dict[str, dict[str, str]]", json.load(f))
         message = f"Loaded Unicode name cache from: {cache_file}"
-        logger.info(message)
-        if verbose:
-            echo(
-                message,
-                style=lambda m: format_info(m, use_color=use_color),
-                show=True,
-                log=True,
-                log_method="info",
-            )
+        echo(
+            message,
+            style=lambda m: format_info(m, use_color=use_color),
+            show=verbose,
+            log=True,
+            log_method="info",
+        )
         return cache
 
     # Rebuild the cache

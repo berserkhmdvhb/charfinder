@@ -161,6 +161,7 @@ def setup_logging(
         teardown_logger(logger)
 
     logger.propagate = False
+    logger.setLevel(logging.DEBUG)
 
     resolved_dir = log_dir or get_log_dir()
     resolved_dir.mkdir(parents=True, exist_ok=True)
