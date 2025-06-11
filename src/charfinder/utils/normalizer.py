@@ -1,6 +1,6 @@
 import unicodedata
 
-from charfinder.utils.logger import get_logger
+from charfinder.utils.logger_setup import get_logger
 
 __all__ = ["normalize"]
 

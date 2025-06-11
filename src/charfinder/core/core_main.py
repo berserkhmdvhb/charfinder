@@ -30,12 +30,8 @@ from charfinder.constants import (
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import build_name_cache
 from charfinder.types import CharMatch, FuzzyMatchContext
-from charfinder.utils.formatter import (
-    echo,
-    format_info,
-    format_result_header,
-    format_result_row,
-)
+from charfinder.utils.formatter import echo, format_result_header, format_result_row
+from charfinder.utils.logger_styles import format_info
 from charfinder.utils.normalizer import normalize
 
 __all__ = [

@@ -21,7 +21,8 @@ from dotenv import dotenv_values
 
 from charfinder.constants import ENV_DEBUG_ENV_LOAD
 from charfinder.settings import resolve_dotenv_path
-from charfinder.utils.formatter import echo, format_debug
+from charfinder.utils.formatter import echo
+from charfinder.utils.logger_styles import format_debug
 
 __all__ = [
     "print_debug_diagnostics",

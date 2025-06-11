@@ -12,7 +12,7 @@ from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from charfinder.utils.logger import get_logger
+from charfinder.utils.logger_setup import get_logger
 
 logger = get_logger()
 

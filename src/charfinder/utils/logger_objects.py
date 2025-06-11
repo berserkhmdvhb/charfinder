@@ -1,3 +1,14 @@
+"""
+Logger objects and custom classes for CharFinder.
+
+- EnvironmentFilter: Injects current environment into log records
+- SafeFormatter: Formatter that handles missing LogRecord attributes safely
+- CustomRotatingFileHandler: Rotating file handler with custom filename scheme:
+    charfinder.log → charfinder_1.log, charfinder_2.log, etc.
+"""
+
+from __future__ import annotations
+
 import contextlib
 import logging
 import re
@@ -5,13 +16,14 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Literal
 
-from charfinder.settings import get_environment
-
 
 class EnvironmentFilter(logging.Filter):
     """Injects the current environment (e.g., DEV, UAT, PROD) into log records."""
 
     def filter(self, record: logging.LogRecord) -> bool:
+        # Delayed import to avoid circular import issues
+        from charfinder.settings import get_environment
+
         record.env = get_environment()
         return True
 
@@ -34,11 +46,17 @@ class SafeFormatter(logging.Formatter):
 
 
 class CustomRotatingFileHandler(RotatingFileHandler):
-    """Custom handler with renamed rotated logs:
-    charfinder.log, charfinder_1.log, charfinder_2.log."""
+    """
+    Rotating file handler with custom filename scheme.
+
+    Example:
+        charfinder.log → charfinder_1.log, charfinder_2.log, ...
+
+    This improves readability of rotated log filenames.
+    """
 
     def rotation_filename(self, default_name: str) -> str:
-        """Rename rotated files: charfinder.log.1 → charfinder_1.log"""
+        """Rename rotated files: charfinder.log.1 → charfinder_1.log."""
         if default_name.endswith(".log"):
             return default_name
         if ".log." in default_name:
@@ -47,7 +65,7 @@ class CustomRotatingFileHandler(RotatingFileHandler):
         return default_name
 
     def do_rollover(self) -> None:
-        """Override base class to support custom filename logic."""
+        """Perform rollover with custom filename logic."""
         if self.stream:
             self.stream.close()
             self.stream = None  # type: ignore[assignment]
@@ -74,7 +92,7 @@ class CustomRotatingFileHandler(RotatingFileHandler):
             self.stream = self._open()
 
     def get_files_to_delete(self) -> list[Path]:
-        """Return rotated log files to delete to enforce backup count."""
+        """Return list of rotated log files to delete to enforce backup count."""
         base_path = Path(self.baseFilename)
         prefix = base_path.stem
         ext = base_path.suffix

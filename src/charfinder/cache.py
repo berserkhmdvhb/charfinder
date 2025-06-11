@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from charfinder.utils.logger import get_logger
+from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.normalizer import normalize
 
 __all__ = [

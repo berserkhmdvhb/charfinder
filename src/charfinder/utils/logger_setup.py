@@ -1,6 +1,7 @@
 """
 Custom logging setup utilities for CharFinder.
 
+Features:
 - Centralized `charfinder` logger with consistent format and handlers
 - Rotating file logging (charfinder.log + rotated backups)
 - Console logging:
@@ -9,13 +10,14 @@ Custom logging setup utilities for CharFinder.
 - Environment name (e.g., DEV, UAT, PROD) injected into each log record
 
 Typical Usage:
-    from charfinder.utils.logger import setup_logging
+    from charfinder.utils.logger_setup import setup_logging
     setup_logging()
 
 Exports:
-    - LOGGER_NAME: Central logger identifier
+    - get_logger: Return the central project logger
     - setup_logging: Attach console/file handlers
     - teardown_logger: Cleanly detach all logging handlers
+    - get_default_formatter: Return default SafeFormatter instance
     - EnvironmentFilter: Injects `record.env` into each log message
     - CustomRotatingFileHandler: Renames rotated logs as `charfinder_1.log`, etc.
 """
@@ -42,6 +44,7 @@ __all__ = [
     "CustomRotatingFileHandler",
     "EnvironmentFilter",
     "get_default_formatter",
+    "get_logger",
     "setup_logging",
     "teardown_logger",
 ]
@@ -61,7 +64,7 @@ def ensure_filter(handler: logging.Handler, filt: logging.Filter) -> None:
 
 
 def get_default_formatter() -> logging.Formatter:
-    """Return default log formatter."""
+    """Return default SafeFormatter instance."""
     return SafeFormatter(const.LOG_FORMAT)
 
 
@@ -130,11 +133,14 @@ def setup_logging(
     logger.addHandler(stream_handler)
 
     # Custom rotating file handler — always DEBUG
+    max_bytes = get_log_max_bytes()
+    backup_count = get_log_backup_count()
+
     custom_file_handler = CustomRotatingFileHandler(
         filename=str(log_file_path),
         mode="a",
-        maxBytes=get_log_max_bytes(),
-        backupCount=get_log_backup_count(),
+        maxBytes=max_bytes,
+        backupCount=backup_count,
         encoding=const.DEFAULT_ENCODING,
         delay=False,
     )
@@ -143,10 +149,13 @@ def setup_logging(
     custom_file_handler.setLevel(logging.DEBUG)
     logger.addHandler(custom_file_handler)
 
-    # Final confirmation log after all handlers are attached — avoid using debug()
-    mb, bc = get_log_max_bytes(), get_log_backup_count()
-    message = f"Logging initialized. Log file: {log_file_path} (maxBytes={mb}, backupCount={bc})"
+    # Final confirmation log after all handlers are attached
+    message = (
+        f"Logging initialized. Log file: {log_file_path} "
+        f"(maxBytes={max_bytes}, backupCount={backup_count})"
+    )
     logger.info(message)
+
     return [stream_handler, custom_file_handler] if return_handlers else None
 
 
@@ -157,7 +166,8 @@ def teardown_logger(logger: logging.Logger | None = None) -> None:
     Args:
         logger: Target logger to tear down. Defaults to project logger.
     """
-    logger = get_logger()
+    logger = logger or get_logger()
+
     for handler in logger.handlers[:]:
         with contextlib.suppress(Exception):
             handler.flush()

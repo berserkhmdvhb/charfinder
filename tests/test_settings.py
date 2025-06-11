@@ -21,7 +21,7 @@ from charfinder.settings import (
     resolve_loaded_dotenv_paths,
     safe_int,
 )
-from charfinder.utils.logger import teardown_logger
+from charfinder.utils.logger_setup import teardown_logger
 
 # ---------------------------------------------------------------------
 # Basic environment accessors

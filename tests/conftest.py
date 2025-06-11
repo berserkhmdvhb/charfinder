@@ -14,8 +14,8 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 
 import pytest
-from charfinder.utils.logger import get_logger, teardown_logger
-from tests.helpers.conftest_helpers import invoke_cli  # if you have this helper
+from charfinder.utils.logger_setup import get_logger, teardown_logger
+from tests.helpers.conftest_helpers import invoke_cli
 
 if TYPE_CHECKING:
     from _pytest.monkeypatch import MonkeyPatch

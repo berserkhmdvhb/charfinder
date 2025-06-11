@@ -18,12 +18,9 @@ from pathlib import Path
 from typing import cast
 
 from charfinder.core.unicode_data_loader import load_alternate_names
-from charfinder.utils.formatter import (
-    echo,
-    format_error,
-    format_info,
-)
-from charfinder.utils.logger import get_logger
+from charfinder.utils.formatter import echo
+from charfinder.utils.logger_setup import get_logger
+from charfinder.utils.logger_styles import format_error, format_info
 from charfinder.utils.normalizer import normalize
 
 __all__ = [

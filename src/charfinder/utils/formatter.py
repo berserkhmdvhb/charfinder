@@ -3,18 +3,20 @@ Shared formatting utilities for CharFinder.
 
 This module provides reusable formatting functions for:
 
-1. Formatting informational, warning, error, debug, success, and settings messages
-   with optional color.
+1. Writing informational, warning, error, debug, success, and settings messages
+   to both terminal and logger (via `echo()` and `log_and_optionally_echo()`).
 2. Formatting result lines for Unicode character search results.
 3. Determining whether color output should be used.
 
-This module is used by CLI components, settings, core modules, and tests.
-
-All functions are pure formatters: they return formatted strings and do not print.
+All functions are pure formatters: they return formatted strings and do not print
+(unless echoing is explicitly requested).
 
 Color handling is provided via `colorama`.
 
 The helper `_color_wrap` centralizes color wrapping logic.
+
+NOTE: Color constants should be factored out to `logger_styles.py` in the future
+to avoid duplication.
 """
 
 from __future__ import annotations
@@ -23,46 +25,28 @@ import logging
 import sys
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from typing import Final, TextIO
+from typing import TextIO
 
 from colorama import Fore, Style, init
 
 from charfinder.constants import FIELD_WIDTHS, VALID_LOG_METHODS
-from charfinder.utils.logger import get_logger
 
 __all__ = [
     "echo",
-    "format_debug",
-    "format_error",
-    "format_info",
     "format_result_header",
     "format_result_line",
     "format_result_row",
-    "format_settings",
-    "format_success",
-    "format_warning",
+    "log_and_optionally_echo",
     "should_use_color",
 ]
 
 # Initialize colorama once
 init(autoreset=True)
 
-# Color constants
-COLOR_HEADER: Final = Fore.CYAN
-COLOR_CODELINE: Final = Fore.YELLOW
-COLOR_ERROR: Final = Fore.RED
-COLOR_INFO: Final = Fore.BLUE
-COLOR_SUCCESS: Final = Fore.GREEN
-COLOR_WARNING: Final = Fore.YELLOW
-COLOR_DEBUG: Final = Fore.LIGHTBLACK_EX
-COLOR_SETTINGS: Final = Fore.LIGHTBLACK_EX
-RESET: Final = Style.RESET_ALL
-
 # Windows: Ensure terminal handles UTF-8 output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-logger = get_logger()
 # ---------------------------------------------------------------------
 # Color support utilities
 # ---------------------------------------------------------------------
@@ -110,6 +94,11 @@ def should_use_color(mode: str) -> bool:
 
 @contextmanager
 def suppress_console_logging() -> Iterator[None]:
+    """
+    Context manager to temporarily suppress StreamHandler (console) output.
+    """
+    from charfinder.utils.logger_setup import get_logger
+
     logger = get_logger()
     stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
     for h in stream_handlers:
@@ -118,7 +107,6 @@ def suppress_console_logging() -> Iterator[None]:
     try:
         yield
     finally:
-        logger = get_logger()
         stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
         for h in stream_handlers:
             h.setLevel(logging.NOTSET)
@@ -149,18 +137,18 @@ def echo(
         log: If False, do not log at all.
         log_method: If provided, log using the corresponding logger method.
     """
-    styled = style(msg)
+    from charfinder.utils.logger_setup import get_logger
 
-    logger = logging.getLogger("charfinder")
+    logger = get_logger()
+    styled = style(msg)
 
     if log_method not in VALID_LOG_METHODS:
         msg_error = f"Invalid log_method: {log_method}"
         raise ValueError(msg_error)
 
-    if log and log_method:
-        log_func = getattr(logger, log_method, None)
-        if callable(log_func):
-            log_func(msg)
+    log_func = getattr(logger, log_method, None) if log_method else None
+    if log and callable(log_func):
+        log_func(msg)
 
     if show:
         with suppress_console_logging():
@@ -168,40 +156,36 @@ def echo(
             stream.flush()
 
 
-def format_debug(message: str, *, use_color: bool = True) -> str:
-    """Format debug message with [DEBUG] prefix."""
-    prefix = f"{COLOR_DEBUG}[DEBUG]{RESET}" if use_color else "[DEBUG]"
-    return f"{prefix} {message}"
+def log_and_optionally_echo(
+    msg: str,
+    level: str = "info",
+    *,
+    show: bool = False,
+    style: Callable[[str], str] | None = None,
+    stream: TextIO = sys.stdout,
+) -> None:
+    """
+    Log the message and optionally echo it to terminal.
 
+    Args:
+        msg: The message text.
+        level: 'info', 'warning', 'error', 'debug', 'exception'.
+        show: If True, print to terminal.
+        style: Optional style function for terminal output.
+        stream: Output stream for terminal (default sys.stdout).
+    """
+    from charfinder.utils.logger_setup import get_logger
 
-def format_error(message: str, *, use_color: bool = True) -> str:
-    """Format error message with [ERROR] prefix."""
-    prefix = f"{COLOR_ERROR}[ERROR]{RESET}" if use_color else "[ERROR]"
-    return f"{prefix} {message}"
+    logger = get_logger()
+    log_func = getattr(logger, level, None)
+    if callable(log_func):
+        log_func(msg)
 
-
-def format_info(message: str, *, use_color: bool = True) -> str:
-    """Format info message with [INFO] prefix."""
-    prefix = f"{COLOR_INFO}[INFO]{RESET}" if use_color else "[INFO]"
-    return f"{prefix} {message}"
-
-
-def format_warning(message: str, *, use_color: bool = True) -> str:
-    """Format warning message with [WARNING] prefix."""
-    prefix = f"{COLOR_WARNING}[WARNING]{RESET}" if use_color else "[WARNING]"
-    return f"{prefix} {message}"
-
-
-def format_settings(message: str, *, use_color: bool = True) -> str:
-    """Format settings message with [SETTINGS] prefix."""
-    prefix = f"{COLOR_SETTINGS}[SETTINGS]{RESET}" if use_color else "[SETTINGS]"
-    return f"{prefix} {message}"
-
-
-def format_success(message: str, *, use_color: bool = True) -> str:
-    """Format success message with [OK] prefix."""
-    prefix = f"{COLOR_SUCCESS}[OK]{RESET}" if use_color else "[OK]"
-    return f"{prefix} {message}"
+    if show and style:
+        styled = style(msg)
+        with suppress_console_logging():
+            stream.write(styled + "\n")
+            stream.flush()
 
 
 # ---------------------------------------------------------------------

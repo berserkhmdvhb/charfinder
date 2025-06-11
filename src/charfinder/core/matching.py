@@ -11,12 +11,9 @@ Exports:
 
 from charfinder.fuzzymatchlib import compute_similarity
 from charfinder.types import FuzzyMatchContext
-from charfinder.utils.formatter import (
-    echo,
-    format_debug,
-    format_info,
-)
-from charfinder.utils.logger import get_logger
+from charfinder.utils.formatter import echo
+from charfinder.utils.logger_setup import get_logger
+from charfinder.utils.logger_styles import format_debug, format_info
 
 __all__ = [
     "find_exact_matches",

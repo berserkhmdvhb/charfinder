@@ -26,8 +26,9 @@ from charfinder.constants import (
     EXIT_SUCCESS,
 )
 from charfinder.core.core_main import find_chars, find_chars_raw
-from charfinder.utils.formatter import format_error, format_result_line, should_use_color
-from charfinder.utils.logger import get_logger
+from charfinder.utils.formatter import format_result_line, should_use_color
+from charfinder.utils.logger_setup import get_logger
+from charfinder.utils.logger_styles import format_error
 
 __all__ = [
     "get_version",

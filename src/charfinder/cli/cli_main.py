@@ -24,14 +24,14 @@ from charfinder.cli.handlers import get_version, handle_find_chars
 from charfinder.cli.parser import create_parser
 from charfinder.constants import EXIT_CANCELLED, EXIT_ERROR, EXIT_SUCCESS
 from charfinder.settings import get_environment, load_settings
-from charfinder.utils.formatter import (
-    echo,
+from charfinder.utils.formatter import echo
+from charfinder.utils.logger_setup import get_logger, setup_logging, teardown_logger
+from charfinder.utils.logger_styles import (
     format_error,
     format_info,
     format_settings,
     format_warning,
 )
-from charfinder.utils.logger import get_logger, setup_logging, teardown_logger
 
 __all__ = ["main"]
 

@@ -1,14 +1,5 @@
-"""
-Environment and configuration management for CharFinder.
-
-- Loads `.env` file (optional) with override via DOTENV_PATH
-- Provides access to environment variables
-- Supports debug logging of dotenv resolution (via CHARFINDER_DEBUG_ENV_LOAD=1)
-"""
-
 from __future__ import annotations
 
-import logging
 import os
 from pathlib import Path
 from typing import cast
@@ -21,6 +12,8 @@ from charfinder.constants import (
     ENV_LOG_BACKUP_COUNT,
     ENV_LOG_MAX_BYTES,
 )
+from charfinder.utils.formatter import log_and_optionally_echo
+from charfinder.utils.logger_styles import format_error, format_settings, format_warning
 
 # ---------------------------------------------------------------------
 # Environment Accessors
@@ -54,10 +47,12 @@ def is_prod() -> bool:
 
 
 def get_log_max_bytes() -> int:
+    """Return maximum log file size in bytes."""
     return safe_int(ENV_LOG_MAX_BYTES, 1_000_000)
 
 
 def get_log_backup_count() -> int:
+    """Return number of log file backups to keep."""
     return safe_int(ENV_LOG_BACKUP_COUNT, 5)
 
 
@@ -90,14 +85,18 @@ def resolve_dotenv_path() -> Path | None:
       2. .env in project root
       3. None if not found
     """
-    logger = logging.getLogger("charfinder")
     root_dir = get_root_dir()
 
     if custom := os.getenv("DOTENV_PATH"):
         custom_path = Path(custom)
         if not custom_path.exists() and os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
             message = f"DOTENV_PATH is set to {custom_path} but the file does not exist."
-            logger.warning(message)
+            log_and_optionally_echo(
+                msg=message,
+                level="warning",
+                show=True,
+                style=format_warning,
+            )
         return custom_path
 
     default_env = root_dir / ".env"
@@ -110,7 +109,7 @@ def is_test_mode() -> bool:
 
 
 # ---------------------------------------------------------------------
-# Public Utilities
+# Environment variable safe access helpers
 # ---------------------------------------------------------------------
 
 
@@ -125,14 +124,18 @@ def safe_int(env_var: str, default: int) -> int:
     Returns:
         Integer from the environment or default.
     """
-    logger = logging.getLogger("charfinder")
     val: str | None = os.getenv(env_var)
     if val is not None:
         try:
             return int(val)
         except ValueError:
             message = f"Invalid int for {env_var!r} = {val!r}; using default {default}"
-            logger.exception(message)
+            log_and_optionally_echo(
+                msg=message,
+                level="error",
+                show=True,
+                style=format_error,
+            )
     return default
 
 
@@ -144,7 +147,17 @@ def safe_int(env_var: str, default: int) -> int:
 def load_settings(
     *, do_load_dotenv: bool = True, debug: bool = False, verbose: bool = False
 ) -> list[Path]:
-    logger = logging.getLogger("charfinder")
+    """
+    Load .env settings and optionally log the process.
+
+    Args:
+        do_load_dotenv: Whether to load the .env file.
+        debug: Whether debug mode is enabled.
+        verbose: Whether verbose output is enabled.
+
+    Returns:
+        List of loaded .env file paths.
+    """
     loaded: list[Path] = []
     dotenv_path = resolve_dotenv_path()
 
@@ -154,18 +167,23 @@ def load_settings(
 
     if not loaded:
         message = "No .env file loaded — using system env or defaults."
-        if debug or verbose:
-            logger.info(message)
+        log_and_optionally_echo(
+            msg=message,
+            level="info",
+            show=debug or verbose,
+            style=format_settings,
+        )
 
     return loaded
 
 
 # ---------------------------------------------------------------------
-# CACHE File Retrieval
+# Cache Config
 # ---------------------------------------------------------------------
 
 
 def get_cache_file() -> str:
+    """Return the cache file path."""
     return os.getenv("CHARFINDER_CACHE", "unicode_name_cache.json")
 
 
