@@ -136,7 +136,7 @@ def echo(
     stream: TextIO = sys.stdout,
     show: bool = True,
     log: bool = True,
-    log_method: str | None = None,  # 'debug', 'info', 'warning', 'error', 'exception'
+    log_method: str | None = None,
 ) -> None:
     """
     Write a formatted message to stdout and optionally to logger.
@@ -147,25 +147,25 @@ def echo(
         stream: Output stream (default sys.stdout).
         show: If True, print to terminal; if False, suppress terminal output.
         log: If False, do not log at all.
-        log_method: If provided, log using the corresponding logger method
-                    ('debug', 'info', 'warning', 'error', 'exception').
+        log_method: If provided, log using the corresponding logger method.
     """
     styled = style(msg)
 
+    logger = logging.getLogger("charfinder")
+
     if log_method not in VALID_LOG_METHODS:
-        message = f"Invalid log_method: {log_method}"
-        raise ValueError(message)
+        msg_error = f"Invalid log_method: {log_method}"
+        raise ValueError(msg_error)
 
     if log and log_method:
         log_func = getattr(logger, log_method, None)
         if callable(log_func):
-            # Always suppress StreamHandler when logging, regardless of show
-            with suppress_console_logging():
-                log_func(msg)
+            log_func(msg)
 
     if show:
-        stream.write(styled + "\n")
-        stream.flush()
+        with suppress_console_logging():
+            stream.write(styled + "\n")
+            stream.flush()
 
 
 def format_debug(message: str, *, use_color: bool = True) -> str:

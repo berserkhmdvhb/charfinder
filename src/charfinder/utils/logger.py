@@ -136,7 +136,7 @@ def setup_logging(
         maxBytes=get_log_max_bytes(),
         backupCount=get_log_backup_count(),
         encoding=const.DEFAULT_ENCODING,
-        delay=True,
+        delay=False,
     )
     custom_file_handler.setFormatter(formatter)
     ensure_filter(custom_file_handler, env_filter)

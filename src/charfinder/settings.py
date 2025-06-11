@@ -96,7 +96,8 @@ def resolve_dotenv_path() -> Path | None:
     if custom := os.getenv("DOTENV_PATH"):
         custom_path = Path(custom)
         if not custom_path.exists() and os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
-            logger.warning(f"DOTENV_PATH is set to {custom_path} but the file does not exist.")
+            message = f"DOTENV_PATH is set to {custom_path} but the file does not exist."
+            logger.warning(message)
         return custom_path
 
     default_env = root_dir / ".env"
@@ -130,7 +131,8 @@ def safe_int(env_var: str, default: int) -> int:
         try:
             return int(val)
         except ValueError:
-            logger.error(f"Invalid int for {env_var!r} = {val!r}; using default {default}")
+            message = f"Invalid int for {env_var!r} = {val!r}; using default {default}"
+            logger.exception(message)
     return default
 
 
@@ -153,8 +155,7 @@ def load_settings(
     if not loaded:
         message = "No .env file loaded — using system env or defaults."
         if debug or verbose:
-            print(message)  # Optional terminal output if needed
-        logger.info(message)
+            logger.info(message)
 
     return loaded
 
