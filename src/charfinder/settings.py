@@ -8,6 +8,7 @@ Environment and configuration management for CharFinder.
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import cast
@@ -20,7 +21,6 @@ from charfinder.constants import (
     ENV_LOG_BACKUP_COUNT,
     ENV_LOG_MAX_BYTES,
 )
-from charfinder.utils.formatter import echo, format_info, format_settings
 
 # ---------------------------------------------------------------------
 # Environment Accessors
@@ -90,18 +90,13 @@ def resolve_dotenv_path() -> Path | None:
       2. .env in project root
       3. None if not found
     """
+    logger = logging.getLogger("charfinder")
     root_dir = get_root_dir()
 
     if custom := os.getenv("DOTENV_PATH"):
         custom_path = Path(custom)
         if not custom_path.exists() and os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
-            echo(
-                f"[DOTENV_PATH is set to {custom_path} but the file does not exist.",
-                style=format_settings,
-                show=True,
-                log=True,
-                log_method="warning",
-            )
+            logger.warning(f"DOTENV_PATH is set to {custom_path} but the file does not exist.")
         return custom_path
 
     default_env = root_dir / ".env"
@@ -129,18 +124,13 @@ def safe_int(env_var: str, default: int) -> int:
     Returns:
         Integer from the environment or default.
     """
+    logger = logging.getLogger("charfinder")
     val: str | None = os.getenv(env_var)
     if val is not None:
         try:
             return int(val)
         except ValueError:
-            echo(
-                f"Invalid int for {env_var!r} = {val!r}; using default {default}",
-                style=format_settings,
-                show=True,
-                log=True,
-                log_method="error",
-            )
+            logger.error(f"Invalid int for {env_var!r} = {val!r}; using default {default}")
     return default
 
 
@@ -152,6 +142,7 @@ def safe_int(env_var: str, default: int) -> int:
 def load_settings(
     *, do_load_dotenv: bool = True, debug: bool = False, verbose: bool = False
 ) -> list[Path]:
+    logger = logging.getLogger("charfinder")
     loaded: list[Path] = []
     dotenv_path = resolve_dotenv_path()
 
@@ -161,7 +152,9 @@ def load_settings(
 
     if not loaded:
         message = "No .env file loaded — using system env or defaults."
-        echo(msg=message, style=format_info, show=debug or verbose, log=True, log_method="info")
+        if debug or verbose:
+            print(message)  # Optional terminal output if needed
+        logger.info(message)
 
     return loaded
 
