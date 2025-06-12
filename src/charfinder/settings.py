@@ -164,13 +164,24 @@ def load_settings(
 
 
 # ---------------------------------------------------------------------
-# Cache Config
+# Files Path Retrieval
 # ---------------------------------------------------------------------
 
 
-def get_cache_file() -> str:
+def get_cache_file() -> Path:
     """Return the cache file path."""
-    return os.getenv("CHARFINDER_CACHE", "unicode_name_cache.json")
+    env_value = os.getenv("CHARFINDER_CACHE_FILE_PATH")
+    if env_value:
+        return get_root_dir() / env_value
+    return get_root_dir() / "data" / "cache" / "unicode_name_cache.json"
+
+
+def get_unicode_data_file() -> Path:
+    """Return the UnicodeData.txt file path."""
+    env_value = os.getenv("UNICODE_DATA_FILE_PATH")
+    if env_value:
+        return get_root_dir() / env_value
+    return get_root_dir() / "data" / "UnicodeData.txt"
 
 
 # ---------------------------------------------------------------------

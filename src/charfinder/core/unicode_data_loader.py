@@ -8,29 +8,20 @@ Exports:
     - load_alternate_names: Return a mapping of characters to their alternate names.
 """
 
-import os
 import sys
-from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from charfinder.settings import get_root_dir
+from charfinder.settings import get_unicode_data_file
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_info, format_warning
 
 logger = get_logger()
 
-UNICODE_DATA_URL = os.getenv(
-    "UNICODE_DATA_URL",
-    "https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt",
-)
-UNICODE_DATA_FILE_ENV = os.getenv("UNICODE_DATA_FILE")
+UNICODE_DATA_URL = "https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt"
+UNICODE_DATA_FILE = get_unicode_data_file()
 
-if UNICODE_DATA_FILE_ENV:
-    UNICODE_DATA_FILE = get_root_dir() / UNICODE_DATA_FILE_ENV
-else:
-    UNICODE_DATA_FILE = Path(__file__).parent.parent.parent / "data" / "UnicodeData.txt"
 __all__ = ["load_alternate_names"]
 
 ALT_NAME_INDEX = 10

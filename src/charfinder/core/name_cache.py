@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import cast
 
 from charfinder.core.unicode_data_loader import load_alternate_names
+from charfinder.settings import get_cache_file
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error, format_info
@@ -35,39 +36,22 @@ def build_name_cache(
     force_rebuild: bool = False,
     show: bool = True,
     use_color: bool = True,
-    cache_file: str | None = None,
+    cache_file_path: Path | None = None,
 ) -> dict[str, dict[str, str]]:
     """
     Build and return a cache dictionary of characters to original and normalized names,
     including alternate names where available.
-
-    Args:
-        force_rebuild: Force rebuilding even if cache file exists.
-        show: Flag to show or not show logging messages.
-        use_color: Colorize log output.
-        cache_file: Path to the cache file.
-
-    Returns:
-        Dictionary mapping each character to its name data:
-        {
-            "original": official Unicode name,
-            "normalized": normalized official name,
-            "alternate": alternate name (if any),
-            "alternate_normalized": normalized alternate name (if any),
-        }
     """
-    if cache_file is None:
-        from charfinder.settings import get_cache_file
+    if cache_file_path is None:
+        cache_file_path = get_cache_file()
 
-        cache_file = get_cache_file()
-
-    path = Path(cache_file)
+    path = Path(cache_file_path)
 
     # Load from cache if available
     if not force_rebuild and path.exists():
         with path.open(encoding="utf-8") as f:
             cache = cast("dict[str, dict[str, str]]", json.load(f))
-        message = f"Loaded Unicode name cache from: {cache_file}"
+        message = f"Loaded Unicode name cache from: {cache_file_path}"
         echo(
             message,
             style=lambda m: format_info(m, use_color=use_color),
@@ -113,9 +97,10 @@ def build_name_cache(
 
     # Write cache to disk
     try:
+        path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8") as f:
             json.dump(cache, f, ensure_ascii=False)
-        message = f"Cache written to: {cache_file}"
+        message = f"Cache written to: {cache_file_path}"
         echo(
             message,
             style=lambda m: format_info(m, use_color=use_color),

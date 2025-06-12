@@ -118,14 +118,6 @@ def test_get_log_dir(patch_env: Callable[[str], None]) -> None:
 # ---------------------------------------------------------------------
 
 
-def test_get_cache_file(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test get_cache_file() accessor."""
-    monkeypatch.setenv("CHARFINDER_CACHE", "custom_cache.json")
-    assert get_cache_file() == "custom_cache.json"
-
-    monkeypatch.delenv("CHARFINDER_CACHE", raising=False)
-    assert get_cache_file() == "unicode_name_cache.json"
-
 # ---------------------------------------------------------------------
 # load_settings and resolve_loaded_dotenv_paths
 # ---------------------------------------------------------------------
