@@ -34,11 +34,13 @@ from charfinder.settings import (
     get_log_dir,
     get_log_max_bytes,
 )
+from charfinder.utils.formatter import echo
 from charfinder.utils.logger_objects import (
     CustomRotatingFileHandler,
     EnvironmentFilter,
     SafeFormatter,
 )
+from charfinder.utils.logger_styles import format_settings
 
 __all__ = [
     "CustomRotatingFileHandler",
@@ -154,7 +156,13 @@ def setup_logging(
         f"Logging initialized. Log file: {log_file_path} "
         f"(maxBytes={max_bytes}, backupCount={backup_count})"
     )
-    logger.info(message)
+    echo(
+            msg=message,
+            style=format_settings,
+            show=True,
+            log=True,
+            log_method="info"
+        )
 
     return [stream_handler, custom_file_handler] if return_handlers else None
 
