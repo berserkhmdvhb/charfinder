@@ -157,7 +157,7 @@ def setup_logging(
     # Final confirmation log after all handlers are attached
     if not suppress_echo:
         message = (
-            f'Logging initialized. Log file: "{log_file_path}"'
+            f'Logging initialized. Log file: "{log_file_path}" '
             f"(maxBytes={max_bytes}, backupCount={backup_count})"
         )
         echo(msg=message, style=format_settings, show=True, log=False, log_method="info")

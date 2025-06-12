@@ -83,6 +83,7 @@ DEFAULT_FUZZY_ALGO = "sequencematcher"
 DEFAULT_FUZZY_MATCH_MODE = "single"
 DEFAULT_EXACT_MATCH_MODE = "word-subset"
 DEFAULT_COLOR_MODE = "auto"
+DEFAULT_NORMALIZATION_FORM: Literal["NFC", "NFD", "NFKC", "NFKD"] = "NFC"
 
 # ---------------------------------------------------------------------
 # Logging (static pieces)

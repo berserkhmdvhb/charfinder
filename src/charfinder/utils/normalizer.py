@@ -1,5 +1,6 @@
 import unicodedata
 
+from charfinder.constants import DEFAULT_NORMALIZATION_FORM
 from charfinder.utils.logger_setup import get_logger
 
 __all__ = ["normalize"]
@@ -17,4 +18,4 @@ def normalize(text: str) -> str:
     Returns:
         Normalized and uppercased text.
     """
-    return unicodedata.normalize("NFKD", text).upper()
+    return unicodedata.normalize(DEFAULT_NORMALIZATION_FORM, text).upper()
