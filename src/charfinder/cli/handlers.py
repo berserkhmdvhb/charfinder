@@ -46,11 +46,11 @@ __all__ = [
 logger = get_logger()
 
 
-def resolve_effective_threshold(cli_threshold: float | None) -> float:
+def resolve_effective_threshold(cli_threshold: float | None, *, use_color: bool = True) -> float:
     """Resolve threshold from CLI arg, env var, or default.
 
     Priority:
-        1. CLI argument (--threshold)
+        1. CLI argument (-  -threshold)
         2. Environment variable CHARFINDER_MATCH_THRESHOLD
         3. DEFAULT_THRESHOLD
     """
@@ -69,7 +69,7 @@ def resolve_effective_threshold(cli_threshold: float | None) -> float:
             )
             echo(
                 message,
-                style=format_warning,
+                style=lambda m: format_warning(m, use_color=use_color),
                 show=True,
                 log=True,
                 log_method="warning",
@@ -141,7 +141,7 @@ def handle_find_chars(args: Namespace) -> int:
     """
     color_mode = resolve_effective_color_mode(args.color)
     use_color = should_use_color(color_mode)
-    threshold = resolve_effective_threshold(args.threshold)
+    threshold = resolve_effective_threshold(args.threshold, use_color=use_color)
 
     # Resolve query: prefer option_query over positional_query
     query_list = args.option_query if args.option_query else args.positional_query

@@ -20,7 +20,7 @@ import sys
 import traceback
 
 from charfinder.cli.diagnostics import print_debug_diagnostics
-from charfinder.cli.handlers import get_version, handle_find_chars
+from charfinder.cli.handlers import get_version, handle_find_chars, resolve_effective_color_mode
 from charfinder.cli.parser import create_parser
 from charfinder.constants import EXIT_CANCELLED, EXIT_ERROR, EXIT_SUCCESS
 from charfinder.settings import get_environment, is_prod, load_settings
@@ -46,7 +46,8 @@ def main() -> None:
     """
     parser = create_parser()
     args = parser.parse_args()
-    use_color = should_use_color(args.color)
+    color_mode = resolve_effective_color_mode(args.color)
+    use_color = should_use_color(color_mode)
     # Support both positional and optional --query/-q args
     query_list = args.option_query if args.option_query else args.positional_query
     query_str = " ".join(query_list).strip()
@@ -63,6 +64,9 @@ def main() -> None:
 
     # === STEP 2: Load .env settings
     load_settings(verbose=args.verbose, debug=args.debug)
+    # === STEP 2b: Recompute color mode (now env var visible)
+    color_mode = resolve_effective_color_mode(args.color)
+    use_color = should_use_color(color_mode)
 
     # === STEP 3: Finalize logging (with correct level now that settings loaded)
     log_level = logging.DEBUG if args.debug else None
