@@ -90,7 +90,7 @@ def resolve_dotenv_path() -> Path | None:
     if custom := os.getenv("DOTENV_PATH"):
         custom_path = Path(custom)
         if not custom_path.exists() and os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
-            message = f"DOTENV_PATH is set to {custom_path} but the file does not exist."
+            message = f'DOTENV_PATH is set to "{custom_path}" but the file does not exist.'
             echo(msg=message, style=format_warning, show=True, log=False, log_method="warning")
         return custom_path
 
@@ -161,6 +161,13 @@ def load_settings(
             msg=message, style=format_settings, show=debug or verbose, log=False, log_method="info"
         )
     return loaded
+
+
+def get_unicode_data_url() -> str:
+    return os.getenv(
+        "UNICODE_DATA_URL",
+        "https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt",
+    )
 
 
 # ---------------------------------------------------------------------

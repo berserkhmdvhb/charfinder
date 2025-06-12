@@ -23,7 +23,7 @@ from charfinder.cli.diagnostics import print_debug_diagnostics
 from charfinder.cli.handlers import get_version, handle_find_chars
 from charfinder.cli.parser import create_parser
 from charfinder.constants import EXIT_CANCELLED, EXIT_ERROR, EXIT_SUCCESS
-from charfinder.settings import get_environment, load_settings
+from charfinder.settings import get_environment, is_prod, load_settings
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger, setup_logging, teardown_logger
 from charfinder.utils.logger_styles import (
@@ -81,6 +81,16 @@ def main() -> None:
             log=True,
             log_method="info",
         )
+
+        if is_prod():
+            echo(
+                "You are running in PROD environment!",
+                style=lambda m: format_warning(m, use_color=use_color),
+                stream=sys.stderr,
+                show=True,
+                log=True,
+                log_method="warning",
+            )
 
         message = f"CharFinder {get_version()} CLI started"
         echo(

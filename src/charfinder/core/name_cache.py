@@ -51,7 +51,7 @@ def build_name_cache(
     if not force_rebuild and path.exists():
         with path.open(encoding="utf-8") as f:
             cache = cast("dict[str, dict[str, str]]", json.load(f))
-        message = f"Loaded Unicode name cache from: {cache_file_path}"
+        message = f'Loaded Unicode name cache from: "{cache_file_path}"'
         echo(
             message,
             style=lambda m: format_info(m, use_color=use_color),
@@ -100,7 +100,7 @@ def build_name_cache(
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8") as f:
             json.dump(cache, f, ensure_ascii=False)
-        message = f"Cache written to: {cache_file_path}"
+        message = f'Cache written to: "{cache_file_path}"'
         echo(
             message,
             style=lambda m: format_info(m, use_color=use_color),
