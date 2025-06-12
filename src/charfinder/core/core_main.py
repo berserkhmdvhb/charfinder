@@ -135,6 +135,7 @@ def find_chars_raw(
     threshold: float = DEFAULT_THRESHOLD,
     name_cache: dict[str, dict[str, str]] | None = None,
     verbose: bool = True,
+    use_color: bool = True,
     fuzzy_algo: FuzzyAlgorithm = "sequencematcher",
     fuzzy_match_mode: MatchMode = "single",
     exact_match_mode: str = "word-subset",
@@ -158,7 +159,7 @@ def find_chars_raw(
         List of dicts: [{code, char, name, (score)}]
     """
     if name_cache is None:
-        name_cache = build_name_cache(show=verbose, use_color=True)
+        name_cache = build_name_cache(show=verbose, use_color=use_color)
 
     norm_query = normalize(query)
     matches: list[tuple[int, str, str, float | None]] = find_exact_matches(
@@ -172,7 +173,7 @@ def find_chars_raw(
             match_mode=fuzzy_match_mode,
             agg_fn=agg_fn,
             verbose=verbose,
-            use_color=False,  # no color needed for raw output
+            use_color=use_color,
             query=query,
         )
         matches.extend(find_fuzzy_matches(norm_query, name_cache, context))
@@ -181,7 +182,7 @@ def find_chars_raw(
     message = f"{match_info} for query: '{query}'"
     echo(
         message,
-        style=lambda m: format_info(m, use_color=False),
+        style=lambda m: format_info(m, use_color=use_color),
         show=verbose,
         log=True,
         log_method="info",

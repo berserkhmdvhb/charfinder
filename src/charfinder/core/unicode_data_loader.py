@@ -28,7 +28,7 @@ EXPECTED_MIN_FIELDS = 11
 def load_alternate_names(
     *,
     show: bool = True,
-    use_color: bool = True,
+    use_color: bool = False,
 ) -> dict[str, str]:
     """
     Load alternate names from UnicodeData.txt.

@@ -159,6 +159,7 @@ def handle_find_chars(args: Namespace) -> int:
                 fuzzy=args.fuzzy,
                 threshold=threshold,
                 verbose=args.verbose,
+                use_color=use_color,
                 fuzzy_algo=args.fuzzy_algo,
                 fuzzy_match_mode=args.fuzzy_match_mode,
                 exact_match_mode=args.exact_match_mode,

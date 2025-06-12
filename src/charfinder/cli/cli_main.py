@@ -78,7 +78,6 @@ def main() -> None:
     )
 
     logger = get_logger()
-    use_color = args.color != "never"
 
     try:
         # Show banner and environment info
