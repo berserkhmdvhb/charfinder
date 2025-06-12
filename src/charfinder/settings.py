@@ -12,7 +12,7 @@ from charfinder.constants import (
     ENV_LOG_BACKUP_COUNT,
     ENV_LOG_MAX_BYTES,
 )
-from charfinder.utils.formatter import log_and_optionally_echo
+from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_error, format_settings, format_warning
 
 # ---------------------------------------------------------------------
@@ -91,12 +91,7 @@ def resolve_dotenv_path() -> Path | None:
         custom_path = Path(custom)
         if not custom_path.exists() and os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
             message = f"DOTENV_PATH is set to {custom_path} but the file does not exist."
-            log_and_optionally_echo(
-                msg=message,
-                level="warning",
-                show=True,
-                style=format_warning,
-            )
+            echo(msg=message, style=format_warning, show=True, log=False, log_method="warning")
         return custom_path
 
     default_env = root_dir / ".env"
@@ -130,12 +125,7 @@ def safe_int(env_var: str, default: int) -> int:
             return int(val)
         except ValueError:
             message = f"Invalid int for {env_var!r} = {val!r}; using default {default}"
-            log_and_optionally_echo(
-                msg=message,
-                level="error",
-                show=True,
-                style=format_error,
-            )
+            echo(msg=message, style=format_error, show=True, log=False, log_method="warning")
     return default
 
 
@@ -167,13 +157,9 @@ def load_settings(
 
     if not loaded:
         message = "No .env file loaded — using system env or defaults."
-        log_and_optionally_echo(
-            msg=message,
-            level="info",
-            show=debug or verbose,
-            style=format_settings,
+        echo(
+            msg=message, style=format_settings, show=debug or verbose, log=False, log_method="info"
         )
-
     return loaded
 
 

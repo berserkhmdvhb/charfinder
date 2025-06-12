@@ -35,10 +35,11 @@ from charfinder.settings import (
     get_log_max_bytes,
 )
 from charfinder.utils.formatter import echo
-from charfinder.utils.logger_objects import (
+from charfinder.utils.logger_helpers import (
     CustomRotatingFileHandler,
     EnvironmentFilter,
     SafeFormatter,
+    StreamFilter,
 )
 from charfinder.utils.logger_styles import format_settings
 
@@ -76,6 +77,7 @@ def setup_logging(
     *,
     reset: bool = False,
     return_handlers: bool = False,
+    suppress_echo: bool = False,
 ) -> list[logging.Handler] | None:
     """
     Set up logging to both console and file.
@@ -126,6 +128,7 @@ def setup_logging(
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
     ensure_filter(stream_handler, env_filter)
+    stream_handler.addFilter(StreamFilter())
 
     console_level = logging.INFO
     if log_level is not None:
@@ -152,17 +155,12 @@ def setup_logging(
     logger.addHandler(custom_file_handler)
 
     # Final confirmation log after all handlers are attached
-    message = (
-        f"Logging initialized. Log file: {log_file_path} "
-        f"(maxBytes={max_bytes}, backupCount={backup_count})"
-    )
-    echo(
-            msg=message,
-            style=format_settings,
-            show=True,
-            log=True,
-            log_method="info"
+    if not suppress_echo:
+        message = (
+            f"Logging initialized. Log file: {log_file_path} "
+            f"(maxBytes={max_bytes}, backupCount={backup_count})"
         )
+        echo(msg=message, style=format_settings, show=True, log=False, log_method="info")
 
     return [stream_handler, custom_file_handler] if return_handlers else None
 

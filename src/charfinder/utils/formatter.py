@@ -4,7 +4,7 @@ Shared formatting utilities for CharFinder.
 This module provides reusable formatting functions for:
 
 1. Writing informational, warning, error, debug, success, and settings messages
-   to both terminal and logger (via `echo()` and `log_and_optionally_echo()`).
+   to both terminal and logger (via `echo()` and `log_optionally_echo()`).
 2. Formatting result lines for Unicode character search results.
 3. Determining whether color output should be used.
 
@@ -21,24 +21,24 @@ to avoid duplication.
 
 from __future__ import annotations
 
-import logging
 import sys
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
 from typing import TextIO
 
 from colorama import Fore, Style, init
 
 from charfinder.constants import FIELD_WIDTHS, VALID_LOG_METHODS
+from charfinder.utils.logger_helpers import suppress_console_logging
 
 __all__ = [
     "echo",
     "format_result_header",
     "format_result_line",
     "format_result_row",
-    "log_and_optionally_echo",
+    "log_optionally_echo",
     "should_use_color",
 ]
+
 
 # Initialize colorama once
 init(autoreset=True)
@@ -88,31 +88,6 @@ def should_use_color(mode: str) -> bool:
 
 
 # ---------------------------------------------------------------------
-# Log Message Management
-# ---------------------------------------------------------------------
-
-
-@contextmanager
-def suppress_console_logging() -> Iterator[None]:
-    """
-    Context manager to temporarily suppress StreamHandler (console) output.
-    """
-    from charfinder.utils.logger_setup import get_logger
-
-    logger = get_logger()
-    stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
-    for h in stream_handlers:
-        h.setLevel(logging.CRITICAL + 1)
-
-    try:
-        yield
-    finally:
-        stream_handlers = [h for h in logger.handlers if isinstance(h, logging.StreamHandler)]
-        for h in stream_handlers:
-            h.setLevel(logging.NOTSET)
-
-
-# ---------------------------------------------------------------------
 # Standard message formatters
 # ---------------------------------------------------------------------
 
@@ -134,7 +109,7 @@ def echo(
         style: The formatting function to apply.
         stream: Output stream (default sys.stdout).
         show: If True, print to terminal; if False, suppress terminal output.
-        log: If False, do not log at all.
+        log: If True, log the message (requires log_method).
         log_method: If provided, log using the corresponding logger method.
     """
     from charfinder.utils.logger_setup import get_logger
@@ -142,13 +117,18 @@ def echo(
     logger = get_logger()
     styled = style(msg)
 
-    if log_method not in VALID_LOG_METHODS:
+    if log and not log_method:
+        msg_error = "log_method must be provided if log=True"
+        raise ValueError(msg_error)
+
+    if log_method and log_method not in VALID_LOG_METHODS:
         msg_error = f"Invalid log_method: {log_method}"
         raise ValueError(msg_error)
 
     log_func = getattr(logger, log_method, None) if log_method else None
     if log and callable(log_func):
-        log_func(msg)
+        with suppress_console_logging():
+            log_func(msg)
 
     if show:
         with suppress_console_logging():
@@ -156,7 +136,7 @@ def echo(
             stream.flush()
 
 
-def log_and_optionally_echo(
+def log_optionally_echo(
     msg: str,
     level: str = "info",
     *,
@@ -179,10 +159,11 @@ def log_and_optionally_echo(
     logger = get_logger()
     log_func = getattr(logger, level, None)
     if callable(log_func):
-        log_func(msg)
+        with suppress_console_logging():
+            log_func(msg)
 
-    if show and style:
-        styled = style(msg)
+    if show:
+        styled = style(msg) if style else msg
         with suppress_console_logging():
             stream.write(styled + "\n")
             stream.flush()

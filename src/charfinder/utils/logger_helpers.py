@@ -1,20 +1,61 @@
 """
-Logger objects and custom classes for CharFinder.
+Logger helpers and custom classes for CharFinder.
 
 - EnvironmentFilter: Injects current environment into log records
 - SafeFormatter: Formatter that handles missing LogRecord attributes safely
 - CustomRotatingFileHandler: Rotating file handler with custom filename scheme:
     charfinder.log → charfinder_1.log, charfinder_2.log, etc.
+- StreamFilter + suppress_console_logging(): allows temporary suppression of console output.
 """
 
 from __future__ import annotations
 
-import contextlib
 import logging
 import re
+import threading
+from collections.abc import Iterator
+from contextlib import contextmanager, suppress
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Literal
+
+__all__ = [
+    "CustomRotatingFileHandler",
+    "EnvironmentFilter",
+    "SafeFormatter",
+    "StreamFilter",
+    "suppress_console_logging",
+]
+
+
+# ---------------------------------------------------------------------
+# Global StreamHandler suppression
+# ---------------------------------------------------------------------
+
+
+_SUPPRESS_CONSOLE_OUTPUT = threading.local()
+_SUPPRESS_CONSOLE_OUTPUT.value = False
+
+
+class StreamFilter(logging.Filter):
+    """Filter that disables StreamHandler output if suppression is active."""
+
+    def filter(self, _record: logging.LogRecord) -> bool:
+        return not getattr(_SUPPRESS_CONSOLE_OUTPUT, "value", False)
+
+
+@contextmanager
+def suppress_console_logging() -> Iterator[None]:
+    """
+    Context manager to temporarily suppress StreamHandler (console) output.
+    Thread-safe version using global flag + StreamFilter.
+    """
+    old_value = getattr(_SUPPRESS_CONSOLE_OUTPUT, "value", False)
+    _SUPPRESS_CONSOLE_OUTPUT.value = True
+    try:
+        yield
+    finally:
+        _SUPPRESS_CONSOLE_OUTPUT.value = old_value
 
 
 class EnvironmentFilter(logging.Filter):
@@ -72,7 +113,7 @@ class CustomRotatingFileHandler(RotatingFileHandler):
 
         if self.backupCount > 0:
             for path in self.get_files_to_delete():
-                with contextlib.suppress(OSError):
+                with suppress(OSError):
                     path.unlink()
 
             for i in range(self.backupCount - 1, 0, -1):

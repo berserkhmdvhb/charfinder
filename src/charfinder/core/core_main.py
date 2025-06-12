@@ -174,7 +174,7 @@ def find_chars_raw(
     message = f"{match_info} for query: '{query}'"
     echo(
         message,
-        format_info,
+        style=lambda m: format_info(m, use_color=False),
         show=verbose,
         log=True,
         log_method="info",

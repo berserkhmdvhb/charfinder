@@ -59,14 +59,14 @@ def main() -> None:
         args.debug = True
 
     # === STEP 1: Setup temporary safe logging first (so .env load doesn't create root handlers)
-    setup_logging(reset=True, log_level=logging.INFO)
+    setup_logging(reset=True, log_level=logging.INFO, suppress_echo=True)
 
     # === STEP 2: Load .env settings
     load_settings(verbose=args.verbose, debug=args.debug)
 
     # === STEP 3: Finalize logging (with correct level now that settings loaded)
     log_level = logging.DEBUG if args.debug else None
-    setup_logging(reset=True, log_level=log_level)
+    setup_logging(reset=True, log_level=log_level, suppress_echo=not (args.verbose or args.debug))
 
     logger = get_logger()
     use_color = args.color != "never"
