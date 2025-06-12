@@ -71,13 +71,14 @@ def get_default_formatter() -> logging.Formatter:
     return SafeFormatter(const.LOG_FORMAT)
 
 
-def setup_logging(
+def setup_logging(  # noqa: PLR0913
     log_dir: Path | None = None,
     log_level: int | None = None,
     *,
     reset: bool = False,
     return_handlers: bool = False,
     suppress_echo: bool = False,
+    use_color: bool = True,
 ) -> list[logging.Handler] | None:
     """
     Set up logging to both console and file.
@@ -94,6 +95,8 @@ def setup_logging(
         log_level: Optional log level for console output (for --debug).
         reset: If True, clears existing handlers before reconfiguring.
         return_handlers: If True, returns the list of attached handlers.
+        suppress_echo: If True, suppress terminal output showing.
+        use_color: If True, shows color.
 
     Returns:
         List of handlers if return_handlers is True; otherwise None.
@@ -160,7 +163,13 @@ def setup_logging(
             f'Logging initialized. Log file: "{log_file_path}" '
             f"(maxBytes={max_bytes}, backupCount={backup_count})"
         )
-        echo(msg=message, style=format_settings, show=True, log=False, log_method="info")
+        echo(
+            msg=message,
+            style=lambda m: format_settings(m, use_color=use_color),
+            show=True,
+            log=False,
+            log_method="info",
+        )
 
     return [stream_handler, custom_file_handler] if return_handlers else None
 

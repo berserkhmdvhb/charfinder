@@ -24,7 +24,7 @@ from charfinder.cli.handlers import get_version, handle_find_chars
 from charfinder.cli.parser import create_parser
 from charfinder.constants import EXIT_CANCELLED, EXIT_ERROR, EXIT_SUCCESS
 from charfinder.settings import get_environment, is_prod, load_settings
-from charfinder.utils.formatter import echo
+from charfinder.utils.formatter import echo, should_use_color
 from charfinder.utils.logger_setup import get_logger, setup_logging, teardown_logger
 from charfinder.utils.logger_styles import (
     format_error,
@@ -46,7 +46,7 @@ def main() -> None:
     """
     parser = create_parser()
     args = parser.parse_args()
-
+    use_color = should_use_color(args.color)
     # Support both positional and optional --query/-q args
     query_list = args.option_query if args.option_query else args.positional_query
     query_str = " ".join(query_list).strip()
@@ -59,14 +59,19 @@ def main() -> None:
         args.debug = True
 
     # === STEP 1: Setup temporary safe logging first (so .env load doesn't create root handlers)
-    setup_logging(reset=True, log_level=logging.INFO, suppress_echo=True)
+    setup_logging(reset=True, log_level=logging.INFO, suppress_echo=True, use_color=use_color)
 
     # === STEP 2: Load .env settings
     load_settings(verbose=args.verbose, debug=args.debug)
 
     # === STEP 3: Finalize logging (with correct level now that settings loaded)
     log_level = logging.DEBUG if args.debug else None
-    setup_logging(reset=True, log_level=log_level, suppress_echo=not (args.verbose or args.debug))
+    setup_logging(
+        reset=True,
+        log_level=log_level,
+        suppress_echo=not (args.verbose or args.debug),
+        use_color=use_color,
+    )
 
     logger = get_logger()
     use_color = args.color != "never"

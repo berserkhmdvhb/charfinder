@@ -16,7 +16,9 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from charfinder.utils.formatter import log_optionally_echo
 from charfinder.utils.logger_setup import get_logger
+from charfinder.utils.logger_styles import format_info
 from charfinder.utils.normalizer import normalize
 
 __all__ = [
@@ -51,7 +53,7 @@ def clear_all_caches() -> None:
     Clears all internal function caches. Useful for testing or debugging.
     """
     cached_normalize.cache_clear()
-    logger.info("All caches cleared.")
+    log_optionally_echo("All caches cleared.", level="info", show=False, style=format_info)
 
 
 def print_cache_stats() -> None:
@@ -59,4 +61,9 @@ def print_cache_stats() -> None:
     Print the current cache statistics for all cached functions.
     Useful for debugging or performance monitoring.
     """
-    logger.info("cached_normalize: %s", cached_normalize.cache_info())
+    log_optionally_echo(
+        f"cached_normalize: {cached_normalize.cache_info()}",
+        level="info",
+        show=False,
+        style=format_info,
+    )

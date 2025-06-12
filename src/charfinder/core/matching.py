@@ -92,7 +92,6 @@ def find_fuzzy_matches(
             log=True,
             log_method="info",
         )
-        logger.info(message)
 
         message = (
             f"Trying fuzzy matching (threshold={context.threshold}, agg_fn={context.agg_fn})..."
@@ -104,7 +103,6 @@ def find_fuzzy_matches(
             log=True,
             log_method="info",
         )
-        logger.info(message)
 
     for char, names in name_cache.items():
         norm_name = names["normalized"]

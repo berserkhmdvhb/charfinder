@@ -28,11 +28,9 @@ from charfinder.cli.args import (
     ARG_FORMAT,
     ARG_FUZZY_MATCH_MODE,
     ARG_THRESHOLD,
-    DEFAULT_COLOR_MODE,
     DEFAULT_EXACT_MATCH_MODE,
     DEFAULT_FUZZY_ALGO,
     DEFAULT_FUZZY_MATCH_MODE,
-    DEFAULT_THRESHOLD,
     VALID_EXACT_MATCH_MODES,
     VALID_FUZZY_ALGOS,
     VALID_FUZZY_MATCH_MODES,
@@ -105,14 +103,14 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         ARG_THRESHOLD,
         type=threshold_range,
-        default=DEFAULT_THRESHOLD,
+        default=None,
         help="Fuzzy match threshold (0.0 to 1.0).",
     )
 
     parser.add_argument(
         ARG_COLOR,
         choices=["auto", "always", "never"],
-        default=DEFAULT_COLOR_MODE,
+        default=None,
         help="Control color output.",
     )
 

@@ -14,30 +14,86 @@ This module delegates color formatting to `cli/formatter.py` and avoids using pr
 from __future__ import annotations
 
 import json
+import os
 import sys
-from argparse import Namespace
+from argparse import ArgumentTypeError, Namespace
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
 
+from charfinder.cli.args import threshold_range
 from charfinder.constants import (
+    DEFAULT_COLOR_MODE,
+    DEFAULT_THRESHOLD,
     EXIT_CANCELLED,
     EXIT_INVALID_USAGE,
     EXIT_NO_RESULTS,
     EXIT_SUCCESS,
 )
 from charfinder.core.core_main import find_chars, find_chars_raw
-from charfinder.utils.formatter import format_result_line, should_use_color
+from charfinder.utils.formatter import echo, format_result_line, should_use_color
 from charfinder.utils.logger_setup import get_logger
-from charfinder.utils.logger_styles import format_error
+from charfinder.utils.logger_styles import format_error, format_warning
 
 __all__ = [
     "get_version",
     "handle_find_chars",
     "print_result_lines",
+    "resolve_effective_color_mode",
+    "resolve_effective_threshold",
     "should_use_color",
 ]
 
 logger = get_logger()
+
+
+def resolve_effective_threshold(cli_threshold: float | None) -> float:
+    """Resolve threshold from CLI arg, env var, or default.
+
+    Priority:
+        1. CLI argument (--threshold)
+        2. Environment variable CHARFINDER_MATCH_THRESHOLD
+        3. DEFAULT_THRESHOLD
+    """
+    if cli_threshold is not None:
+        return cli_threshold
+
+    env_value = os.getenv("CHARFINDER_MATCH_THRESHOLD")
+    if env_value is not None:
+        try:
+            # Reuse your existing CLI validator for consistency
+            return threshold_range(env_value)
+        except ArgumentTypeError:
+            message = (
+                f"Invalid CHARFINDER_MATCH_THRESHOLD env var: {env_value!r} — "
+                f"using default {DEFAULT_THRESHOLD}"
+            )
+            echo(
+                message,
+                style=format_warning,
+                show=True,
+                log=True,
+                log_method="warning",
+                stream=sys.stderr,
+            )
+    return DEFAULT_THRESHOLD
+
+
+def resolve_effective_color_mode(cli_color_mode: str | None) -> str:
+    """Resolve color mode from CLI arg, env var, or default.
+
+    Priority:
+        1. CLI argument (--color)
+        2. Environment variable CHARFINDER_COLOR_MODE
+        3. DEFAULT_COLOR_MODE
+    """
+    if cli_color_mode is not None:
+        return cli_color_mode
+
+    env_value = os.getenv("CHARFINDER_COLOR_MODE")
+    if env_value in {"auto", "always", "never"}:
+        return env_value
+
+    return DEFAULT_COLOR_MODE
 
 
 @lru_cache(maxsize=1)
@@ -83,7 +139,9 @@ def handle_find_chars(args: Namespace) -> int:
     Returns:
         int: Exit code to be passed to sys.exit().
     """
-    use_color = should_use_color(args.color)
+    color_mode = resolve_effective_color_mode(args.color)
+    use_color = should_use_color(color_mode)
+    threshold = resolve_effective_threshold(args.threshold)
 
     # Resolve query: prefer option_query over positional_query
     query_list = args.option_query if args.option_query else args.positional_query
@@ -99,7 +157,7 @@ def handle_find_chars(args: Namespace) -> int:
             rows = find_chars_raw(
                 query=query_str,
                 fuzzy=args.fuzzy,
-                threshold=args.threshold,
+                threshold=threshold,
                 verbose=args.verbose,
                 fuzzy_algo=args.fuzzy_algo,
                 fuzzy_match_mode=args.fuzzy_match_mode,
@@ -116,7 +174,7 @@ def handle_find_chars(args: Namespace) -> int:
             find_chars(
                 query=query_str,
                 fuzzy=args.fuzzy,
-                threshold=args.threshold,
+                threshold=threshold,
                 verbose=args.verbose,
                 use_color=use_color,
                 fuzzy_algo=args.fuzzy_algo,
