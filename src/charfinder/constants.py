@@ -37,6 +37,7 @@ VALID_FUZZY_ALGOS = ("sequencematcher", "rapidfuzz", "levenshtein")
 VALID_FUZZY_MATCH_MODES = ("single", "hybrid")
 VALID_EXACT_MATCH_MODES = ("substring", "word-subset")
 VALID_LOG_METHODS = {"debug", "info", "warning", "error", "exception"}
+VALID_HYBRID_AGG_FUNCS = Literal["mean", "median", "max", "min"]
 
 
 # ---------------------------------------------------------------------

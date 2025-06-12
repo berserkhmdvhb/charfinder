@@ -104,13 +104,14 @@ def handle_find_chars(args: Namespace) -> int:
                 fuzzy_algo=args.fuzzy_algo,
                 fuzzy_match_mode=args.fuzzy_match_mode,
                 exact_match_mode=args.exact_match_mode,
+                agg_fn=args.hybrid_agg_fn,
             )
             json.dump(rows, sys.stdout, ensure_ascii=False, indent=2)
             sys.stdout.write("\n")
             # In JSON mode, always return EXIT_SUCCESS (even if 0 results)
             return EXIT_SUCCESS
 
-        # Text output mode → use find_chars() generator
+        # Text output mode => use find_chars() generator
         results = list(
             find_chars(
                 query=query_str,
@@ -121,6 +122,7 @@ def handle_find_chars(args: Namespace) -> int:
                 fuzzy_algo=args.fuzzy_algo,
                 fuzzy_match_mode=args.fuzzy_match_mode,
                 exact_match_mode=args.exact_match_mode,
+                agg_fn=args.hybrid_agg_fn,
             )
         )
 

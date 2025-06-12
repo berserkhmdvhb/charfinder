@@ -161,6 +161,12 @@ def create_parser() -> argparse.ArgumentParser:
         help="Fuzzy match mode when --fuzzy is enabled.",
     )
 
+    parser.add_argument(
+        "--hybrid-agg-fn",
+        choices=["mean", "median", "max", "min"],
+        default="mean",
+        help="Aggregation function for hybrid match mode (default: mean).",
+    )
     # ---------------------------------------------------------------------
     # Output Options
     # ---------------------------------------------------------------------

@@ -59,8 +59,8 @@ def find_exact_matches(
             if query_words <= name_words:
                 matches.append((code_point, char, original_name, None))
         else:
-            msg = f"Unknown exact match mode: {exact_match_mode}"
-            raise ValueError(msg)
+            message = f"Unknown exact match mode: {exact_match_mode}"
+            raise ValueError(message)
 
     return matches
 
@@ -92,9 +92,11 @@ def find_fuzzy_matches(
             log=True,
             log_method="info",
         )
-
         logger.info(message)
-        message = f"Trying fuzzy matching (threshold={context.threshold})..."
+
+        message = (
+            f"Trying fuzzy matching (threshold={context.threshold}, agg_fn={context.agg_fn})..."
+        )
         echo(
             message,
             style=lambda m: format_info(m, use_color=context.use_color),
@@ -108,9 +110,21 @@ def find_fuzzy_matches(
         norm_name = names["normalized"]
         alt_norm = names.get("alternate_normalized")
 
-        score1 = compute_similarity(norm_query, norm_name, context.fuzzy_algo, context.match_mode)
+        score1 = compute_similarity(
+            norm_query,
+            norm_name,
+            context.fuzzy_algo,
+            context.match_mode,
+            agg_fn=context.agg_fn,
+        )
         score2 = (
-            compute_similarity(norm_query, alt_norm, context.fuzzy_algo, context.match_mode)
+            compute_similarity(
+                norm_query,
+                alt_norm,
+                context.fuzzy_algo,
+                context.match_mode,
+                agg_fn=context.agg_fn,
+            )
             if alt_norm
             else None
         )
@@ -127,6 +141,7 @@ def find_fuzzy_matches(
                     log_method="debug",
                 )
             continue
+
         if score >= context.threshold:
             matches.append((ord(char), char, names["original"], score))
 

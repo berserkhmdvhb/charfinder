@@ -24,6 +24,7 @@ from charfinder.constants import (
     DEFAULT_THRESHOLD,
     VALID_FUZZY_ALGOS,
     VALID_FUZZY_MATCH_MODES,
+    VALID_HYBRID_AGG_FUNCS,
     FuzzyAlgorithm,
     MatchMode,
 )
@@ -51,6 +52,7 @@ def find_chars(
     fuzzy_algo: FuzzyAlgorithm = "sequencematcher",
     fuzzy_match_mode: MatchMode = "single",
     exact_match_mode: str = "word-subset",
+    agg_fn: VALID_HYBRID_AGG_FUNCS = "mean",
 ) -> Generator[str, None, None]:
     """
     Search for Unicode characters by name using exact or fuzzy matching.
@@ -65,26 +67,27 @@ def find_chars(
         fuzzy_algo: Algorithm to use for fuzzy scoring.
         fuzzy_match_mode: 'single' or 'hybrid'.
         exact_match_mode: 'substring' or 'word-subset'.
+        agg_fn: Aggregation function for hybrid match mode.
 
     Yields:
         Each line to be printed for the result table (header first, then matching rows).
     """
     if fuzzy_algo not in VALID_FUZZY_ALGOS:
         valid_algos = ", ".join(VALID_FUZZY_ALGOS)
-        msg = f"Invalid fuzzy algorithm: '{fuzzy_algo}'. Must be one of: {valid_algos}"
-        raise ValueError(msg)
+        message = f"Invalid fuzzy algorithm: '{fuzzy_algo}'. Must be one of: {valid_algos}"
+        raise ValueError(message)
 
     if fuzzy_match_mode not in VALID_FUZZY_MATCH_MODES:
-        msg = f"Invalid fuzzy match mode: '{fuzzy_match_mode}'. Must be 'single' or 'hybrid'."
-        raise ValueError(msg)
+        message = f"Invalid fuzzy match mode: '{fuzzy_match_mode}'. Must be 'single' or 'hybrid'."
+        raise ValueError(message)
 
     if not isinstance(query, str):
-        msg = "Query must be a string."
-        raise TypeError(msg)
+        message = "Query must be a string."
+        raise TypeError(message)
 
     if not query.strip():
-        msg = "Query string must not be empty."
-        raise ValueError(msg)
+        message = "Query string must not be empty."
+        raise ValueError(message)
 
     if name_cache is None:
         name_cache = build_name_cache(show=verbose, use_color=use_color)
@@ -99,6 +102,7 @@ def find_chars(
             threshold=threshold,
             fuzzy_algo=fuzzy_algo,
             match_mode=fuzzy_match_mode,
+            agg_fn=agg_fn,
             verbose=verbose,
             use_color=use_color,
             query=query,
@@ -134,6 +138,7 @@ def find_chars_raw(
     fuzzy_algo: FuzzyAlgorithm = "sequencematcher",
     fuzzy_match_mode: MatchMode = "single",
     exact_match_mode: str = "word-subset",
+    agg_fn: VALID_HYBRID_AGG_FUNCS = "mean",
 ) -> list[CharMatch]:
     """
     Search for Unicode characters and return raw results for JSON output.
@@ -147,6 +152,7 @@ def find_chars_raw(
         fuzzy_algo: Algorithm to use for fuzzy scoring.
         fuzzy_match_mode: 'single' or 'hybrid'.
         exact_match_mode: 'substring' or 'word-subset'.
+        agg_fn: Aggregation function for hybrid match mode.
 
     Returns:
         List of dicts: [{code, char, name, (score)}]
@@ -164,6 +170,7 @@ def find_chars_raw(
             threshold=threshold,
             fuzzy_algo=fuzzy_algo,
             match_mode=fuzzy_match_mode,
+            agg_fn=agg_fn,
             verbose=verbose,
             use_color=False,  # no color needed for raw output
             query=query,

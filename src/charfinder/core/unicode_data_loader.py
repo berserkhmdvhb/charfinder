@@ -65,9 +65,9 @@ def load_alternate_names(
                 log_method="info",
             )
         except (URLError, TimeoutError, OSError):
-            fallback_msg = 'Could not download "UnicodeData.txt". No local fallback found.'
+            fallback_message = 'Could not download "UnicodeData.txt". No local fallback found.'
             echo(
-                fallback_msg,
+                fallback_message,
                 style=lambda m: format_warning(m, use_color=use_color),
                 stream=sys.stderr,
                 show=show,

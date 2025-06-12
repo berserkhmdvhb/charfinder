@@ -28,6 +28,7 @@ __all__ = [
     "ARG_COLOR",
     "ARG_EXACT_MATCH_MODE",
     "ARG_FUZZY_MATCH_MODE",
+    "ARG_HYBRID_AGG_FN",
     "ARG_QUERY",
     "ARG_THRESHOLD",
     "DEFAULT_COLOR_MODE",
@@ -49,6 +50,7 @@ ARG_FORMAT = "--format"
 
 ARG_EXACT_MATCH_MODE = "exact_match_mode"
 ARG_FUZZY_MATCH_MODE = "fuzzy_match_mode"
+ARG_HYBRID_AGG_FN = "hybrid_agg_fn"
 
 
 def threshold_range(value: str) -> float:
@@ -67,11 +69,11 @@ def threshold_range(value: str) -> float:
     try:
         fvalue = float(value)
     except ValueError as exc:
-        msg = f"Invalid threshold value: {value}"
-        raise argparse.ArgumentTypeError(msg) from exc
+        message = f"Invalid threshold value: {value}"
+        raise argparse.ArgumentTypeError(message) from exc
 
     if not 0.0 <= fvalue <= 1.0:
-        msg = "Threshold must be between 0.0 and 1.0"
-        raise argparse.ArgumentTypeError(msg)
+        message = "Threshold must be between 0.0 and 1.0"
+        raise argparse.ArgumentTypeError(message)
 
     return fvalue

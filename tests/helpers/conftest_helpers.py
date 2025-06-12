@@ -116,5 +116,5 @@ class ArgcompleteStub(ModuleType):
 
     @staticmethod
     def _autocomplete(*_args: object, **_kwargs: object) -> NoReturn:
-        msg = "Simulated autocomplete failure"
-        raise RuntimeError(msg)
+        message = "Simulated autocomplete failure"
+        raise RuntimeError(message)
