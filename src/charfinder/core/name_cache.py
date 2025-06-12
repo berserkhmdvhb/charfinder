@@ -33,7 +33,7 @@ logger = get_logger()
 def build_name_cache(
     *,
     force_rebuild: bool = False,
-    verbose: bool = True,
+    show: bool = True,
     use_color: bool = True,
     cache_file: str | None = None,
 ) -> dict[str, dict[str, str]]:
@@ -43,7 +43,7 @@ def build_name_cache(
 
     Args:
         force_rebuild: Force rebuilding even if cache file exists.
-        verbose: Show logging messages.
+        show: Flag to show or not show logging messages.
         use_color: Colorize log output.
         cache_file: Path to the cache file.
 
@@ -71,7 +71,8 @@ def build_name_cache(
         echo(
             message,
             style=lambda m: format_info(m, use_color=use_color),
-            show=verbose,
+            stream=sys.stderr,
+            show=show,
             log=True,
             log_method="info",
         )
@@ -79,18 +80,17 @@ def build_name_cache(
 
     # Rebuild the cache
     message = "Rebuilding Unicode name cache. This may take a few seconds..."
-    logger.info(message)
-    if verbose:
-        echo(
-            message,
-            style=lambda m: format_info(m, use_color=use_color),
-            show=True,
-            log=True,
-            log_method="info",
-        )
+    echo(
+        message,
+        style=lambda m: format_info(m, use_color=use_color),
+        stream=sys.stderr,
+        show=show,
+        log=True,
+        log_method="info",
+    )
 
     # Load alternate names once
-    alternate_names = load_alternate_names()
+    alternate_names = load_alternate_names(show=show)
 
     cache = {}
     for code in range(sys.maxunicode + 1):
@@ -116,24 +116,23 @@ def build_name_cache(
         with path.open("w", encoding="utf-8") as f:
             json.dump(cache, f, ensure_ascii=False)
         message = f"Cache written to: {cache_file}"
-        logger.info(message)
-        if verbose:
-            echo(
-                message,
-                style=lambda m: format_info(m, use_color=use_color),
-                show=True,
-                log=True,
-                log_method="info",
-            )
-    except Exception:
+        echo(
+            message,
+            style=lambda m: format_info(m, use_color=use_color),
+            stream=sys.stderr,
+            show=show,
+            log=True,
+            log_method="info",
+        )
+    except OSError:
         message = "Failed to write cache."
         echo(
             message,
             style=lambda m: format_error(m, use_color=use_color),
+            stream=sys.stderr,
             show=True,
             log=True,
             log_method="error",
         )
-        logger.exception(message)
 
     return cache

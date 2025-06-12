@@ -87,7 +87,7 @@ def find_chars(
         raise ValueError(msg)
 
     if name_cache is None:
-        name_cache = build_name_cache(verbose=verbose, use_color=use_color)
+        name_cache = build_name_cache(show=verbose, use_color=use_color)
 
     norm_query = normalize(query)
     matches: list[tuple[int, str, str, float | None]] = find_exact_matches(
@@ -152,7 +152,7 @@ def find_chars_raw(
         List of dicts: [{code, char, name, (score)}]
     """
     if name_cache is None:
-        name_cache = build_name_cache(verbose=verbose, use_color=True)
+        name_cache = build_name_cache(show=verbose, use_color=True)
 
     norm_query = normalize(query)
     matches: list[tuple[int, str, str, float | None]] = find_exact_matches(
