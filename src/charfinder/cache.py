@@ -1,16 +1,18 @@
+"""Persistent cache for Unicode character names and normalized names.
+
+Stores cached data in a JSON file inside the user's cache directory.
+Supports lazy loading and saving to disk.
+
+Attributes:
+    cache_file: Path to the cache file.
+    _cache: In-memory dictionary of cached data.
+
+Methods:
+    get(key): Return cached value if exists.
+    set(key, value): Store a value in the cache.
+    clear(): Clear the cache in memory and on disk.
 """
-Shared caching utilities for CharFinder.
 
-This module provides reusable caching mechanisms for:
-- Normalization of Unicode strings (highly repetitive in fuzzy matching)
-- Optionally other pure functions (e.g., similarity computation) in future
-
-It also exposes:
-- clear_all_caches(): clears all function caches
-- print_cache_stats(): prints current cache usage
-
-This pattern mirrors the `cache.py` module in the ppt project.
-"""
 
 from __future__ import annotations
 
