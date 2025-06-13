@@ -1,13 +1,16 @@
-"""
-Matching helpers for CharFinder.
+"""Matching helpers for CharFinder.
 
-This module provides internal helpers for exact and fuzzy matching of
+Provides internal helpers for exact and fuzzy matching of
 Unicode character names, including alternate Unicode aliases.
 
-Exports:
-    - find_exact_matches: Perform exact matching.
-    - find_fuzzy_matches: Perform fuzzy matching with scoring.
+Functions:
+    find_exact_matches(): Perform exact matching.
+    find_fuzzy_matches(): Perform fuzzy matching with scoring.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from charfinder.fuzzymatchlib import compute_similarity
 from charfinder.types import FuzzyMatchContext
@@ -22,6 +25,10 @@ __all__ = [
 
 logger = get_logger()
 
+# ---------------------------------------------------------------------
+# Exact Matching
+# ---------------------------------------------------------------------
+
 
 def find_exact_matches(
     norm_query: str,
@@ -33,13 +40,15 @@ def find_exact_matches(
     using both official and alternate normalized names.
 
     Args:
-        norm_query: Normalized query.
-        name_cache: Unicode name cache.
-        exact_match_mode: Exact match mode to use ('substring' or 'word-subset').
+        norm_query (str): Normalized query.
+        name_cache (dict[str, dict[str, str]]): Unicode name cache.
+        exact_match_mode (str): Exact match mode to use ('substring' or 'word-subset').
 
     Returns:
-        List of matches as (code point, character, name).
+        list[tuple[int, str, str, float | None]]:
+            List of matches as (code point, character, name, None).
     """
+
     matches: list[tuple[int, str, str, float | None]] = []
 
     for char, names in name_cache.items():
@@ -65,6 +74,11 @@ def find_exact_matches(
     return matches
 
 
+# ---------------------------------------------------------------------
+# Fuzzy Matching
+# ---------------------------------------------------------------------
+
+
 def find_fuzzy_matches(
     norm_query: str,
     name_cache: dict[str, dict[str, str]],
@@ -79,7 +93,7 @@ def find_fuzzy_matches(
         context: FuzzyMatchContext instance.
 
     Returns:
-        List of matches as (code, char, name, score).
+        list[tuple[int, str, str, float]]: List of matches as (code point, character, name, score).
     """
     matches: list[tuple[int, str, str, float | None]] = []
 

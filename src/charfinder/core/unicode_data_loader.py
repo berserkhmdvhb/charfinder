@@ -1,12 +1,15 @@
-"""
-Load and parse the UnicodeData.txt file for alternate character names.
+"""Load and parse the UnicodeData.txt file for alternate character names.
 
-This module extracts official and alternate names for Unicode characters
+Extracts official and alternate names for Unicode characters
 from the Unicode Character Database (UCD), specifically UnicodeData.txt.
 
-Exports:
-    - load_alternate_names: Return a mapping of characters to their alternate names.
+Functions:
+    load_alternate_names(): Return a mapping of characters to their alternate names.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 import sys
 from urllib.error import URLError
@@ -23,6 +26,10 @@ __all__ = ["load_alternate_names"]
 
 ALT_NAME_INDEX = 10
 EXPECTED_MIN_FIELDS = 11
+
+# ---------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------
 
 
 def load_alternate_names(
@@ -41,7 +48,7 @@ def load_alternate_names(
         use_color: If True, apply color to terminal output.
 
     Returns:
-        Dictionary mapping characters to their alternate names.
+        dict[str, str]: Dictionary mapping characters to their alternate names.
     """
     text: str | None = None
 

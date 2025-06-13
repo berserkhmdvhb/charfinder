@@ -1,23 +1,33 @@
-"""
-Shared formatting utilities for CharFinder.
+"""Shared formatting utilities for CharFinder.
 
-This module provides reusable formatting functions for:
+Provides reusable formatting functions for:
 
-1. Writing informational, warning, error, debug, success, and settings messages
-   to both terminal and logger (via `echo()` and `log_optionally_echo()`).
-2. Formatting result lines for Unicode character search results.
-3. Determining whether color output should be used.
+- Writing informational, warning, error, debug, success, and settings messages
+  to both terminal and logger (via `echo()` and `log_optionally_echo()`).
+- Formatting result lines for Unicode character search results.
+- Determining whether color output should be used.
 
 All functions are pure formatters: they return formatted strings and do not print
 (unless echoing is explicitly requested).
 
 Color handling is provided via `colorama`.
 
-The helper `_color_wrap` centralizes color wrapping logic.
+Functions:
+    echo(): Write a formatted message to terminal and logger.
+    log_optionally_echo(): Log a message and optionally echo to terminal.
+    should_use_color(): Determine whether color output should be used.
+    format_result_line(): Format a result line for CLI display.
+    format_result_header(): Format the result table header and divider.
+    format_result_row(): Format a single result row.
 
-NOTE: Color constants should be factored out to `logger_styles.py` in the future
-to avoid duplication.
+Note:
+    Color constants should be factored out to `logger_styles.py` in the future
+    to avoid duplication.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from __future__ import annotations
 
@@ -111,6 +121,9 @@ def echo(
         show: If True, print to terminal; if False, suppress terminal output.
         log: If True, log the message (requires log_method).
         log_method: If provided, log using the corresponding logger method.
+
+    Raises:
+        ValueError: If log=True but log_method is not provided, or if log_method is invalid.
     """
     from charfinder.utils.logger_setup import get_logger
 
@@ -177,7 +190,15 @@ def log_optionally_echo(
 def format_result_line(line: str, *, use_color: bool = False) -> str:
     """
     Format a result line for display in the CLI.
+
+    Args:
+        line (str): The line to format.
+        use_color (bool): Whether to apply color formatting.
+
+    Returns:
+        str: The formatted result line.
     """
+
     return _color_wrap(line, Fore.YELLOW, use_color=use_color)
 
 
@@ -189,7 +210,7 @@ def format_result_header(*, has_score: bool) -> list[str]:
         has_score: Whether the results include a score column.
 
     Returns:
-        A list of two strings: header line and divider line.
+        list[str]: A list of two strings: header line and divider line.
     """
     if has_score:
         header = (

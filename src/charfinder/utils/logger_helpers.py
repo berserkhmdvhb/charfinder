@@ -1,12 +1,22 @@
-"""
-Logger helpers and custom classes for CharFinder.
+"""Logger helpers and custom classes for CharFinder.
 
-- EnvironmentFilter: Injects current environment into log records
-- SafeFormatter: Formatter that handles missing LogRecord attributes safely
-- CustomRotatingFileHandler: Rotating file handler with custom filename scheme:
-    charfinder.log → charfinder_1.log, charfinder_2.log, etc.
-- StreamFilter + suppress_console_logging(): allows temporary suppression of console output.
+Provides helpers for advanced logging behavior in CharFinder.
+
+Classes:
+    EnvironmentFilter: Injects current environment into log records.
+    SafeFormatter: Formatter that handles missing LogRecord attributes safely.
+    CustomRotatingFileHandler: Rotating file handler with custom filename scheme:
+        charfinder.log → charfinder_1.log, charfinder_2.log, etc.
+    StreamFilter: Filter that disables StreamHandler output when suppression is active.
+
+Functions:
+    suppress_console_logging():
+        Context manager to temporarily suppress StreamHandler (console) output.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from __future__ import annotations
 
@@ -29,7 +39,7 @@ __all__ = [
 
 
 # ---------------------------------------------------------------------
-# Global StreamHandler suppression
+# Console Output Suppression
 # ---------------------------------------------------------------------
 
 
@@ -58,6 +68,11 @@ def suppress_console_logging() -> Iterator[None]:
         _SUPPRESS_CONSOLE_OUTPUT.value = old_value
 
 
+# ---------------------------------------------------------------------
+# Log Record Filters
+# ---------------------------------------------------------------------
+
+
 class EnvironmentFilter(logging.Filter):
     """Injects the current environment (e.g., DEV, UAT, PROD) into log records."""
 
@@ -67,6 +82,11 @@ class EnvironmentFilter(logging.Filter):
 
         record.env = get_environment()
         return True
+
+
+# ---------------------------------------------------------------------
+# Formatters
+# ---------------------------------------------------------------------
 
 
 class SafeFormatter(logging.Formatter):
@@ -86,11 +106,16 @@ class SafeFormatter(logging.Formatter):
         return super().format(record)
 
 
+# ---------------------------------------------------------------------
+# Custom File Handlers
+# ---------------------------------------------------------------------
+
+
 class CustomRotatingFileHandler(RotatingFileHandler):
     """
     Rotating file handler with custom filename scheme.
 
-    Example:
+    Behavior:
         charfinder.log → charfinder_1.log, charfinder_2.log, ...
 
     This improves readability of rotated log filenames.

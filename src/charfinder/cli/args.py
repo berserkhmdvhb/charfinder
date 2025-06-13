@@ -1,13 +1,26 @@
+"""Argument names and argument validators for CharFinder CLI.
+
+Defines:
+
+- CLI argument names used across the CLI components (parser, handlers).
+- Custom argument validators (such as `threshold_range` for --threshold).
+
+Used by:
+    cli_main.py, parser.py
+
+Constants:
+    ARG_QUERY, ARG_THRESHOLD, ARG_COLOR, ARG_EXACT_MATCH_MODE, ARG_FUZZY_MATCH_MODE,
+    ARG_HYBRID_AGG_FN, DEFAULT_COLOR_MODE, DEFAULT_EXACT_MATCH_MODE, DEFAULT_FUZZY_ALGO,
+    DEFAULT_FUZZY_MATCH_MODE, DEFAULT_THRESHOLD, VALID_EXACT_MATCH_MODES,
+    VALID_FUZZY_ALGOS, VALID_FUZZY_MATCH_MODES
+
+Functions:
+    threshold_range(): Validate that --threshold is a float in [0.0, 1.0].
 """
-Argument names and argument validators for CharFinder CLI.
 
-This module defines:
-
-1. CLI argument names used across the CLI components (parser, handlers).
-2. Custom argument validators (such as `threshold_range` for --threshold).
-
-This module is used by `cli_main.py` and `parser.py` during CLI argument parsing.
-"""
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from __future__ import annotations
 
@@ -42,7 +55,10 @@ __all__ = [
     "threshold_range",
 ]
 
-# Argument names (used in parser.py and handlers.py)
+# --------------------------------------------------------------------
+# CLI Argument Names
+# --------------------------------------------------------------------
+
 ARG_QUERY = "query"
 ARG_THRESHOLD = "--threshold"
 ARG_COLOR = "--color"
@@ -51,6 +67,10 @@ ARG_FORMAT = "--format"
 ARG_EXACT_MATCH_MODE = "exact_match_mode"
 ARG_FUZZY_MATCH_MODE = "fuzzy_match_mode"
 ARG_HYBRID_AGG_FN = "hybrid_agg_fn"
+
+# ---------------------------------------------------------------------
+# Argument Validators
+# ---------------------------------------------------------------------
 
 
 def threshold_range(value: str) -> float:

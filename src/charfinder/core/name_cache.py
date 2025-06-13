@@ -1,15 +1,18 @@
-"""
-Name cache builder for CharFinder.
+"""Name cache builder for CharFinder.
 
-This module provides functionality to build and cache Unicode character names,
+Provides functionality to build and cache Unicode character names,
 including alternate names from UnicodeData.txt.
 
-It is intentionally separated from CLI logic to support clean reuse in both
-library and CLI contexts.
+This module is intentionally separated from CLI logic to support clean reuse
+in both library and CLI contexts.
 
-Exports:
-    - build_name_cache: Build the Unicode name cache and optionally persist it.
+Functions:
+    build_name_cache(): Build the Unicode name cache and optionally persist it.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 import json
 import sys
@@ -30,6 +33,10 @@ __all__ = [
 
 logger = get_logger()
 
+# ---------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------
+
 
 def build_name_cache(
     *,
@@ -41,7 +48,19 @@ def build_name_cache(
     """
     Build and return a cache dictionary of characters to original and normalized names,
     including alternate names where available.
+
+    Args:
+        force_rebuild (bool): If True, force rebuild the cache even if a cached file exists.
+        show (bool): Whether to display progress messages.
+        use_color (bool): Whether to apply ANSI color formatting to messages.
+        cache_file_path (Path | None):
+            Optional path to use for cache file; defaults to standard cache path.
+
+    Returns:
+        dict[str, dict[str, str]]:
+            Unicode name cache mapping each character to its names.
     """
+
     if cache_file_path is None:
         cache_file_path = get_cache_file()
 

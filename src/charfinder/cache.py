@@ -1,18 +1,20 @@
-"""Persistent cache for Unicode character names and normalized names.
+"""Caching utilities for Unicode normalization in Charfinder.
 
-Stores cached data in a JSON file inside the user's cache directory.
-Supports lazy loading and saving to disk.
+Provides an LRU cache for the `normalize()` function to avoid redundant
+normalization computations and improve performance across repeated lookups.
 
-Attributes:
-    cache_file: Path to the cache file.
-    _cache: In-memory dictionary of cached data.
+Functions:
+    cached_normalize(text): Return normalized version of text, with LRU caching.
+    clear_all_caches(): Clear all internal function caches (useful for testing).
+    print_cache_stats(): Print current LRU cache statistics to the log.
 
-Methods:
-    get(key): Return cached value if exists.
-    set(key, value): Store a value in the cache.
-    clear(): Clear the cache in memory and on disk.
+Constants:
+    MAX_CACHE_SIZE: Maximum size of the LRU cache (default: 1024).
 """
 
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from __future__ import annotations
 
@@ -33,6 +35,10 @@ __all__ = [
 MAX_CACHE_SIZE = 1024  # normalize() is used VERY often → large cache is safe
 logger = get_logger()
 
+# ---------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------
+
 
 @lru_cache(maxsize=MAX_CACHE_SIZE)
 def cached_normalize(text: str) -> str:
@@ -43,7 +49,7 @@ def cached_normalize(text: str) -> str:
         text: Input text.
 
     Returns:
-        Normalized version of the text.
+        str: Normalized version of the text.
     """
     result = normalize(text)
     logger.debug("cached_normalize() hit for text: %r", text)

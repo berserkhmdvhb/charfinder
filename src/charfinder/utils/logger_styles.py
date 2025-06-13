@@ -1,5 +1,4 @@
-"""
-Logging style formatters for terminal output (with optional color).
+"""Logging style formatters for terminal output (with optional color).
 
 Provides colorized prefixes for common log message types:
 
@@ -12,14 +11,18 @@ Provides colorized prefixes for common log message types:
 
 Used to format user-facing messages consistently in terminal.
 
-Exports:
-    format_debug
-    format_info
-    format_warning
-    format_error
-    format_settings
-    format_success
+Functions:
+    format_debug(): Format debug message with [DEBUG] prefix.
+    format_info(): Format info message with [INFO] prefix.
+    format_warning(): Format warning message with [WARNING] prefix.
+    format_error(): Format error message with [ERROR] prefix.
+    format_settings(): Format settings message with [SETTINGS] prefix.
+    format_success(): Format success message with [OK] prefix.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from typing import Final
 

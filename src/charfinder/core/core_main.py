@@ -1,20 +1,19 @@
-"""
-Core logic for charfinder.
+"""Core logic for CharFinder.
 
-This module provides the core processing functions for Unicode character search
+Provides the core processing functions for Unicode character search
 with fuzzy matching and name normalization.
 
-It is intentionally kept free of any CLI-specific or I/O code to maximize
-testability and reusability.
+This module is intentionally kept free of any CLI-specific or I/O code
+to maximize testability and reusability.
 
-Functions in this module:
-- `normalize`: Normalize Unicode names for comparison.
-- `build_name_cache`: Build and cache Unicode character name mappings.
-- `find_chars`: Search Unicode characters by exact or fuzzy name match.
-
-This module adheres to clean-code principles and is part of the library
-interface exposed via `__all__`.
+Functions:
+    find_chars(): Search Unicode characters by exact or fuzzy name match (yields formatted lines).
+    find_chars_raw(): Search Unicode characters and return raw results for JSON output.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from __future__ import annotations
 
@@ -39,6 +38,10 @@ __all__ = [
     "find_chars",
     "find_chars_raw",
 ]
+
+# ---------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------
 
 
 def find_chars(
@@ -70,7 +73,7 @@ def find_chars(
         agg_fn: Aggregation function for hybrid match mode.
 
     Yields:
-        Each line to be printed for the result table (header first, then matching rows).
+        str: Each line to be printed for the result table (header first, then matching rows).
     """
     if fuzzy_algo not in VALID_FUZZY_ALGOS:
         valid_algos = ", ".join(VALID_FUZZY_ALGOS)
@@ -156,7 +159,7 @@ def find_chars_raw(
         agg_fn: Aggregation function for hybrid match mode.
 
     Returns:
-        List of dicts: [{code, char, name, (score)}]
+        list[CharMatch]: List of Unicode character matches, formatted for JSON output.
     """
     if name_cache is None:
         name_cache = build_name_cache(show=verbose, use_color=use_color)

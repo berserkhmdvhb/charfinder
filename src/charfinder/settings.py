@@ -1,3 +1,25 @@
+"""Environment and application settings management for Charfinder.
+
+Provides dynamic loading of environment variables from .env files and system
+environment, with support for development, testing, and production modes.
+
+Functions:
+    get_root_dir(): Return the root directory of the project.
+    load_settings(): Load application settings from environment and .env file.
+    resolve_loaded_dotenv_paths(): Return resolved .env paths (for debug/CLI).
+    get_log_dir(): Return log directory based on current environment.
+    get_cache_file(): Return cache file path.
+    get_unicode_data_file(): Return UnicodeData.txt file path.
+    get_environment(): Return current environment (DEV/UAT/PROD).
+    is_dev(), is_uat(), is_prod(): Check current environment.
+    get_log_max_bytes(): Return maximum log size.
+    get_log_backup_count(): Return number of log backups.
+"""
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
+
 from __future__ import annotations
 
 import os
@@ -14,6 +36,22 @@ from charfinder.constants import (
 )
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_error, format_settings, format_warning
+
+__all__ = [
+    "get_cache_file",
+    "get_environment",
+    "get_log_backup_count",
+    "get_log_dir",
+    "get_log_max_bytes",
+    "get_root_dir",
+    "get_unicode_data_file",
+    "get_unicode_data_url",
+    "is_dev",
+    "is_prod",
+    "is_uat",
+    "load_settings",
+    "resolve_loaded_dotenv_paths",
+]
 
 # ---------------------------------------------------------------------
 # Environment Accessors

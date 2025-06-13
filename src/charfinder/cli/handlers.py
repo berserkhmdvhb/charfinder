@@ -1,15 +1,18 @@
+"""Handlers for CLI output rendering and execution in CharFinder.
+
+Delegates color formatting to `cli/formatter.py` and avoids using print().
+
+Functions:
+    resolve_effective_threshold(): Resolve threshold from CLI arg, env var, or default.
+    resolve_effective_color_mode(): Resolve color mode from CLI arg, env var, or default.
+    get_version(): Retrieve installed package version.
+    print_result_lines(): Print result lines to stdout.
+    handle_find_chars(): Main CLI execution logic.
 """
-Handlers for CLI output rendering and execution in CharFinder.
 
-This module provides:
-
-1. `should_use_color`: Determine whether color output should be used based on user settings.
-2. `print_result_lines`: Print result lines to stdout, with consistent formatting.
-3. `handle_find_chars`: Main CLI execution logic.
-4. `get_version`: Retrieve installed package version.
-
-This module delegates color formatting to `cli/formatter.py` and avoids using print().
-"""
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from __future__ import annotations
 
@@ -45,15 +48,27 @@ __all__ = [
 
 logger = get_logger()
 
+# ---------------------------------------------------------------------
+# Argument Resolution Helpers
+# ---------------------------------------------------------------------
+
 
 def resolve_effective_threshold(cli_threshold: float | None, *, use_color: bool = True) -> float:
     """Resolve threshold from CLI arg, env var, or default.
 
     Priority:
-        1. CLI argument (-  -threshold)
+        1. CLI argument (--threshold)
         2. Environment variable CHARFINDER_MATCH_THRESHOLD
         3. DEFAULT_THRESHOLD
+
+    Args:
+        cli_threshold (float | None): Threshold value from CLI argument, or None.
+        use_color (bool): Whether to apply ANSI formatting when logging warnings.
+
+    Returns:
+        float: The resolved threshold value.
     """
+
     if cli_threshold is not None:
         return cli_threshold
 
@@ -85,7 +100,14 @@ def resolve_effective_color_mode(cli_color_mode: str | None) -> str:
         1. CLI argument (--color)
         2. Environment variable CHARFINDER_COLOR_MODE
         3. DEFAULT_COLOR_MODE
+
+    Args:
+        cli_color_mode (str | None): Color mode from CLI argument, or None.
+
+    Returns:
+        str: The resolved color mode ("auto", "always", or "never").
     """
+
     if cli_color_mode is not None:
         return cli_color_mode
 
@@ -94,6 +116,11 @@ def resolve_effective_color_mode(cli_color_mode: str | None) -> str:
         return env_value
 
     return DEFAULT_COLOR_MODE
+
+
+# ---------------------------------------------------------------------
+# Metadata Helpers
+# ---------------------------------------------------------------------
 
 
 @lru_cache(maxsize=1)
@@ -108,6 +135,11 @@ def get_version() -> str:
         return version("charfinder")
     except PackageNotFoundError:
         return "unknown (not installed)"
+
+
+# ---------------------------------------------------------------------
+# Output Helpers
+# ---------------------------------------------------------------------
 
 
 def print_result_lines(lines: list[str], *, use_color: bool = False) -> None:
@@ -126,6 +158,11 @@ def print_result_lines(lines: list[str], *, use_color: bool = False) -> None:
         sys.stdout.write(output + "\n")
 
 
+# ---------------------------------------------------------------------
+# Main CLI Execution
+# ---------------------------------------------------------------------
+
+
 def handle_find_chars(args: Namespace) -> int:
     """
     Main CLI execution handler.
@@ -138,6 +175,10 @@ def handle_find_chars(args: Namespace) -> int:
 
     Returns:
         int: Exit code to be passed to sys.exit().
+
+    Raises:
+        KeyboardInterrupt: If the user interrupts execution.
+        Exception: For unexpected errors (logged and handled internally).
     """
     color_mode = resolve_effective_color_mode(args.color)
     use_color = should_use_color(color_mode)
@@ -167,6 +208,7 @@ def handle_find_chars(args: Namespace) -> int:
             )
             json.dump(rows, sys.stdout, ensure_ascii=False, indent=2)
             sys.stdout.write("\n")
+            sys.stdout.flush()
             # In JSON mode, always return EXIT_SUCCESS (even if 0 results)
             return EXIT_SUCCESS
 

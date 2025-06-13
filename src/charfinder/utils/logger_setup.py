@@ -1,5 +1,4 @@
-"""
-Custom logging setup utilities for CharFinder.
+"""Custom logging setup utilities for CharFinder.
 
 Features:
 - Centralized `charfinder` logger with consistent format and handlers
@@ -13,14 +12,20 @@ Typical Usage:
     from charfinder.utils.logger_setup import setup_logging
     setup_logging()
 
-Exports:
-    - get_logger: Return the central project logger
-    - setup_logging: Attach console/file handlers
-    - teardown_logger: Cleanly detach all logging handlers
-    - get_default_formatter: Return default SafeFormatter instance
-    - EnvironmentFilter: Injects `record.env` into each log message
-    - CustomRotatingFileHandler: Renames rotated logs as `charfinder_1.log`, etc.
+Functions:
+    get_logger(): Return the central project logger.
+    setup_logging(): Attach console/file handlers.
+    teardown_logger(): Cleanly detach all logging handlers.
+    get_default_formatter(): Return default SafeFormatter instance.
+
+Classes:
+    EnvironmentFilter: Injects `record.env` into each log message.
+    CustomRotatingFileHandler: Renames rotated logs as `charfinder_1.log`, etc.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from __future__ import annotations
 
@@ -54,6 +59,10 @@ __all__ = [
 
 LOGGER_NAME = "charfinder"
 
+# ---------------------------------------------------------------------
+# Logger Access Functions
+# ---------------------------------------------------------------------
+
 
 def get_logger() -> logging.Logger:
     """Return the central project logger."""
@@ -69,6 +78,11 @@ def ensure_filter(handler: logging.Handler, filt: logging.Filter) -> None:
 def get_default_formatter() -> logging.Formatter:
     """Return default SafeFormatter instance."""
     return SafeFormatter(const.LOG_FORMAT)
+
+
+# ---------------------------------------------------------------------
+# Logging Setup Functions
+# ---------------------------------------------------------------------
 
 
 def setup_logging(  # noqa: PLR0913

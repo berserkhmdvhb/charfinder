@@ -8,11 +8,11 @@ Defines:
 - Exact match modes
 - Exit codes used by CLI
 - Output field widths
-- Cache file path
 - Default thresholds and modes
 - Logging configuration
 - Environment variable names
 """
+
 
 # ---------------------------------------------------------------------
 # Imports
@@ -21,6 +21,41 @@ Defines:
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Literal
+
+__all__ = [
+    "DEFAULT_COLOR_MODE",
+    "DEFAULT_ENCODING",
+    "DEFAULT_EXACT_MATCH_MODE",
+    "DEFAULT_FUZZY_ALGO",
+    "DEFAULT_FUZZY_MATCH_MODE",
+    "DEFAULT_LOG_ROOT",
+    "DEFAULT_NORMALIZATION_FORM",
+    "DEFAULT_THRESHOLD",
+    "ENV_DEBUG_ENV_LOAD",
+    "ENV_ENVIRONMENT",
+    "ENV_LOG_BACKUP_COUNT",
+    "ENV_LOG_LEVEL",
+    "ENV_LOG_MAX_BYTES",
+    "EXIT_CANCELLED",
+    "EXIT_ERROR",
+    "EXIT_INVALID_USAGE",
+    "EXIT_NO_RESULTS",
+    "EXIT_SUCCESS",
+    "FIELD_WIDTHS",
+    "LOG_FILE_NAME",
+    "LOG_FORMAT",
+    "LOG_METHODS",
+    "PACKAGE_NAME",
+    "VALID_EXACT_MATCH_MODES",
+    "VALID_FUZZY_ALGOS",
+    "VALID_FUZZY_MATCH_MODES",
+    "VALID_HYBRID_AGG_FUNCS",
+    "VALID_LOG_METHODS",
+    "ColorMode",
+    "ExactMatchMode",
+    "FuzzyAlgorithm",
+    "MatchMode",
+]
 
 # ---------------------------------------------------------------------
 # Package Info

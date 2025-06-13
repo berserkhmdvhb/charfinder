@@ -1,18 +1,21 @@
-"""
-Diagnostics utilities for user-facing CLI debug output.
+"""Diagnostics utilities for user-facing CLI debug output.
 
 Provides human-readable runtime diagnostics when the `--debug` flag is passed.
 
 Behavior:
-- Output is printed directly to stdout (if show=True)
-- ANSI coloring is applied based on `--color` flag or terminal support
-- Output includes CLI arguments and .env file(s) diagnostics
-- Output is always logged (level DEBUG)
+    - Output is printed directly to stdout (if show=True).
+    - ANSI coloring is applied based on `--color` flag or terminal support.
+    - Output includes CLI arguments and .env file(s) diagnostics.
+    - Output is always logged (level DEBUG).
 
 Functions:
-    - print_debug_diagnostics: Print args and .env context
-    - print_dotenv_debug: Print loaded .env file content (via settings)
+    print_debug_diagnostics(): Print CLI args and .env context.
+    print_dotenv_debug(): Print loaded .env file content (via settings).
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 import os
 from argparse import Namespace
@@ -28,6 +31,10 @@ __all__ = [
     "print_debug_diagnostics",
     "print_dotenv_debug",
 ]
+
+# ---------------------------------------------------------------------
+# Diagnostics Functions
+# ---------------------------------------------------------------------
 
 
 def print_debug_diagnostics(
@@ -111,6 +118,7 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
     Intended for CLI `--debug` output (diagnostics only).
 
     Args:
+        use_color (bool): Whether to apply ANSI formatting.
         show: If True, print to terminal; always logged.
     """
     dotenv_path = resolve_dotenv_path()

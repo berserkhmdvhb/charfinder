@@ -1,24 +1,25 @@
-"""
-CLI argument parser definition for CharFinder.
+"""CLI argument parser definition for CharFinder.
 
-This module defines the main ArgumentParser used by the CLI.
+Defines the main ArgumentParser used by the CLI.
 
 Responsibilities:
-- Define CLI arguments and options.
-- Attach custom validators (e.g. threshold_range).
-- Provide choices for color output.
-- Provide output format, json or text.
-- Attach --version.
-- Enable argcomplete tab completion.
+    - Define CLI arguments and options.
+    - Attach custom validators (e.g. threshold_range).
+    - Provide choices for color output.
+    - Provide output format: json or text.
+    - Attach --version.
+    - Enable argcomplete tab completion.
 
 Used by:
-- cli_main.py to parse CLI arguments.
+    cli_main.py to parse CLI arguments.
 
-This module exposes:
-- create_parser(): Returns the configured ArgumentParser instance.
+Functions:
+    create_parser(): Returns the configured ArgumentParser instance.
 """
 
-__all__ = ["create_parser"]
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 import argparse
 
@@ -37,6 +38,12 @@ from charfinder.cli.args import (
     threshold_range,
 )
 from charfinder.cli.handlers import get_version
+
+__all__ = ["create_parser"]
+
+# ---------------------------------------------------------------------
+# Parser Creation
+# ---------------------------------------------------------------------
 
 
 def create_parser() -> argparse.ArgumentParser:

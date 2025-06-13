@@ -1,6 +1,15 @@
 """
 Type definitions and reusable dataclasses for CharFinder.
+
+Defines:
+- AlgorithmFn: Callable type alias for fuzzy algorithm functions.
+- FuzzyMatchContext: Dataclass holding parameters for fuzzy matching.
+- CharMatch: TypedDict representing a single match result.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from __future__ import annotations
 
@@ -16,15 +25,19 @@ except ImportError:
 if TYPE_CHECKING:
     from charfinder.constants import VALID_HYBRID_AGG_FUNCS, FuzzyAlgorithm, MatchMode
 
+# ---------------------------------------------------------------------
+# Type definitions
+# ---------------------------------------------------------------------
+
 AlgorithmFn = Callable[[str, str], float]
 
 
 @dataclass
 class FuzzyMatchContext:
     threshold: float
-    fuzzy_algo: FuzzyAlgorithm  # Literal[...] type
-    match_mode: MatchMode  # Literal[...] type
-    agg_fn: VALID_HYBRID_AGG_FUNCS  # Aggregation function for hybrid mode
+    fuzzy_algo: FuzzyAlgorithm
+    match_mode: MatchMode
+    agg_fn: VALID_HYBRID_AGG_FUNCS
     verbose: bool
     use_color: bool
     query: str

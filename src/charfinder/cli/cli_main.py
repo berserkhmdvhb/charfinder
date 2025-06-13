@@ -1,18 +1,23 @@
-"""
-Main CLI entry point for CharFinder.
+"""Main CLI entry point for CharFinder.
 
-This module coordinates the full CLI workflow:
+Coordinates the full CLI workflow:
 
 - Builds the CLI argument parser.
 - Parses command-line arguments.
+- Loads environment settings.
+- Configures logging.
 - Dispatches to the main handler (handle_find_chars).
 - Acts as the main entry point when invoked via:
     python -m charfinder
     charfinder [args]
 
-This module exposes:
-- main(): The main CLI entry function.
+Functions:
+    main(): The main CLI entry function.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 import logging
 import os
@@ -34,6 +39,10 @@ from charfinder.utils.logger_styles import (
 )
 
 __all__ = ["main"]
+
+# ---------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------
 
 
 def main() -> None:

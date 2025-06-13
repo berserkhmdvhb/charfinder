@@ -1,19 +1,37 @@
+"""Fuzzy matching algorithms and utilities for Charfinder.
+
+Provides consistent wrappers for multiple fuzzy string similarity algorithms,
+as well as a hybrid strategy combining multiple scores.
+
+Uses:
+    - difflib.SequenceMatcher
+    - rapidfuzz.fuzz.ratio
+    - Levenshtein.ratio
+    - custom simple and normalized ratio algorithms
+
+Public API:
+    compute_similarity(): Main function to compute similarity between two strings.
+    In addition to SUPPORTED_ALGORITHMS, it supports the following built-in algorithms:
+        - 'sequencematcher' (uses difflib.SequenceMatcher)
+        - 'rapidfuzz' (uses rapidfuzz.fuzz.ratio)
+        - 'levenshtein' (uses Levenshtein.ratio)
+
+Internal algorithms:
+    simple_ratio(): Matching character ratio in order.
+    normalized_ratio(): Ratio after Unicode normalization and uppercasing.
+    levenshtein_ratio(): Levenshtein similarity ratio.
+    hybrid_score(): Combine multiple algorithm scores using an aggregation function.
+
+Constants:
+    SUPPORTED_ALGORITHMS: Dict of algorithm names to implementations.
+    VALID_FUZZY_ALGOS: Allowed algorithm names (from constants.py).
+    VALID_FUZZY_MATCH_MODES: Allowed match modes ("single", "hybrid").
+    VALID_HYBRID_AGG_FUNCS: Allowed hybrid aggregation functions ("mean", "median", "max", "min").
 """
-Fuzzy matching utilities for charfinder.
 
-This module provides a unified interface to compute string similarity
-using different fuzzy matching algorithms:
-
-- SequenceMatcher (difflib)
-- RapidFuzz
-- Levenshtein
-
-It supports both single algorithm mode and hybrid mode
-(with configurable aggregation).
-
-Functions:
-- compute_similarity: Compute similarity score between two strings.
-"""
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 from __future__ import annotations
 
@@ -44,13 +62,29 @@ if TYPE_CHECKING:
 
 
 def simple_ratio(a: str, b: str) -> float:
-    """Compute the ratio of matching characters in order."""
+    """Compute the ratio of matching characters in order.
+
+    Args:
+        a: First string.
+        b: Second string.
+
+    Returns:
+        float: Similarity score in the range [0.0, 1.0].
+    """
     matches = sum(1 for c1, c2 in zip(a, b, strict=False) if c1 == c2)
     return matches / max(len(a), len(b)) if max(len(a), len(b)) > 0 else 0.0
 
 
 def normalized_ratio(a: str, b: str) -> float:
-    """Compute ratio after Unicode normalization and uppercasing."""
+    """Compute ratio after Unicode normalization and uppercasing.
+
+    Args:
+        a: First string.
+        b: Second string.
+
+    Returns:
+        float: Similarity score in the range [0.0, 1.0].
+    """
     norm_a = unicodedata.normalize(DEFAULT_NORMALIZATION_FORM, a).upper()
     norm_b = unicodedata.normalize(DEFAULT_NORMALIZATION_FORM, b).upper()
     matches = sum(1 for c1, c2 in zip(norm_a, norm_b, strict=False) if c1 == c2)
@@ -58,12 +92,32 @@ def normalized_ratio(a: str, b: str) -> float:
 
 
 def levenshtein_ratio(a: str, b: str) -> float:
-    """Compute Levenshtein similarity ratio."""
+    """Compute Levenshtein similarity ratio.
+
+    Args:
+        a: First string.
+        b: Second string.
+
+    Returns:
+        Similarity score in the range [0.0, 1.0].
+    """
     return Levenshtein.ratio(a, b)
 
 
 def hybrid_score(a: str, b: str, agg_fn: VALID_HYBRID_AGG_FUNCS = "mean") -> float:
-    """Hybrid score combining multiple algorithms with a chosen aggregate function."""
+    """Hybrid score combining multiple algorithms with a chosen aggregate function.
+
+    Args:
+        a: First string.
+        b: Second string.
+        agg_fn: Aggregation function to combine scores ("mean", "median", "max", "min").
+
+    Returns:
+        Hybrid similarity score in the range [0.0, 1.0].
+
+    Raises:
+        ValueError: If agg_fn is not supported.
+    """
     scores = [
         simple_ratio(a, b),
         normalized_ratio(a, b),
@@ -105,7 +159,11 @@ __all__ = [
 
 
 def get_supported_algorithms() -> list[str]:
-    """Return a list of supported algorithm names."""
+    """Return a list of supported algorithm names.
+
+    Returns:
+        list[str]: List of supported algorithm names.
+    """
     return list(SUPPORTED_ALGORITHMS.keys())
 
 
@@ -126,13 +184,15 @@ def compute_similarity(
         algorithm: One of 'sequencematcher', 'rapidfuzz', or 'levenshtein'.
         mode: 'single' (default) to use one algorithm, or 'hybrid' to use `hybrid_score`
             (supports configurable aggregation).
-        agg_fn: aggregation function to aggregate the scores
+        agg_fn: Aggregation function to aggregate the scores.
 
     Returns:
-        Similarity score in the range [0.0, 1.0].
+        float: Similarity score in the range [0.0, 1.0].
 
     Raises:
         ValueError: If algorithm or mode is invalid.
+        RuntimeError:
+            If an unexpected algorithm is passed (should not occur if validation is correct).
     """
     if algorithm not in VALID_FUZZY_ALGOS:
         message = (
@@ -157,7 +217,7 @@ def compute_similarity(
 
     if mode == "hybrid":
         # Use our unified hybrid_score function
-        return hybrid_score(s1, s2, agg_fn=agg_fn)  # in future: make agg_fn configurable
+        return hybrid_score(s1, s2, agg_fn=agg_fn)
     if algorithm == "sequencematcher":
         return SequenceMatcher(None, s1, s2).ratio()
     if algorithm == "rapidfuzz":
