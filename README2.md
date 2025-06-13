@@ -276,3 +276,68 @@ For deeper insights into Unicode normalization and its impact on search:
 
 * [Unicode® Standard Annex #15 — Unicode Normalization Forms](https://unicode.org/reports/tr15/)
 * CharFinder documentation: [docs/normalization.md](docs/normalization.md)
+
+
+## 🎯 Exact and Fuzzy Match
+
+CharFinder offers a rich and flexible matching system to search for Unicode characters by name. You can combine exact matching, fuzzy matching, different algorithms, and match modes to suit your needs.
+
+### Matching Modes Overview
+
+| Matching Type | Mode                  | CLI Argument                     | Description                                                                   |
+| ------------- | --------------------- | -------------------------------- | ----------------------------------------------------------------------------- |
+| Exact         | Substring             | `--exact-match-mode substring`   | Query string must appear as a substring of the character name.                |
+| Exact         | Word Subset (default) | `--exact-match-mode word-subset` | All words in the query must appear in the character name (order-independent). |
+| Fuzzy         | Single (default)      | `--fuzzy-match-mode single`      | Use a single fuzzy algorithm to compute similarity scores.                    |
+| Fuzzy         | Hybrid                | `--fuzzy-match-mode hybrid`      | Combine multiple fuzzy algorithm scores using an aggregation function.        |
+
+### Available Fuzzy Algorithms
+
+You can select the fuzzy matching algorithm using `--fuzzy-algo`:
+
+* `sequencematcher` (Python standard library `difflib.SequenceMatcher`)
+* `rapidfuzz` ([RapidFuzz](https://github.com/maxbachmann/RapidFuzz))
+* `levenshtein` ([python-Levenshtein](https://github.com/ztane/python-Levenshtein))
+
+### Aggregation Functions (Hybrid Mode)
+
+When using `--fuzzy-match-mode hybrid`, you can select how the algorithm scores are aggregated using `--hybrid-agg-fn`:
+
+* `mean` (default)
+* `median`
+* `max`
+* `min`
+
+### Combination Matrix
+
+| Exact Mode        | Fuzzy Mode | Fuzzy Algo                              | Aggregation Function   |
+| ----------------- | ---------- | --------------------------------------- | ---------------------- |
+| substring         | -          | -                                       | -                      |
+| word-subset       | -          | -                                       | -                      |
+| fallback to fuzzy | single     | sequencematcher, rapidfuzz, levenshtein | -                      |
+| fallback to fuzzy | hybrid     | Combination of above                    | mean, median, max, min |
+
+### Matching Flow
+
+1. **Exact match first:**
+
+   * CharFinder always tries exact match first (substring or word-subset).
+2. **Fuzzy fallback:**
+
+   * If no exact match is found and `--fuzzy` is enabled, fuzzy matching is attempted.
+3. **Single vs. Hybrid:**
+
+   * In single mode, one algorithm is used.
+   * In hybrid mode, multiple algorithms are used and aggregated.
+
+### Normalization
+
+All matching is performed on Unicode **NFC-normalized** and **uppercased** character names and query strings to ensure consistency.
+
+### Cross-Reference
+
+For a deeper technical dive, see:
+
+* [docs/matching.md](docs/matching.md)
+* [docs/core\_logic.md](docs/core_logic.md)
+
