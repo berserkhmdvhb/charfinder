@@ -238,3 +238,41 @@ CharFinder implements a **layered architecture** with clear boundaries:
 * [docs/environment\_config.md](docs/environment_config.md)
 * [docs/logging\_system.md](docs/logging_system.md)
 * [docs/caching.md](docs/caching.md)
+
+## 6. 🌐 What is Unicode?
+
+Unicode is the universal standard for encoding text across all writing systems, symbols, and emojis in the world. It assigns a unique code point to every character, ensuring that text is represented consistently across different platforms, languages, and applications.
+
+In other words, Unicode provides the foundation that enables modern software to handle multilingual text and a vast array of symbols reliably.
+
+### Why It Matters for CharFinder
+
+* **Uniform Search Space**: Unicode encompasses over 140,000 characters, making it possible to search and retrieve any symbol, emoji, or letter from a single source.
+* **Cross-Language Support**: Whether you search for Latin letters, mathematical symbols, arrows, CJK characters, or ancient scripts, Unicode ensures consistent handling.
+* **Emojis & Symbols**: Emojis are part of Unicode and fully supported by CharFinder.
+
+### Normalization in CharFinder
+
+Text normalization is crucial when performing searches across Unicode:
+
+* Different character sequences may visually or semantically represent the same character (e.g. `é` vs `é`).
+* Normalization converts these variations to a consistent form before comparison.
+
+**CharFinder** uses **Unicode NFC (Normalization Form C)** by default, which:
+
+* Ensures composed characters are used where possible.
+* Provides stable and predictable search behavior.
+
+For example:
+
+| Input Query | Normalized Form (NFC) | Effective Search Behavior |
+| ----------- | --------------------- | ------------------------- |
+| café        | café (U+00E9)         | Matches correctly         |
+| café       | café (U+00E9)         | Matches correctly         |
+
+### Learn More
+
+For deeper insights into Unicode normalization and its impact on search:
+
+* [Unicode® Standard Annex #15 — Unicode Normalization Forms](https://unicode.org/reports/tr15/)
+* CharFinder documentation: [docs/normalization.md](docs/normalization.md)
