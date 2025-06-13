@@ -28,13 +28,13 @@ Ever tried to find an emoji using its name, or more technically, the Unicode cha
 
 ---
 
-# 🎥 Demo Video
+# 🎥 1. Demo Video
 
 https://github.com/user-attachments/assets/e19b0bbd-d99b-401b-aa29-0092627f376b
 
 ---
 
-## ✨ Features
+## ✨ 2. Features
 
 CharFinder is a **feature-rich Unicode character search tool**, designed for both **CLI** and **Python library** usage. It combines exact and fuzzy matching with fast caching, robust environment management, and beautiful CLI output.
 
@@ -88,12 +88,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 ### 🔧 Environment-aware Behavior
 
 * `.env` files are supported with robust resolution:
-
-  * `DOTENV_PATH` override.
-  * `.env.override`, `.env`, `.env.local`, `.env.test`.
-
 * Environment-specific behavior:
-
   * Log directory changes by environment.
   * Test mode activates `.env.test`.
 
@@ -163,243 +158,83 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 * Cross-ref: [docs/logging\_system.md](docs/logging_system.md), [docs/env-logging-scenarios.md](docs/env-logging-scenarios.md).
 
 ---
+## 3. 📦 Project Structure
 
-## 📦 Installation
+CharFinder follows a **clean, layered architecture** to ensure separation of concerns, maintainability, and testability.
 
-### From PyPI (Recommended)
+The project is structured for ease of contribution and for flexible usage as both:
 
-```bash
-pip install charfinder
-```
+* A **CLI tool** (`charfinder` command).
+* An **importable Python library**.
 
-### From GitHub (Development Version)
-
-```bash
-pip install git+https://github.com/berserkhmdvhb/charfinder.git
-```
-
----
-
-## 🚀 Usage
-
-### 🖥 CLI Mode
-
-```bash
-charfinder -q heart
-```
-
-Example:
-
-```bash
-$ charfinder -q snowman
-☃  U+2603  SNOWMAN
-```
-
-Show all options:
-
-```bash
-charfinder --help
-```
-
-You can also run directly from source:
-
-```bash
-python -m charfinder -q smile
-```
-
-#### Common CLI Options
-
-| Option            | Description                                                 |
-|-------------------|-------------------------------------------------------------|
-| `--fuzzy`         | Enable fuzzy match fallback                                 |
-| `--threshold`     | Fuzzy match threshold (0.0–1.0, default: `0.7`)             |
-| `--fuzzy-algo`    | `sequencematcher`, `rapidfuzz`, or `levenshtein`           |
-| `--match-mode`    | `single` or `hybrid` (aggregated fuzzy scoring)            |
-| `--quiet`         | Suppress logging                                           |
-| `--color`         | `auto`, `never`, or `always`                               |
-| `--help`          | Show command-line help and usage info                     |
-| `--version`       | Show installed version of `charfinder`                    |
-
-🧠 Use `--match-mode hybrid` to combine all 3 algorithms by averaging their scores.
-
-Example:
-
-```bash
-charfinder -q grnning --fuzzy --threshold 0.6 --fuzzy-algo rapidfuzz
-```
-
-### 🐍 Python Library Mode
-
-```python
-from charfinder.core import find_chars
-
-for line in find_chars("snowman"):
-    print(line)
-
-# Enable fuzzy search with threshold and algorithm
-find_chars("snwmn", fuzzy=True, threshold=0.6, fuzzy_algo="rapidfuzz")
-```
-
----
-
-## 📂 Project Structure
+### 3.1 📂 Structure
 
 ```
 charfinder/
-├── src/charfinder/
-│   ├── __init__.py               ← Package marker
-│   ├── __main__.py               ← Enables `python -m charfinder` entry point
-│   ├── cli.py                    ← Argument parsing and CLI integration
-│   ├── core.py                   ← Core logic: search, normalize, cache
-│   ├── fuzzymatchlib.py          ← Fuzzy algorithm dispatcher
-│   ├── constants.py              ← Constants, enums, and default settings
-│   └── py.typed                  ← Marker for type-checking consumers
-├── tests/
-│   ├── test_cli.py               ← CLI integration tests via subprocess
-│   ├── test_lib.py               ← Tests for core `find_chars` function
-│   ├── test_fuzzymatchlib.py     ← Tests for fuzzy similarity scoring logic
-│   └── manual/demo.ipynb         ← Notebook for interactive exploration
-├── .github/
-│   └── workflows/tests.yml       ← GitHub Actions workflow (CI/CD)
-├── .pre-commit-config.yaml       ← Hook definitions: lint, format, type-check
-├── Makefile                      ← Automation for common dev tasks
-├── pyproject.toml                ← PEP 621 config + dependencies
-├── MANIFEST.in                   ← Includes additional files in distributions
-├── LICENSE.txt                   ← MIT license
-├── unicode_name_cache.json       ← Auto-generated at runtime; not tracked in Git
-└── README.md                     ← Project documentation (this file)
+├── .github/workflows/               # GitHub Actions CI pipeline
+├── .pre-commit-config.yaml          # Pre-commit hooks
+├── publish/                         # Sample config for PyPI/TestPyPI
+├── .env.sample                      # Sample environment variables
+├── LICENSE.txt
+├── Makefile                         # Automation tasks
+├── MANIFEST.in                      # Files to include in sdist
+├── pyproject.toml                   # PEP 621 build + deps
+├── README.md                        # Project documentation (this file)
+├── docs/                            # Detailed documentation (.md files)
+├── src/charfinder/                  # Main package code
+│   ├── __init__.py                  # Package version marker
+│   ├── __main__.py                  # Enables `python -m charfinder`
+│   ├── cli/                         # CLI logic (modularized)
+│   ├── core/                        # Core Unicode search logic
+│   ├── utils/                       # Shared utilities: formatting, logging, normalization
+│   ├── constants.py                 # Constants and default values
+│   ├── cache.py                     # Caching utilities
+│   ├── fuzzymatchlib.py             # Fuzzy matching algorithms
+│   ├── settings.py                  # Environment/config management
+│   ├── types.py                     # Shared type definitions
+│   └── py.typed                     # Marker for type-checking consumers
+└── tests/
+    ├── cli/                         # CLI test modules
+    ├── core/                        # Core logic tests
+    ├── test_log.py                  # Logging tests
+    ├── test_settings.py             # Settings/config tests
+    ├── conftest.py                  # Shared test fixtures
+    └── manual/demo.ipynb            # Interactive notebook for manual testing
 ```
 
----
+### 3.2 🧱 Architecture
 
-## 🧪 Testing
+CharFinder implements a **layered architecture** with clear boundaries:
 
-```bash
-# Run the full test suite with detailed output
-make test
+* **CLI Layer**
 
-# Re-run only failed or last tests for quicker feedback
-make test-fast
+  * User-facing command line interface.
+  * Argument parsing, CLI options, formatted output.
+  * Implements `cli_main.py`, `handlers.py`, `formatter.py`, and utilities.
 
-# Run tests and show coverage report in the terminal
-make coverage
+* **Core Layer**
 
-# Run all style and type checks
-make check-all
+  * Unicode name cache builder.
+  * Exact and fuzzy matching logic.
+  * Unicode normalization.
+  * Pure, reusable business logic.
 
-# Or run individual checks
-make lint                # ruff + mypy
-make format-check        # black format check (skips .ipynb)
-make format              # auto-format with black
-```
+* **Utilities Layer**
 
-**Pre-commit hooks**
+  * Logging system with rotating file handlers.
+  * Environment configuration.
+  * Type-safe, cached normalization.
 
-```bash
-make precommit       # install pre-commit hook
-make precommit-run   # manually run hooks on all files
-```
+* **Tests Layer**
 
-For manual exploration, see: [`demo.ipynb`](https://github.com/berserkhmdvhb/charfinder/blob/main/tests/manual/demo.ipynb)
+  * Comprehensive unit and CLI tests.
+  * 100% coverage enforced.
+  * Supports isolated environment behavior during tests.
 
----
+**Cross-reference:** see [Internals and Architecture](#9-internals-and-architecture) for deeper technical insights, and refer to these detailed documents:
 
-## 🛠 For Developers
-
-```bash
-git clone https://github.com/berserkhmdvhb/charfinder.git
-cd charfinder
-make install
-```
-
-If `make` is unavailable:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-pip install -e .[dev]
-```
-
----
-
-
-### Makefile Commands
-
-| Command            | Description                                                         |
-|--------------------|---------------------------------------------------------------------|
-| `help`             | Show this help text with a list of available commands               |
-| `install`          | Install the package in editable mode (no dev dependencies)          |
-| `install-dev`      | Upgrade pip and install package + all dev dependencies              |
-| `format`           | Reformat all Python files using `black`                             |
-| `format-check`     | Check formatting using `black --check` (non-invasive)               |
-| `mypy`             | Type-check source & tests (excludes `*.ipynb`)                      |
-| `ruff`             | Lint source & tests with `ruff` (excludes `*.ipynb`)                |
-| `lint`             | Run static checks: `ruff` + `mypy`                                  |
-| `test`             | Run the full test suite (`pytest tests --maxfail=1 -v`)             |
-| `test-fast`        | Run only failed or last tests quickly (`pytest --lf -x -v`)         |
-| `coverage`         | Run tests with coverage report in the terminal                      |
-| `coverage-xml`     | Run tests with coverage and output `coverage.xml` (for CI tools)   |
-| `check-all`        | Run `format-check`, `mypy`, `ruff`, and then `test`                 |
-| `precommit`        | Install Git pre-commit hooks (`pre-commit install`)                 |
-| `precommit-run`    | Run all configured pre-commit hooks locally                         |
-| `build`            | Build sdist & wheel via `python -m build`                           |
-| `clean`            | Remove build artifacts (`dist/`, `build/`, `*.egg-info/`)           |
-| `publish-test`     | Upload distributions to TestPyPI                                    |
-| `publish`          | Check & upload distributions to PyPI                                |
-| `upload-coverage`  | Send coverage report to Coveralls                                   |
-
-
-## 📦 Dependencies
-
-**Runtime**
-
-- [`argcomplete`](https://pypi.org/project/argcomplete/)
-- [`colorama`](https://pypi.org/project/colorama/)
-- [`python-Levenshtein`](https://pypi.org/project/python-Levenshtein/)
-- [`rapidfuzz`](https://pypi.org/project/rapidfuzz/)
-
-**Development**
-
-- [`black`](https://pypi.org/project/black/)
-- [`build`](https://pypi.org/project/build/)
-- [`coverage`](https://pypi.org/project/coverage/)
-- [`coveralls`](https://pypi.org/project/coveralls/) *(Python < 3.13 only)*
-- [`mypy`](https://pypi.org/project/mypy/)
-- [`pre-commit`](https://pypi.org/project/pre-commit/)
-- [`pytest`](https://pypi.org/project/pytest/)
-- [`pytest-cov`](https://pypi.org/project/pytest-cov/)
-- [`ruff`](https://pypi.org/project/ruff/)
-- [`twine`](https://pypi.org/project/twine/)
-
-
-Install all with:
-
-```bash
-pip install -e .[dev]
-```
-
----
-
-## 📌 Roadmap
-
-| Feature                              | Status |
-|--------------------------------------|--------|
-| Strict Unicode name matching         | ✅     |
-| Unicode normalization (NFKD)         | ✅     |
-| Caching for fast repeated lookup     | ✅     |
-| Fuzzy search with 3 algorithms       | ✅     |
-| CLI: quiet mode, color modes         | ✅     |
-| Type hints, logging, clean code      | ✅     |
-| Unit tests + CLI test coverage       | ✅     |
-| `charfinder` CLI entry point         | ✅     |
-| Fuzzy score shown in results         | ✅     |
-| `demo.ipynb` interactive interface   | ✅     |
-| Hybrid fuzzy matching strategy       | ✅     |
-| Docker container support             | 🔜     |
-| JSON output format (for scripting)   | 🔜     |
-
----
-
-## 🧾 License
-
-MIT License © 2025 [berserkhmdvhb](https://github.com/berserkhmdvhb)
+* [docs/cli\_architecture.md](docs/cli_architecture.md)
+* [docs/core\_logic.md](docs/core_logic.md)
+* [docs/environment\_config.md](docs/environment_config.md)
+* [docs/logging\_system.md](docs/logging_system.md)
+* [docs/caching.md](docs/caching.md)
