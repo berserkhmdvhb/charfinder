@@ -33,7 +33,7 @@ __all__ = [
 def print_debug_diagnostics(
     args: Namespace,
     *,
-    use_color: bool,
+    use_color: bool = False,
     show: bool = True,
 ) -> None:
     """
@@ -92,7 +92,7 @@ def print_debug_diagnostics(
         log=True,
         log_method="debug",
     )
-    print_dotenv_debug(show=show)
+    print_dotenv_debug(use_color=use_color, show=show)
 
     # End footer
     echo(
@@ -104,7 +104,7 @@ def print_debug_diagnostics(
     )
 
 
-def print_dotenv_debug(*, show: bool = True) -> None:
+def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
     """
     Print details of the resolved .env file and its contents.
 
@@ -115,31 +115,41 @@ def print_dotenv_debug(*, show: bool = True) -> None:
     """
     dotenv_path = resolve_dotenv_path()
 
-    echo("=== DOTENV DEBUG ===", style=format_debug, show=show, log=False, log_method="debug")
+    echo(
+        "=== DOTENV DEBUG ===",
+        style=lambda msg: format_debug(msg, use_color=use_color),
+        show=show,
+        log=False,
+        log_method="debug",
+    )
 
     if not dotenv_path:
         echo(
             "No .env file found or resolved.",
-            style=format_debug,
+            style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
             log_method="debug",
         )
         echo(
             "Environment variables may only be coming from the OS.",
-            style=format_debug,
+            style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
             log_method="debug",
         )
         echo(
-            "=== END DOTENV DEBUG ===", style=format_debug, show=show, log=True, log_method="debug"
+            "=== END DOTENV DEBUG ===",
+            style=lambda msg: format_debug(msg, use_color=use_color),
+            show=show,
+            log=True,
+            log_method="debug",
         )
         return
 
     echo(
         f"Selected .env file: {dotenv_path}",
-        style=format_debug,
+        style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
         log=True,
         log_method="debug",
@@ -151,14 +161,14 @@ def print_dotenv_debug(*, show: bool = True) -> None:
         if not values:
             echo(
                 ".env file exists but is empty or contains no key-value pairs.",
-                style=format_debug,
+                style=lambda msg: format_debug(msg, use_color=use_color),
                 show=show,
                 log=True,
                 log_method="debug",
             )
             echo(
                 "=== END DOTENV DEBUG ===",
-                style=format_debug,
+                style=lambda msg: format_debug(msg, use_color=use_color),
                 show=show,
                 log=True,
                 log_method="debug",
@@ -168,7 +178,7 @@ def print_dotenv_debug(*, show: bool = True) -> None:
         pairs_str = ", ".join(f"{key}={value}" for key, value in values.items())
         echo(
             f"Loaded key-value pairs: {pairs_str}",
-            style=format_debug,
+            style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
             log_method="debug",
@@ -177,10 +187,16 @@ def print_dotenv_debug(*, show: bool = True) -> None:
     except (OSError, UnicodeDecodeError) as exc:
         echo(
             f"Failed to read .env file: {exc}",
-            style=format_debug,
+            style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
             log_method="debug",
         )
 
-    echo("=== END DOTENV DEBUG ===", style=format_debug, show=show, log=True, log_method="debug")
+    echo(
+        "=== END DOTENV DEBUG ===",
+        style=lambda msg: format_debug(msg, use_color=use_color),
+        show=show,
+        log=True,
+        log_method="debug",
+    )
