@@ -18,7 +18,6 @@ Designed for both technical and non-technical users, charfinder enables reliable
 1. [🎥 Demo Video](#-1-demo-video)
 2. [✨ Features](#-2-features)
 3. [📦 Project Structure](#3--project-structure)
-
    * [3.1 📂 Structure](#31--structure)
    * [3.2 🧱 Architecture](#32--architecture)
 4. [🌐 What is Unicode?](#4--what-is-unicode)
@@ -30,7 +29,6 @@ Designed for both technical and non-technical users, charfinder enables reliable
    * [Combination Matrix](#combination-matrix)
    * [Matching Flow](#matching-flow)
    * [Normalization](#normalization)
-   * [Cross-Reference](#cross-reference)
 6. [🚀 Usage](#6--usage)
 
    * [6.1 Installation](#61-installation)
