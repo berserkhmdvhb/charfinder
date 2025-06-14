@@ -16,12 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypedDict
-
-try:
-    from typing import NotRequired, TypedDict  # Python 3.11+
-except ImportError:
-    from typing_extensions import NotRequired, TypedDict
+from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 if TYPE_CHECKING:
     from charfinder.constants import VALID_HYBRID_AGG_FUNCS, FuzzyAlgorithm, MatchMode
