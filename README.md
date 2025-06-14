@@ -22,7 +22,7 @@ Designed for both technical and non-technical users, charfinder enables reliable
    * [3.1 📂 Structure](#31--structure)
    * [3.2 🧱 Architecture](#32--architecture)
 4. [🌐 What is Unicode?](#4--what-is-unicode)
-5. [🎯 Exact and Fuzzy Match](#5--exact-and-fuzzy-match)
+5. [🎯 Exact and Fuzzy Match](#-5-exact-and-fuzzy-match)
 
    * [Matching Modes Overview](#matching-modes-overview)
    * [Available Fuzzy Algorithms](#available-fuzzy-algorithms)
