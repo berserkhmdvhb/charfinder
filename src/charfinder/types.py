@@ -18,11 +18,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-try:
-    from typing import NotRequired, TypedDict
-except ImportError:
-    from typing_extensions import NotRequired, TypedDict
-
+from typing_extensions import NotRequired, TypedDict
 
 if TYPE_CHECKING:
     from charfinder.constants import VALID_HYBRID_AGG_FUNCS, FuzzyAlgorithm, MatchMode
