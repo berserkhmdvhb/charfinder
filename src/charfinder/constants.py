@@ -47,7 +47,6 @@ __all__ = [
     "LOG_METHODS",
     "PACKAGE_NAME",
     "VALID_EXACT_MATCH_MODES",
-    "VALID_FUZZY_ALGOS",
     "VALID_FUZZY_MATCH_MODES",
     "VALID_HYBRID_AGG_FUNCS",
     "VALID_LOG_METHODS",
@@ -68,7 +67,7 @@ DEFAULT_ENCODING = "utf-8"
 # Valid Inputs
 # ---------------------------------------------------------------------
 
-VALID_FUZZY_ALGOS = ("sequencematcher", "rapidfuzz", "levenshtein")
+
 VALID_FUZZY_MATCH_MODES = ("single", "hybrid")
 VALID_EXACT_MATCH_MODES = ("substring", "word-subset")
 VALID_LOG_METHODS = {"debug", "info", "warning", "error", "exception"}
@@ -79,7 +78,17 @@ VALID_HYBRID_AGG_FUNCS = Literal["mean", "median", "max", "min"]
 # Typing Aliases
 # ---------------------------------------------------------------------
 
-FuzzyAlgorithm = Literal["sequencematcher", "rapidfuzz", "levenshtein"]
+FuzzyAlgorithm = Literal[
+    "sequencematcher",
+    "rapidfuzz",
+    "levenshtein",
+    "simple_ratio",
+    "normalized_ratio",
+    "levenshtein_ratio",
+    "token_sort_ratio",
+    "hybrid_score",
+]
+
 MatchMode = Literal["single", "hybrid"]
 ExactMatchMode = Literal["substring", "word-subset"]
 ColorMode = Literal["auto", "always", "never"]
@@ -90,6 +99,18 @@ LOG_METHODS = SimpleNamespace(
     ERROR="error",
     EXCEPTION="exception",
 )
+
+FUZZY_ALGO_ALIASES: dict[str, str] = {
+    "levenshtein": "levenshtein_ratio",
+    "simple": "simple_ratio",
+    "normalized": "normalized_ratio",
+    "token_sort": "token_sort_ratio",
+    "hybrid": "hybrid_score",
+    "sequencematcher": "sequencematcher",
+    "rapidfuzz": "rapidfuzz",
+}
+
+
 # ---------------------------------------------------------------------
 # Exit Codes
 # ---------------------------------------------------------------------
@@ -120,6 +141,19 @@ DEFAULT_FUZZY_MATCH_MODE = "single"
 DEFAULT_EXACT_MATCH_MODE = "word-subset"
 DEFAULT_COLOR_MODE = "auto"
 DEFAULT_NORMALIZATION_FORM: Literal["NFC", "NFD", "NFKC", "NFKD"] = "NFC"
+
+
+# ---------------------------------------------------------------------
+# Hybrid scoring weights for fuzzy match components
+# ---------------------------------------------------------------------
+
+# Weights must sum to 1.0
+FUZZY_HYBRID_WEIGHTS: dict[str, float] = {
+    "simple_ratio": 0.15,
+    "normalized_ratio": 0.15,
+    "levenshtein_ratio": 0.15,
+    "token_sort_ratio": 0.55,
+}
 
 # ---------------------------------------------------------------------
 # Logging (static pieces)

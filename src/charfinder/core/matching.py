@@ -50,7 +50,7 @@ def find_exact_matches(
     """
 
     matches: list[tuple[int, str, str, float | None]] = []
-
+    # Matching Loop
     for char, names in name_cache.items():
         code_point = ord(char)
         original_name = names["original"]

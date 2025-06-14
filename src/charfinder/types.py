@@ -4,6 +4,7 @@ Type definitions and reusable dataclasses for CharFinder.
 Defines:
 - AlgorithmFn: Callable type alias for fuzzy algorithm functions.
 - FuzzyMatchContext: Dataclass holding parameters for fuzzy matching.
+- SearchConfig: Dataclass grouping parameters for Unicode search.
 - CharMatch: TypedDict representing a single match result.
 """
 
@@ -25,6 +26,7 @@ except ImportError:
 if TYPE_CHECKING:
     from charfinder.constants import VALID_HYBRID_AGG_FUNCS, FuzzyAlgorithm, MatchMode
 
+
 # ---------------------------------------------------------------------
 # Type definitions
 # ---------------------------------------------------------------------
@@ -41,6 +43,20 @@ class FuzzyMatchContext:
     verbose: bool
     use_color: bool
     query: str
+
+
+@dataclass
+class SearchConfig:
+    fuzzy: bool
+    threshold: float
+    name_cache: dict[str, dict[str, str]] | None
+    verbose: bool
+    use_color: bool
+    fuzzy_algo: FuzzyAlgorithm
+    fuzzy_match_mode: MatchMode
+    exact_match_mode: str
+    agg_fn: VALID_HYBRID_AGG_FUNCS
+    prefer_fuzzy: bool
 
 
 class CharMatch(TypedDict):

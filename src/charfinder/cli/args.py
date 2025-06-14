@@ -11,8 +11,7 @@ Used by:
 Constants:
     ARG_QUERY, ARG_THRESHOLD, ARG_COLOR, ARG_EXACT_MATCH_MODE, ARG_FUZZY_MATCH_MODE,
     ARG_HYBRID_AGG_FN, DEFAULT_COLOR_MODE, DEFAULT_EXACT_MATCH_MODE, DEFAULT_FUZZY_ALGO,
-    DEFAULT_FUZZY_MATCH_MODE, DEFAULT_THRESHOLD, VALID_EXACT_MATCH_MODES,
-    VALID_FUZZY_ALGOS, VALID_FUZZY_MATCH_MODES
+    DEFAULT_FUZZY_MATCH_MODE, DEFAULT_THRESHOLD, VALID_EXACT_MATCH_MODES, VALID_FUZZY_MATCH_MODES
 
 Functions:
     threshold_range(): Validate that --threshold is a float in [0.0, 1.0].
@@ -33,9 +32,9 @@ from charfinder.constants import (
     DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_THRESHOLD,
     VALID_EXACT_MATCH_MODES,
-    VALID_FUZZY_ALGOS,
     VALID_FUZZY_MATCH_MODES,
 )
+from charfinder.fuzzymatchlib import resolve_algorithm_name
 
 __all__ = [
     "ARG_COLOR",
@@ -50,8 +49,8 @@ __all__ = [
     "DEFAULT_FUZZY_MATCH_MODE",
     "DEFAULT_THRESHOLD",
     "VALID_EXACT_MATCH_MODES",
-    "VALID_FUZZY_ALGOS",
     "VALID_FUZZY_MATCH_MODES",
+    "fuzzy_algo_validator",
     "threshold_range",
 ]
 
@@ -97,3 +96,23 @@ def threshold_range(value: str) -> float:
         raise argparse.ArgumentTypeError(message)
 
     return fvalue
+
+
+def fuzzy_algo_validator(value: str) -> str:
+    """
+    Validate and normalize the fuzzy algorithm name (case-insensitive).
+
+    Args:
+        value (str): Input from CLI (e.g., 'Levenshtein').
+
+    Returns:
+        str: Valid internal algorithm name string.
+
+    Raises:
+        argparse.ArgumentTypeError: If the name is invalid.
+    """
+    try:
+        return resolve_algorithm_name(value)
+    except ValueError as exc:
+        message = str(exc)
+        raise argparse.ArgumentTypeError(message) from exc

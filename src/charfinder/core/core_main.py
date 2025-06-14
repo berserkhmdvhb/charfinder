@@ -1,15 +1,19 @@
 """Core logic for CharFinder.
 
-Provides the core processing functions for Unicode character search
-with fuzzy matching and name normalization.
+Provides the public API surface for high-level character search,
+delegating to internal finder implementations.
 
 This module is intentionally kept free of any CLI-specific or I/O code
 to maximize testability and reusability.
+
+Now supports hybrid matching via `prefer_fuzzy=True`, allowing fuzzy
+results to be included even if exact matches exist.
 
 Functions:
     find_chars(): Search Unicode characters by exact or fuzzy name match (yields formatted lines).
     find_chars_raw(): Search Unicode characters and return raw results for JSON output.
 """
+
 
 # ---------------------------------------------------------------------
 # Imports
@@ -18,26 +22,58 @@ Functions:
 from __future__ import annotations
 
 from collections.abc import Generator
+from typing import TYPE_CHECKING, Literal
 
 from charfinder.constants import (
     DEFAULT_THRESHOLD,
-    VALID_FUZZY_ALGOS,
-    VALID_FUZZY_MATCH_MODES,
     VALID_HYBRID_AGG_FUNCS,
     FuzzyAlgorithm,
     MatchMode,
 )
-from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
-from charfinder.core.name_cache import build_name_cache
-from charfinder.types import CharMatch, FuzzyMatchContext
-from charfinder.utils.formatter import echo, format_result_header, format_result_row
-from charfinder.utils.logger_styles import format_info
-from charfinder.utils.normalizer import normalize
+from charfinder.core.finders import find_chars as _find_chars_impl
+from charfinder.core.finders import find_chars_raw as _find_chars_raw_impl
+from charfinder.core.finders import find_chars_with_info as _find_chars_info_impl
+from charfinder.types import SearchConfig
+from charfinder.utils.formatter import format_result_header, format_result_row
 
-__all__ = [
-    "find_chars",
-    "find_chars_raw",
-]
+if TYPE_CHECKING:
+    from charfinder.types import CharMatch
+
+ExactMatchMode = Literal["substring", "word-subset"]
+
+__all__ = ["find_chars", "find_chars_raw"]
+
+# ---------------------------------------------------------------------
+# Internal Helper
+# ---------------------------------------------------------------------
+
+
+def _build_config(
+    *,
+    fuzzy: bool,
+    threshold: float,
+    name_cache: dict[str, dict[str, str]] | None,
+    verbose: bool,
+    use_color: bool,
+    fuzzy_algo: FuzzyAlgorithm,
+    fuzzy_match_mode: MatchMode,
+    exact_match_mode: ExactMatchMode,
+    agg_fn: VALID_HYBRID_AGG_FUNCS,
+    prefer_fuzzy: bool,
+) -> SearchConfig:
+    return SearchConfig(
+        fuzzy=fuzzy,
+        threshold=threshold,
+        name_cache=name_cache,
+        verbose=verbose,
+        use_color=use_color,
+        fuzzy_algo=fuzzy_algo,
+        fuzzy_match_mode=fuzzy_match_mode,
+        exact_match_mode=exact_match_mode,
+        agg_fn=agg_fn,
+        prefer_fuzzy=prefer_fuzzy,
+    )
+
 
 # ---------------------------------------------------------------------
 # Public API
@@ -54,11 +90,14 @@ def find_chars(
     use_color: bool = True,
     fuzzy_algo: FuzzyAlgorithm = "sequencematcher",
     fuzzy_match_mode: MatchMode = "single",
-    exact_match_mode: str = "word-subset",
+    exact_match_mode: ExactMatchMode = "word-subset",
     agg_fn: VALID_HYBRID_AGG_FUNCS = "mean",
+    prefer_fuzzy: bool = False,
 ) -> Generator[str, None, None]:
     """
     Search for Unicode characters by name using exact or fuzzy matching.
+
+    Delegates to `core.finders.find_chars`.
 
     Args:
         query: Input query string.
@@ -71,64 +110,24 @@ def find_chars(
         fuzzy_match_mode: 'single' or 'hybrid'.
         exact_match_mode: 'substring' or 'word-subset'.
         agg_fn: Aggregation function for hybrid match mode.
+        prefer_fuzzy: If True, include fuzzy matches even if exact matches are found (hybrid mode).
 
-    Yields:
-        str: Each line to be printed for the result table (header first, then matching rows).
+    Returns:
+        Generator[str, None, None]: Yields each line of formatted CLI result output.
     """
-    if fuzzy_algo not in VALID_FUZZY_ALGOS:
-        valid_algos = ", ".join(VALID_FUZZY_ALGOS)
-        message = f"Invalid fuzzy algorithm: '{fuzzy_algo}'. Must be one of: {valid_algos}"
-        raise ValueError(message)
-
-    if fuzzy_match_mode not in VALID_FUZZY_MATCH_MODES:
-        message = f"Invalid fuzzy match mode: '{fuzzy_match_mode}'. Must be 'single' or 'hybrid'."
-        raise ValueError(message)
-
-    if not isinstance(query, str):
-        message = "Query must be a string."
-        raise TypeError(message)
-
-    if not query.strip():
-        message = "Query string must not be empty."
-        raise ValueError(message)
-
-    if name_cache is None:
-        name_cache = build_name_cache(show=verbose, use_color=use_color)
-
-    norm_query = normalize(query)
-    matches: list[tuple[int, str, str, float | None]] = find_exact_matches(
-        norm_query, name_cache, exact_match_mode
+    config = _build_config(
+        fuzzy=fuzzy,
+        threshold=threshold,
+        name_cache=name_cache,
+        verbose=verbose,
+        use_color=use_color,
+        fuzzy_algo=fuzzy_algo,
+        fuzzy_match_mode=fuzzy_match_mode,
+        exact_match_mode=exact_match_mode,
+        agg_fn=agg_fn,
+        prefer_fuzzy=prefer_fuzzy,
     )
-
-    if not matches and fuzzy:
-        context = FuzzyMatchContext(
-            threshold=threshold,
-            fuzzy_algo=fuzzy_algo,
-            match_mode=fuzzy_match_mode,
-            agg_fn=agg_fn,
-            verbose=verbose,
-            use_color=use_color,
-            query=query,
-        )
-        matches.extend(find_fuzzy_matches(norm_query, name_cache, context))
-
-    match_info = f"Found {len(matches)} match(es)" if matches else "No matches found"
-    message = f"{match_info} for query: '{query}'"
-    echo(
-        message,
-        style=lambda m: format_info(m, use_color=use_color),
-        show=verbose,
-        log=True,
-        log_method="info",
-    )
-
-    if not matches:
-        return
-
-    yield from format_result_header(has_score=(matches[0][3] is not None))
-
-    for code, char, name, score in matches:
-        yield format_result_row(code, char, name, score)
+    return _find_chars_impl(query, config)
 
 
 def find_chars_raw(
@@ -141,11 +140,14 @@ def find_chars_raw(
     use_color: bool = True,
     fuzzy_algo: FuzzyAlgorithm = "sequencematcher",
     fuzzy_match_mode: MatchMode = "single",
-    exact_match_mode: str = "word-subset",
+    exact_match_mode: ExactMatchMode = "word-subset",
     agg_fn: VALID_HYBRID_AGG_FUNCS = "mean",
+    prefer_fuzzy: bool = False,
 ) -> list[CharMatch]:
     """
     Search for Unicode characters and return raw results for JSON output.
+
+    Delegates to `core.finders.find_chars_raw`.
 
     Args:
         query: Input query string.
@@ -153,53 +155,96 @@ def find_chars_raw(
         threshold: Fuzzy match threshold.
         name_cache: Optional prebuilt Unicode name cache.
         verbose: Whether to log progress.
+        use_color: Whether to colorize log output.
         fuzzy_algo: Algorithm to use for fuzzy scoring.
         fuzzy_match_mode: 'single' or 'hybrid'.
         exact_match_mode: 'substring' or 'word-subset'.
         agg_fn: Aggregation function for hybrid match mode.
+        prefer_fuzzy: If True, include fuzzy matches even if exact matches are found (hybrid mode).
 
     Returns:
-        list[CharMatch]: List of Unicode character matches, formatted for JSON output.
+        list[CharMatch]: of Unicode character matches, formatted for JSON output.
     """
-    if name_cache is None:
-        name_cache = build_name_cache(show=verbose, use_color=use_color)
+    config = _build_config(
+        fuzzy=fuzzy,
+        threshold=threshold,
+        name_cache=name_cache,
+        verbose=verbose,
+        use_color=use_color,
+        fuzzy_algo=fuzzy_algo,
+        fuzzy_match_mode=fuzzy_match_mode,
+        exact_match_mode=exact_match_mode,
+        agg_fn=agg_fn,
+        prefer_fuzzy=prefer_fuzzy,
+    )
+    return _find_chars_raw_impl(query, config)
 
-    norm_query = normalize(query)
-    matches: list[tuple[int, str, str, float | None]] = find_exact_matches(
-        norm_query, name_cache, exact_match_mode
+
+def find_chars_with_info(
+    query: str,
+    *,
+    fuzzy: bool = False,
+    threshold: float = DEFAULT_THRESHOLD,
+    name_cache: dict[str, dict[str, str]] | None = None,
+    verbose: bool = True,
+    use_color: bool = True,
+    fuzzy_algo: FuzzyAlgorithm = "sequencematcher",
+    fuzzy_match_mode: MatchMode = "single",
+    exact_match_mode: ExactMatchMode = "word-subset",
+    agg_fn: VALID_HYBRID_AGG_FUNCS = "mean",
+    prefer_fuzzy: bool = False,
+) -> tuple[list[str], bool]:
+    """
+    Search for Unicode characters and return both output lines and fuzzy usage flag.
+
+    This wraps `core.finders.find_chars_with_info()` and returns:
+      - The formatted output lines.
+      - A boolean indicating whether fuzzy matching was actually used.
+
+    Args:
+        query (str): Input query string.
+        fuzzy (bool): Whether to enable fuzzy matching.
+        threshold (float): Fuzzy match threshold.
+        name_cache (dict[str, dict[str, str]] | None): Optional prebuilt name cache.
+        verbose (bool): Whether to show progress messages.
+        use_color (bool): Whether to enable ANSI color formatting.
+        fuzzy_algo (FuzzyAlgorithm): Algorithm used for fuzzy scoring.
+        fuzzy_match_mode (MatchMode): 'single' or 'hybrid' match scoring mode.
+        exact_match_mode (Literal): 'substring' or 'word-subset' for exact match logic.
+        agg_fn (str): Aggregation function to use for hybrid fuzzy matching.
+        prefer_fuzzy (bool): If True, include fuzzy matches even if exact matches are found.
+
+    Returns:
+        tuple[list[str], bool]: A tuple containing:
+            - A list of formatted CLI output lines.
+            - A boolean indicating whether fuzzy matching was used.
+    """
+    config = _build_config(
+        fuzzy=fuzzy,
+        threshold=threshold,
+        name_cache=name_cache,
+        verbose=verbose,
+        use_color=use_color,
+        fuzzy_algo=fuzzy_algo,
+        fuzzy_match_mode=fuzzy_match_mode,
+        exact_match_mode=exact_match_mode,
+        agg_fn=agg_fn,
+        prefer_fuzzy=prefer_fuzzy,
     )
 
-    if not matches and fuzzy:
-        context = FuzzyMatchContext(
-            threshold=threshold,
-            fuzzy_algo=fuzzy_algo,
-            match_mode=fuzzy_match_mode,
-            agg_fn=agg_fn,
-            verbose=verbose,
-            use_color=use_color,
-            query=query,
+    raw_matches, fuzzy_used = _find_chars_info_impl(query, config)
+
+    lines: list[str] = []
+    if raw_matches:
+        has_score = "score" in raw_matches[0]
+        lines.extend(format_result_header(has_score=has_score))
+        lines.extend(
+            format_result_row(
+                int(match["code"][2:], 16),
+                match["char"],
+                match["name"].split("  ")[0],
+                match.get("score"),
+            )
+            for match in raw_matches
         )
-        matches.extend(find_fuzzy_matches(norm_query, name_cache, context))
-
-    match_info = f"Found {len(matches)} match(es)" if matches else "No matches found"
-    message = f"{match_info} for query: '{query}'"
-    echo(
-        message,
-        style=lambda m: format_info(m, use_color=use_color),
-        show=verbose,
-        log=True,
-        log_method="info",
-    )
-
-    results: list[CharMatch] = []
-    for code, char, name, score in matches:
-        item: CharMatch = {
-            "code": f"U+{code:04X}",
-            "char": char,
-            "name": f"{name}  (\\u{code:04x})",
-        }
-        if score is not None:
-            item["score"] = round(score, 3)
-        results.append(item)
-
-    return results
+    return lines, fuzzy_used

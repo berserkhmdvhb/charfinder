@@ -5,6 +5,7 @@ Delegates color formatting to `cli/formatter.py` and avoids using print().
 Functions:
     resolve_effective_threshold(): Resolve threshold from CLI arg, env var, or default.
     resolve_effective_color_mode(): Resolve color mode from CLI arg, env var, or default.
+    apply_fuzzy_defaults(): Apply default fuzzy match behavior if not explicitly set.
     get_version(): Retrieve installed package version.
     print_result_lines(): Print result lines to stdout.
     handle_find_chars(): Main CLI execution logic.
@@ -22,6 +23,7 @@ import sys
 from argparse import ArgumentTypeError, Namespace
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
+from typing import Any
 
 from charfinder.cli.args import threshold_range
 from charfinder.constants import (
@@ -32,18 +34,18 @@ from charfinder.constants import (
     EXIT_NO_RESULTS,
     EXIT_SUCCESS,
 )
-from charfinder.core.core_main import find_chars, find_chars_raw
+from charfinder.core.core_main import find_chars_raw, find_chars_with_info
 from charfinder.utils.formatter import echo, format_result_line, should_use_color
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error, format_warning
 
 __all__ = [
+    "apply_fuzzy_defaults",
     "get_version",
     "handle_find_chars",
     "print_result_lines",
     "resolve_effective_color_mode",
     "resolve_effective_threshold",
-    "should_use_color",
 ]
 
 logger = get_logger()
@@ -68,14 +70,12 @@ def resolve_effective_threshold(cli_threshold: float | None, *, use_color: bool 
     Returns:
         float: The resolved threshold value.
     """
-
     if cli_threshold is not None:
         return cli_threshold
 
     env_value = os.getenv("CHARFINDER_MATCH_THRESHOLD")
     if env_value is not None:
         try:
-            # Reuse your existing CLI validator for consistency
             return threshold_range(env_value)
         except ArgumentTypeError:
             message = (
@@ -107,7 +107,6 @@ def resolve_effective_color_mode(cli_color_mode: str | None) -> str:
     Returns:
         str: The resolved color mode ("auto", "always", or "never").
     """
-
     if cli_color_mode is not None:
         return cli_color_mode
 
@@ -116,6 +115,24 @@ def resolve_effective_color_mode(cli_color_mode: str | None) -> str:
         return env_value
 
     return DEFAULT_COLOR_MODE
+
+
+def apply_fuzzy_defaults(args: Namespace) -> None:
+    """Apply default fuzzy match algorithm and mode if --fuzzy is set.
+
+    If the user enables --fuzzy but does not specify --fuzzy-algo or --fuzzy-match-mode,
+    this function injects safe and useful defaults:
+        fuzzy_algo: "token_sort_ratio"
+        fuzzy_match_mode: "hybrid"
+
+    Args:
+        args (Namespace): Parsed CLI arguments.
+    """
+    if args.fuzzy:
+        if not getattr(args, "fuzzy_algo", None):
+            args.fuzzy_algo = "token_sort_ratio"
+        if not getattr(args, "fuzzy_match_mode", None):
+            args.fuzzy_match_mode = "hybrid"
 
 
 # ---------------------------------------------------------------------
@@ -149,9 +166,6 @@ def print_result_lines(lines: list[str], *, use_color: bool = False) -> None:
     Args:
         lines (list[str]): The list of result lines to print.
         use_color (bool, optional): Whether to apply color formatting. Defaults to False.
-
-    Returns:
-        None
     """
     for line in lines:
         output = format_result_line(line, use_color=use_color)
@@ -163,30 +177,23 @@ def print_result_lines(lines: list[str], *, use_color: bool = False) -> None:
 # ---------------------------------------------------------------------
 
 
-def handle_find_chars(args: Namespace) -> int:
+def handle_find_chars(args: Namespace, query_str: str) -> tuple[int, dict[str, Any] | None]:
     """
     Main CLI execution handler.
 
-    Runs find_chars() or find_chars_raw() with the given args,
-    prints results, and returns an appropriate exit code.
+    Runs find_chars_with_info() or find_chars_raw() with the given args and query string,
+    prints results, and returns an appropriate exit code and match diagnostics.
 
     Args:
         args (Namespace): Parsed CLI arguments.
+        query_str (str): Query string to search for.
 
     Returns:
-        int: Exit code to be passed to sys.exit().
-
-    Raises:
-        KeyboardInterrupt: If the user interrupts execution.
-        Exception: For unexpected errors (logged and handled internally).
+        tuple[int, dict[str, Any] | None]: Exit code and match info for diagnostics.
     """
     color_mode = resolve_effective_color_mode(args.color)
     use_color = should_use_color(color_mode)
     threshold = resolve_effective_threshold(args.threshold, use_color=use_color)
-
-    # Resolve query: prefer option_query over positional_query
-    query_list = args.option_query if args.option_query else args.positional_query
-    query_str = " ".join(query_list).strip()
 
     if not query_str:
         message = "Query must not be empty."
@@ -197,11 +204,19 @@ def handle_find_chars(args: Namespace) -> int:
             log=False,
             log_method="error",
         )
-        return EXIT_INVALID_USAGE
+        return EXIT_INVALID_USAGE, None
 
     try:
+        match_info = {
+            "fuzzy": args.fuzzy,
+            "fuzzy_algo": args.fuzzy_algo,
+            "fuzzy_match_mode": args.fuzzy_match_mode,
+            "exact_match_mode": args.exact_match_mode,
+            "hybrid_agg_fn": args.hybrid_agg_fn,
+            "prefer_fuzzy": args.prefer_fuzzy,
+        }
+
         if args.format == "json":
-            # Structured output mode: use find_chars_raw()
             rows = find_chars_raw(
                 query=query_str,
                 fuzzy=args.fuzzy,
@@ -212,33 +227,33 @@ def handle_find_chars(args: Namespace) -> int:
                 fuzzy_match_mode=args.fuzzy_match_mode,
                 exact_match_mode=args.exact_match_mode,
                 agg_fn=args.hybrid_agg_fn,
+                prefer_fuzzy=args.prefer_fuzzy,
             )
-            json.dump(rows, sys.stdout, ensure_ascii=False, indent=2)
-            sys.stdout.write("\n")
+            message = json.dumps(rows, ensure_ascii=False, indent=2)
+            sys.stdout.write(message + "\n")
             sys.stdout.flush()
-            # In JSON mode, always return EXIT_SUCCESS (even if 0 results)
-            return EXIT_SUCCESS
+            return EXIT_SUCCESS, match_info
 
-        # Text output mode => use find_chars() generator
-        results = list(
-            find_chars(
-                query=query_str,
-                fuzzy=args.fuzzy,
-                threshold=threshold,
-                verbose=args.verbose,
-                use_color=use_color,
-                fuzzy_algo=args.fuzzy_algo,
-                fuzzy_match_mode=args.fuzzy_match_mode,
-                exact_match_mode=args.exact_match_mode,
-                agg_fn=args.hybrid_agg_fn,
-            )
+        results, fuzzy_used = find_chars_with_info(
+            query=query_str,
+            fuzzy=args.fuzzy,
+            threshold=threshold,
+            verbose=args.verbose,
+            use_color=use_color,
+            fuzzy_algo=args.fuzzy_algo,
+            fuzzy_match_mode=args.fuzzy_match_mode,
+            exact_match_mode=args.exact_match_mode,
+            agg_fn=args.hybrid_agg_fn,
+            prefer_fuzzy=args.prefer_fuzzy,
         )
 
+        match_info["fuzzy_was_used"] = fuzzy_used
+
         if not results:
-            return EXIT_NO_RESULTS
+            return EXIT_NO_RESULTS, match_info
 
         print_result_lines(results, use_color=use_color)
-        return EXIT_SUCCESS
+        return EXIT_SUCCESS, match_info
 
     except KeyboardInterrupt:
         if args.verbose:
@@ -250,4 +265,4 @@ def handle_find_chars(args: Namespace) -> int:
                 log=False,
                 log_method="warning",
             )
-        return EXIT_CANCELLED
+        return EXIT_CANCELLED, None

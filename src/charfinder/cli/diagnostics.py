@@ -5,11 +5,11 @@ Provides human-readable runtime diagnostics when the `--debug` flag is passed.
 Behavior:
     - Output is printed directly to stdout (if show=True).
     - ANSI coloring is applied based on `--color` flag or terminal support.
-    - Output includes CLI arguments and .env file(s) diagnostics.
+    - Output includes CLI arguments, match diagnostics, and .env file(s).
     - Output is always logged (level DEBUG).
 
 Functions:
-    print_debug_diagnostics(): Print CLI args and .env context.
+    print_debug_diagnostics(): Print CLI args, match info, and .env context.
     print_dotenv_debug(): Print loaded .env file content (via settings).
 """
 
@@ -19,9 +19,11 @@ Functions:
 
 import os
 from argparse import Namespace
+from typing import Any
 
 from dotenv import dotenv_values
 
+from charfinder.cli.diagnostics_match import print_match_diagnostics
 from charfinder.constants import ENV_DEBUG_ENV_LOAD
 from charfinder.settings import resolve_dotenv_path
 from charfinder.utils.formatter import echo
@@ -40,6 +42,7 @@ __all__ = [
 def print_debug_diagnostics(
     args: Namespace,
     *,
+    match_info: dict[str, Any] | None = None,
     use_color: bool = False,
     show: bool = True,
 ) -> None:
@@ -48,52 +51,64 @@ def print_debug_diagnostics(
 
     Includes:
     - CLI arguments as parsed
+    - Fuzzy/exact match info if provided
     - Loaded .env file details
 
     Args:
         args: Parsed CLI arguments (argparse.Namespace)
+        match_info: Match context returned by matcher, if available
         use_color: Whether to apply ANSI formatting
         show: If True, print to terminal; always logged.
     """
-    # Diagnostic header
+    message = "=== DEBUG DIAGNOSTICS ==="
     echo(
-        "=== DEBUG DIAGNOSTICS ===",
+        message,
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
         log=True,
         log_method="debug",
     )
 
-    # CLI arguments
+    message = "Parsed args:"
     echo(
-        "Parsed args:",
+        message,
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
         log=True,
         log_method="debug",
     )
+
     for key, value in vars(args).items():
+        message = f"  {key:<20} = {value}"
         echo(
-            f"  {key:<20} = {value}",
+            message,
             style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
             log_method="debug",
         )
 
-    # CHARFINDER_DEBUG_ENV_LOAD
-    debug_env = os.getenv(ENV_DEBUG_ENV_LOAD, "0")
+    message = f"{ENV_DEBUG_ENV_LOAD} = {os.getenv(ENV_DEBUG_ENV_LOAD, '0')}"
     echo(
-        f"{ENV_DEBUG_ENV_LOAD} = {debug_env}",
+        message,
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
         log=True,
         log_method="debug",
     )
 
-    # Loaded .env
+    if match_info:
+        args_for_debug = Namespace(**match_info)
+        print_match_diagnostics(
+            args_for_debug,
+            match_info=match_info,
+            use_color=use_color,
+            show=show,
+        )
+
+    message = "Loaded .env file(s):"
     echo(
-        "Loaded .env file(s):",
+        message,
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
         log=True,
@@ -101,9 +116,9 @@ def print_debug_diagnostics(
     )
     print_dotenv_debug(use_color=use_color, show=show)
 
-    # End footer
+    message = "=== END DEBUG DIAGNOSTICS ==="
     echo(
-        "=== END DEBUG DIAGNOSTICS ===",
+        message,
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
         log=True,
@@ -123,8 +138,9 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
     """
     dotenv_path = resolve_dotenv_path()
 
+    message = "=== DOTENV DEBUG ==="
     echo(
-        "=== DOTENV DEBUG ===",
+        message,
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
         log=False,
@@ -132,22 +148,25 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
     )
 
     if not dotenv_path:
+        message = "No .env file found or resolved."
         echo(
-            "No .env file found or resolved.",
+            message,
             style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
             log_method="debug",
         )
+        message = "Environment variables may only be coming from the OS."
         echo(
-            "Environment variables may only be coming from the OS.",
+            message,
             style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
             log_method="debug",
         )
+        message = "=== END DOTENV DEBUG ==="
         echo(
-            "=== END DOTENV DEBUG ===",
+            message,
             style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
@@ -155,8 +174,9 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
         )
         return
 
+    message = f"Selected .env file: {dotenv_path}"
     echo(
-        f"Selected .env file: {dotenv_path}",
+        message,
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
         log=True,
@@ -167,15 +187,17 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
         values = dotenv_values(dotenv_path=dotenv_path)
 
         if not values:
+            message = ".env file exists but is empty or contains no key-value pairs."
             echo(
-                ".env file exists but is empty or contains no key-value pairs.",
+                message,
                 style=lambda msg: format_debug(msg, use_color=use_color),
                 show=show,
                 log=True,
                 log_method="debug",
             )
+            message = "=== END DOTENV DEBUG ==="
             echo(
-                "=== END DOTENV DEBUG ===",
+                message,
                 style=lambda msg: format_debug(msg, use_color=use_color),
                 show=show,
                 log=True,
@@ -184,8 +206,9 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
             return
 
         pairs_str = ", ".join(f"{key}={value}" for key, value in values.items())
+        message = f"Loaded key-value pairs: {pairs_str}"
         echo(
-            f"Loaded key-value pairs: {pairs_str}",
+            message,
             style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
@@ -193,16 +216,18 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
         )
 
     except (OSError, UnicodeDecodeError) as exc:
+        message = f"Failed to read .env file: {exc}"
         echo(
-            f"Failed to read .env file: {exc}",
+            message,
             style=lambda msg: format_debug(msg, use_color=use_color),
             show=show,
             log=True,
             log_method="debug",
         )
 
+    message = "=== END DOTENV DEBUG ==="
     echo(
-        "=== END DOTENV DEBUG ===",
+        message,
         style=lambda msg: format_debug(msg, use_color=use_color),
         show=show,
         log=True,

@@ -33,8 +33,8 @@ from charfinder.cli.args import (
     DEFAULT_FUZZY_ALGO,
     DEFAULT_FUZZY_MATCH_MODE,
     VALID_EXACT_MATCH_MODES,
-    VALID_FUZZY_ALGOS,
     VALID_FUZZY_MATCH_MODES,
+    fuzzy_algo_validator,
     threshold_range,
 )
 from charfinder.cli.handlers import get_version
@@ -52,7 +52,8 @@ def create_parser() -> argparse.ArgumentParser:
 
     Defines the following arguments:
     - query: The search query string (required positional).
-    - --fuzzy: Enable fuzzy search if no exact matches.
+    - --fuzzy: Enable fuzzy search if no exact matches.+
+    - --prefer-fuzzy: Include fuzzy results even if exact matches exist (hybrid mode).
     - --threshold: Fuzzy match threshold (float between 0.0 and 1.0).
     - --color: Color output mode ('auto', 'always', 'never').
     - --verbose: Enable console output.
@@ -108,6 +109,12 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--prefer-fuzzy",
+        action="store_true",
+        help="Include fuzzy results even if exact matches are found (hybrid mode).",
+    )
+
+    parser.add_argument(
         ARG_THRESHOLD,
         type=threshold_range,
         default=None,
@@ -154,9 +161,13 @@ def create_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "--fuzzy-algo",
-        choices=VALID_FUZZY_ALGOS,
+        dest="fuzzy_algo",
+        type=fuzzy_algo_validator,
         default=DEFAULT_FUZZY_ALGO,
-        help="Fuzzy matching algorithm to use.",
+        help=(
+            "Fuzzy matching algorithm (case-insensitive). "
+            "Examples: 'token_sort', 'hybrid', 'levenshtein'."
+        ),
     )
 
     parser.add_argument(
