@@ -15,16 +15,65 @@ Designed for both technical and non-technical users, charfinder enables reliable
 
 ## 📚 Table of Contents
 
-- [Demo Video](#-demo-video)
-- [Features](#-features)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Project Structure](#-project-structure)
-- [Testing](#-testing)
-- [For Developers](#-for-developers)
-- [Dependencies](#-dependencies)
-- [Roadmap](#-roadmap)
-- [License](#-license)
+1. [🎥 Demo Video](#-demo-video)
+2. [✨ Features](#-features)
+3. [📦 Project Structure](#-project-structure)
+
+   * [3.1 📂 Structure](#31-structure)
+   * [3.2 🧱 Architecture](#32-architecture)
+4. [🌐 What is Unicode?](#-what-is-unicode)
+5. [🎯 Exact and Fuzzy Match](#-exact-and-fuzzy-match)
+
+   * [Matching Modes Overview](#matching-modes-overview)
+   * [Available Fuzzy Algorithms](#available-fuzzy-algorithms)
+   * [Aggregation Functions (Hybrid Mode)](#aggregation-functions-hybrid-mode)
+   * [Combination Matrix](#combination-matrix)
+   * [Matching Flow](#matching-flow)
+   * [Normalization](#normalization)
+   * [Cross-Reference](#cross-reference)
+6. [🚀 Usage](#-usage)
+
+   * [7.1 Installation](#71-installation)
+
+     * [For Users](#for-users)
+     * [For Developers](#for-developers)
+   * [7.2 💻 CLI Usage](#72-cli-usage)
+   * [7.3 🐍 Python Library Usage](#73-python-library-usage)
+7. [8. 🧱 Internals and Architecture](#8-internals-and-architecture)
+
+   * [8.1 Architecture Overview](#81-architecture-overview)
+   * [8.2 Key Components](#82-key-components)
+
+     * [Caching](#caching)
+     * [Environment Management](#environment-management)
+     * [Logging](#logging)
+8. [🧪 9. Testing](#-9-testing)
+
+   * [Running Tests](#running-tests)
+   * [Code Quality Enforcement](#code-quality-enforcement)
+   * [Coverage Policy](#coverage-policy)
+   * [Test Layers](#test-layers)
+9. [👨‍💼 10. Developer Guide](#-10-developer-guide)
+
+   * [🔨 Cloning & Installation](#-cloning--installation)
+   * [🔧 Makefile Commands](#-makefile-commands)
+   * [🗒️ Onboarding Tips](#-onboarding-tips)
+10. [⚡ 11. Performance](#-11-performance)
+
+    * [Key Optimizations](#key-optimizations)
+    * [Benchmarks (Informal)](#benchmarks-informal)
+    * [Profiling Tips](#profiling-tips)
+    * [Future Improvements](#future-improvements)
+11. [🚧 12. Limitations / Known Issues](#-12-limitations--known-issues)
+
+    * [Fuzzy Algorithms Scope](#fuzzy-algorithms-scope)
+    * [Limitations for Embedding in APIs or External Applications](#limitations-for-embedding-in-apis-or-external-applications)
+    * [UnicodeData.txt Updates](#unicodedatattxt-updates)
+    * [Limitations of Matching Model](#limitations-of-matching-model)
+    * [Known Issues](#known-issues)
+    * [Embedding Checklist](#embedding-checklist)
+12. [📖 13. Documentation](#-13-documentation)
+13. [🧾 License](#-license)
 
 ---
 
@@ -368,7 +417,7 @@ The following usage guide shows how to install, run, and integrate CharFinder bo
 
 ### 7.1 Installation
 
-#### For Users
+#### 👤 For Users
 
 ##### PyPI (Recommended)
 
@@ -382,7 +431,7 @@ pip install charfinder
 pip install git+https://github.com/berserkhmdvhb/charfinder.git
 ```
 
-#### For Developers
+#### 👨‍💻 For Developers
 
 ##### Clone and Install in Editable Mode
 
@@ -495,7 +544,7 @@ For detailed documentation on the core logic and API, see [docs/core\_logic.md](
 
 ---
 
-## 8. Internals and Architecture
+## 8. 🧱 Internals and Architecture
 
 CharFinder is designed with a **layered, modular architecture** to ensure clean separation of concerns, testability, and reuse across CLI and Python library usage.
 
@@ -676,7 +725,7 @@ See [docs/unit\_test\_design.md](docs/unit_test_design.md)
 
 ---
 
-### 👨‍💼 10. Developer Guide
+### 👨‍💻 10. Developer Guide
 
 #### 🔨 Cloning & Installation
 
