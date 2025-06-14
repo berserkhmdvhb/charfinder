@@ -7,9 +7,9 @@
 
 # 🔎 charfinder
 
-**charfinder** is a terminal and Python-based tool to search Unicode characters by name—strictly or fuzzily—with normalization, caching, logging, and colorful output.
+**charfinder** is a modern terminal and Python-based tool for searching and exploring Unicode characters by name — supporting both exact and advanced fuzzy matching — with Unicode normalization, efficient caching, structured logging.
 
-Ever tried to find an emoji using its name, or more technically, the Unicode character for "shrug" or "grinning face"? `charfinder` helps you locate them effortlessly from the command line or programmatically.
+Designed for both technical and non-technical users, charfinder enables reliable Unicode search in terminals, scripts, and applications. It can power developer workflows, automation scripts, data pipelines, and user-facing interfaces such as chatbots and messaging apps, while providing transparency and precise control over matching behavior.
 
 ---
 
@@ -131,7 +131,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 * Code quality and enforcement:
   * `ruff` (format/lint), `mypy` (type-check)
    
-* 100% test coverage.
+* High test coverage.
 
 * CLI tested via **subprocess integration tests**.
 
@@ -180,15 +180,35 @@ charfinder/
 ├── src/charfinder/                  # Main package code
 │   ├── __init__.py                  # Package version marker
 │   ├── __main__.py                  # Enables `python -m charfinder`
-│   ├── cli/                         # CLI logic (modularized)
-│   ├── core/                        # Core Unicode search logic
-│   ├── utils/                       # Shared utilities: formatting, logging, normalization
-│   ├── constants.py                 # Constants and default values
 │   ├── cache.py                     # Caching utilities
+│   ├── constants.py                 # Constants and default values
 │   ├── fuzzymatchlib.py             # Fuzzy matching algorithms
 │   ├── settings.py                  # Environment/config management
 │   ├── types.py                     # Shared type definitions
-│   └── py.typed                     # Marker for type-checking consumers
+│   ├── py.typed                     # Marker for type-checking consumers
+│   │
+│   ├── cli/                         # CLI logic (modularized)
+│   │   ├── __init__.py
+│   │   ├── args.py                  # CLI argument definitions
+│   │   ├── cli_main.py              # CLI main controller
+│   │   ├── diagnostics.py           # CLI diagnostics output
+│   │   ├── handlers.py              # CLI command handlers
+│   │   └── parser.py                # CLI parser and argument preprocessing
+│   │
+│   ├── core/                        # Core Unicode search logic
+│   │   ├── __init__.py
+│   │   ├── core_main.py             # Public API functions (find_chars, etc.)
+│   │   ├── matching.py              # Exact and fuzzy matching helpers
+│   │   ├── name_cache.py            # Unicode name cache builder
+│   │   └── unicode_data_loader.py   # UnicodeData.txt loader and parser
+│   │
+│   ├── utils/                       # Shared utilities
+│       ├── __init__.py
+│       ├── formatter.py             # Terminal and log message formatting
+│       ├── logger_helpers.py        # Custom logging helpers
+│       ├── logger_setup.py          # Logging setup and teardown
+│       ├── logger_styles.py         # Styling for log output
+│       └── normalizer.py            # Unicode normalization utility
 └── tests/
     ├── cli/                         # CLI test modules
     ├── core/                        # Core logic tests
@@ -922,4 +942,9 @@ The following documents are located in the [`docs/`](docs/) directory:
 
 > These documents are designed to serve both as **developer onboarding** material and **technical audit** documentation.
 
+---
+
+## 🧾 License
+
+MIT License © 2025 [berserkhmdvhb](https://github.com/berserkhmdvhb)
 
