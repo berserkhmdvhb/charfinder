@@ -39,7 +39,7 @@ Designed for both technical and non-technical users, charfinder enables reliable
      * [For Developers](#for-developers)
    * [6.2 💻 CLI Usage](#62-cli-usage)
    * [6.3 🐍 Python Library Usage](#73-python-library-usage)
-7. [7. 🧱 Internals and Architecture](#7-internals-and-architecture)
+7. [🧱 Internals and Architecture](#7-internals-and-architecture)
 
    * [7.1 Architecture Overview](#71-architecture-overview)
    * [7.2 Key Components](#72-key-components)
@@ -47,24 +47,24 @@ Designed for both technical and non-technical users, charfinder enables reliable
      * [Caching](#caching)
      * [Environment Management](#environment-management)
      * [Logging](#logging)
-8. [🧪 9. Testing](#-8-testing)
+8. [🧪 Testing](#-8-testing)
 
    * [Running Tests](#running-tests)
    * [Code Quality Enforcement](#code-quality-enforcement)
    * [Coverage Policy](#coverage-policy)
    * [Test Layers](#test-layers)
-9. [👨‍💼 9. Developer Guide](#-9-developer-guide)
+9. [👨‍💼 Developer Guide](#-9-developer-guide)
 
    * [🔨 Cloning & Installation](#-cloning--installation)
    * [🔧 Makefile Commands](#-makefile-commands)
    * [🗒️ Onboarding Tips](#-onboarding-tips)
-10. [⚡ 10. Performance](#-10-performance)
+10. [⚡ Performance](#-10-performance)
 
     * [Key Optimizations](#key-optimizations)
     * [Benchmarks (Informal)](#benchmarks-informal)
     * [Profiling Tips](#profiling-tips)
     * [Future Improvements](#future-improvements)
-11. [🚧 11. Limitations / Known Issues](#-11-limitations--known-issues)
+11. [🚧 Limitations / Known Issues](#-11-limitations--known-issues)
 
     * [Fuzzy Algorithms Scope](#fuzzy-algorithms-scope)
     * [Limitations for Embedding in APIs or External Applications](#limitations-for-embedding-in-apis-or-external-applications)
@@ -72,8 +72,8 @@ Designed for both technical and non-technical users, charfinder enables reliable
     * [Limitations of Matching Model](#limitations-of-matching-model)
     * [Known Issues](#known-issues)
     * [Embedding Checklist](#embedding-checklist)
-12. [📖 12. Documentation](#-12-documentation)
-13. [🧾 13. License](#-13-license)
+12. [📖 Documentation](#-12-documentation)
+13. [🧾 License](#-13-license)
 
 ---
 
