@@ -126,8 +126,11 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 
 * Cross-ref: [docs/core\_logic.md](docs/core_logic.md).
 
-### 🔖 Testability & Quality
+### 🧪 Testability & Quality
 
+* Code quality and enforcement:
+  * `ruff` (format/lint), `mypy` (type-check)
+   
 * 100% test coverage.
 
 * CLI tested via **subprocess integration tests**.
@@ -147,16 +150,8 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
   * Python 3.10 to 3.13.
   * Lint (Ruff), type-check (MyPy), test, coverage.
 
-* Pre-commit hooks:
-
-  * Black formatting.
-  * Ruff linting.
-  * Mypy type-checking.
-
 * Easy publishing to PyPI.
-
-* Cross-ref: [docs/logging\_system.md](docs/logging_system.md), [docs/env-logging-scenarios.md](docs/env-logging-scenarios.md).
-
+  
 ---
 
 ## 3. 📦 Project Structure
@@ -657,9 +652,85 @@ Hooks include:
 * **Logging tests:** test rotating logging, suppression, environment filtering.
 * **Settings tests:** test different `.env` and environment variable scenarios.
 
-### Test Documentation
+See [docs/unit\_test\_design.md](docs/unit_test_design.md)
 
-See [docs/unit\_test\_design.md](docs/unit_test_design.md) for detailed design of CharFinder's test architecture and testing strategies.
+---
 
+### 👨‍💼 Developer Guide
+
+#### 🔨 Cloning & Installation
+
+**For Users:**
+
+```bash
+git clone https://github.com/berserkhmdvhb/charfinder.git
+cd charfinder
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+make install
+```
+
+**For Developers (Contributors):**
+
+```bash
+git clone https://github.com/berserkhmdvhb/charfinder.git
+cd charfinder
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+make develop
+```
+
+#### 🔧 Makefile Commands
+
+| Command                                     | Description                                                  |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| `make install`                              | Install the package in editable mode                         |
+| `make develop`                              | Install with all dev dependencies                            |
+| `make fmt`                                  | Auto-format code using Ruff                                  |
+| `make fmt-check`                            | Check code formatting (dry run)                              |
+| `make lint-ruff`                            | Run Ruff linter                                              |
+| `make type-check`                           | Run MyPy static type checker                                 |
+| `make lint-all`                             | Run formatter, linter, and type checker                      |
+| `make lint-all-check`                       | Dry run: check formatting, lint, and types                   |
+| `make test`                                 | Run all tests using Pytest                                   |
+| `make test-file FILE=...`                   | Run a single test file or keyword                            |
+| `make test-file-function FILE=... FUNC=...` | Run a specific test function                                 |
+| `make test-fast`                            | Run only last failed tests                                   |
+| `make test-coverage`                        | Run tests and show terminal coverage summary                 |
+| `make test-coverage-xml`                    | Run tests and generate XML coverage report                   |
+| `make test-cov-html`                        | Run tests with HTML coverage report and open it              |
+| `make test-coverage-rep`                    | Show full line-by-line coverage report                       |
+| `make test-coverage-file FILE=...`          | Show coverage for a specific file                            |
+| `make check-all`                            | Run format-check, lint, and full test suite                  |
+| `make test-watch`                           | Auto-rerun tests on file changes                             |
+| `make precommit`                            | Install pre-commit hook                                      |
+| `make precommit-check`                      | Dry run all pre-commit hooks                                 |
+| `make precommit-run`                        | Run all pre-commit hooks                                     |
+| `make env-check`                            | Show Python and environment info                             |
+| `make env-debug`                            | Show debug-related env info                                  |
+| `make env-clear`                            | Unset CHARFINDER\_\* and DOTENV\_PATH environment variables  |
+| `make env-show`                             | Show currently set CHARFINDER\_\* and DOTENV\_PATH variables |
+| `make env-example`                          | Show example env variable usage                              |
+| `make dotenv-debug`                         | Show debug info from dotenv loader                           |
+| `make safety`                               | Check dependencies for vulnerabilities                       |
+| `make check-updates`                        | List outdated pip packages                                   |
+| `make check-toml`                           | Check pyproject.toml for syntax validity                     |
+| `make clean-logs`                           | Remove DEV log files                                         |
+| `make clean-cache`                          | Remove cache files                                           |
+| `make clean-coverage`                       | Remove coverage data                                         |
+| `make clean-build`                          | Remove build artifacts                                       |
+| `make clean-pyc`                            | Remove .pyc and **pycache** files                            |
+| `make clean-all`                            | Remove all build, test, cache, and log artifacts             |
+| `make build`                                | Build package for distribution                               |
+| `make publish-test`                         | Upload to TestPyPI                                           |
+| `make publish-dryrun`                       | Validate and simulate TestPyPI upload (dry run)              |
+| `make publish`                              | Upload to PyPI                                               |
+| `make upload-coverage`                      | Upload coverage report to Coveralls                          |
+
+#### 📝 Onboarding Tips
+
+* Always use `make develop` to install full dev dependencies.
+* Run `make check-all`  before pushing changes, or equivalently, run `make lint-all-check` and `make test-coverage`.
+* Validate `.env` loading with `make dotenv-debug`.
 
 
