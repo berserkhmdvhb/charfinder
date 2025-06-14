@@ -17,7 +17,7 @@ Designed for both technical and non-technical users, charfinder enables reliable
 
 1. [🎥 Demo Video](#1-demo-video)
 2. [✨ Features](#2--features)
-3. [📦 Project Structure](#3--project-structure)
+3. [📦 Project Structure](#3-project-structure)
 
    * [3.1 📂 Structure](#31--structure)
    * [3.2 🧱 Architecture](#32--architecture)
