@@ -316,28 +316,47 @@ See following:
 
 ## 🎯 5. Exact and Fuzzy Match
 
-CharFinder offers a rich and flexible matching system to search for Unicode characters by name. You can combine exact matching, fuzzy matching, different algorithms, and match modes to suit your needs.
+CharFinder provides a powerful and customizable matching engine to search Unicode characters by name. The system combines exact and fuzzy strategies, supporting multiple algorithms and modes.
 
 ### Matching Modes Overview
 
-| Matching Type | Mode                  | CLI Argument                     | Description                                                                   |
-| ------------- | --------------------- | -------------------------------- | ----------------------------------------------------------------------------- |
-| Exact         | Substring             | `--exact-match-mode substring`   | Query string must appear as a substring of the character name.                |
-| Exact         | Word Subset (default) | `--exact-match-mode word-subset` | All words in the query must appear in the character name (order-independent). |
-| Fuzzy         | Single (default)      | `--fuzzy-match-mode single`      | Use a single fuzzy algorithm to compute similarity scores.                    |
-| Fuzzy         | Hybrid                | `--fuzzy-match-mode hybrid`      | Combine multiple fuzzy algorithm scores using an aggregation function.        |
+| Matching Type | Mode                  | CLI Argument                     | Description                                                             |
+| ------------- | --------------------- | -------------------------------- | ----------------------------------------------------------------------- |
+| Exact         | Substring             | `--exact-match-mode substring`   | Query must appear as a substring in the Unicode name.                   |
+| Exact         | Word Subset (default) | `--exact-match-mode word-subset` | All words in the query must be present in the name (order-independent). |
+| Fuzzy         | Single (default)      | `--fuzzy-match-mode single`      | Use one algorithm to compute similarity scores.                         |
+| Fuzzy         | Hybrid                | `--fuzzy-match-mode hybrid`      | Combine multiple algorithm scores via aggregation.                      |
+
+### Default Behavior
+
+By default, CharFinder applies the following logic:
+
+1. **Exact match** is attempted first using **word-subset** mode.
+2. We can two cases here:
+   - **Exact match found**: **Fuzzy match** won't be triggered even if `--fuzzy` is enabled, unless one also adds arguement `--prefer-fuzzy` is used), in which case both exact match and fuzzy match results are shown
+    - **Exact match not found**: In this case, if `--fuzzy` is enabled, **fuzzy match** it is automatically triggered.
+4. Fuzzy matching defaults to **single** mode using the `token_sort_ratio` algorithm.
+5. In **hybrid mode**, a weighted combination of algorithms is used:
+
+   * `simple_ratio`, `normalized_ratio`, `levenshtein_ratio`, and `token_sort_ratio`
+   * Aggregated using the function from `--agg-fn` (default: `mean`)
 
 ### Available Fuzzy Algorithms
 
-You can select the fuzzy matching algorithm using `--fuzzy-algo`:
+Specify via `--fuzzy-algo`:
 
-* `sequencematcher` (Python standard library `difflib.SequenceMatcher`)
-* `rapidfuzz` ([RapidFuzz](https://github.com/maxbachmann/RapidFuzz))
-* `levenshtein` ([python-Levenshtein](https://github.com/ztane/python-Levenshtein))
+* `sequencematcher` (difflib standard lib)
+* `rapidfuzz` (Fast fuzzy matching)
+* `levenshtein` (Levenshtein distance)
+* `simple_ratio` (basic char overlap)
+* `normalized_ratio` (normalized similarity)
+* `levenshtein_ratio` (ratio form)
+* `token_sort_ratio` (**default**, handles reordered/partial words)
+* `hybrid_score` (weighted combo; internally used in hybrid mode)
 
 ### Aggregation Functions (Hybrid Mode)
 
-When using `--fuzzy-match-mode hybrid`, you can select how the algorithm scores are aggregated using `--hybrid-agg-fn`:
+Choose how scores are aggregated using `--agg-fn`:
 
 * `mean` (default)
 * `median`
@@ -346,44 +365,43 @@ When using `--fuzzy-match-mode hybrid`, you can select how the algorithm scores 
 
 ### Combination Matrix
 
-| Match Path             | Exact Match Mode        | Fuzzy Match Mode | Fuzzy Algorithms                        | Aggregation Function   |
-| ---------------------- | ----------------------- | ---------------- | --------------------------------------- | ---------------------- |
-| Exact only             | substring / word-subset | -                | -                                       | -                      |
-| Exact → Fuzzy fallback | substring / word-subset | single           | sequencematcher, rapidfuzz, levenshtein | -                      |
-| Exact → Fuzzy fallback | substring / word-subset | hybrid           | Combination of above                    | mean, median, max, min |
+| Match Path             | Exact Match Mode        | Fuzzy Match Mode | Fuzzy Algorithms                                | Aggregation Function   |
+| ---------------------- | ----------------------- | ---------------- | ----------------------------------------------- | ---------------------- |
+| Exact only             | substring / word-subset | -                | -                                               | -                      |
+| Exact → Fuzzy fallback | substring / word-subset | single           | token\_sort\_ratio (default), or user-specified | -                      |
+| Exact → Fuzzy fallback | substring / word-subset | hybrid           | token\_sort\_ratio + others (weighted combo)    | mean, median, max, min |
 
 **Notes**
 
-- Exact match is always attempted first. If `--fuzzy` is enabled and no exact match is found, fuzzy matching is attempted ("fallback to fuzzy").
-- "Fuzzy only" mode is not yet directly supported but may be added in future for advanced use cases.
-- The `--exact-match-mode` controls the exact match phase:
-  - `substring` → substring matching
-  - `word-subset` (default) → all words in query must be present in target name
-- The `--fuzzy-match-mode` and `--fuzzy-algo` control the fuzzy phase.
-- Hybrid mode combines multiple algorithm scores using the selected aggregation function.
+* Exact match is always attempted first.
+* Fuzzy matching only runs if enabled and exact match fails (unless `--prefer-fuzzy` is set).
+* Use `--debug` to view strategy details and weight breakdowns in hybrid mode.
+* The `--fuzzy-match-mode` and `--fuzzy-algo` flags control fuzzy routing.
+* The hybrid strategy uses predefined weights:
+
+  * 55% token\_sort\_ratio, 15% each for simple, normalized, levenshtein ratios.
 
 ### Matching Flow
 
-1. **Exact match first:**
+1. **Exact Phase**:
 
-   * CharFinder always tries exact match first (substring or word-subset).
-2. **Fuzzy fallback:**
+   * Run substring or word-subset match based on `--exact-match-mode`.
+2. **Fuzzy Phase** (if triggered):
 
-   * If no exact match is found and `--fuzzy` is enabled, fuzzy matching is attempted.
-3. **Single vs. Hybrid:**
-
-   * In single mode, one algorithm is used.
-   * In hybrid mode, multiple algorithms are used and aggregated.
+   * If `--fuzzy-match-mode` is `single`, use specified `--fuzzy-algo`.
+   * If `hybrid`, run all supported algorithms and combine with `--agg-fn`.
 
 ### Normalization
 
-All matching is performed on Unicode **NFC-normalized** and **uppercased** character names and query strings to ensure consistency.
+All names and queries are normalized to **NFC form** and **uppercased** before matching.
 
+---
 
+For implementation details, see:
 
-See
-* [docs/matching.md](docs/matching.md)
-* [docs/core\_logic.md](docs/core_logic.md)
+* [`docs/matching.md`](docs/matching.md)
+* [`docs/core_logic.md`](docs/core_logic.md)
+
 
 ---
 
@@ -451,19 +469,20 @@ charfinder --help
 
 #### Common CLI Options
 
-| Option               | Description                                                           |
-| -------------------- | --------------------------------------------------------------------- |
-| `--fuzzy`            | Enable fuzzy search if no exact matches                               |
-| `--threshold`        | Fuzzy match threshold (0.0 to 1.0)                                    |
-| `--fuzzy-algo`       | Choose fuzzy algorithm: `sequencematcher`, `rapidfuzz`, `levenshtein` |
-| `--fuzzy-match-mode` | Fuzzy match mode: `single` or `hybrid`                                |
-| `--exact-match-mode` | Exact match mode: `substring` or `word-subset`                        |
-| `--hybrid-agg-fn`    | Aggregation function for hybrid mode: `mean`, `median`, `max`, `min`  |
-| `--color`            | Output color mode: `auto`, `always`, `never`                          |
-| `--format`           | Choose output format: `text` or `json`                                       |
-| `--verbose`, `-v`    | Enable verbose console output                                         |
-| `--debug`            | Enable diagnostic output                                              |
-| `--version`          | Show version                                                          |
+| Option               | Description                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------------|
+| `--fuzzy`            | Enable fuzzy search if no exact matches                                                             |
+| `--prefer-fuzzy`     | Force fuzzy search even if exact matches are found                                                  |
+| `--threshold`        | Fuzzy match threshold (0.0 to 1.0); applies to all fuzzy algorithms                                 |
+| `--fuzzy-algo`       | Choose fuzzy algorithm: `token_sort_ratio` (default), `sequencematcher`, `rapidfuzz`, `levenshtein` |
+| `--fuzzy-match-mode` | Fuzzy match mode: `single` (default), `hybrid`                                                      |
+| `--hybrid-agg-fn`    | Aggregation function for hybrid mode: `mean` (default), `median`, `max`, `min`                      |
+| `--exact-match-mode` | Exact match mode: `word-subset` (default), `substring`                                              |
+| `--format`           | Choose output format: `text` (default) or `json`                                                    |
+| `--color`            | Output color mode: `auto` (default), `always`, `never`                                              |
+| `--verbose`, `-v`    | Enable verbose console output (enabled by default in CLI; suppressed in tests)                      |
+| `--debug`            | Enable diagnostic output with detailed strategy, config, and environment info                       |
+| `--version`          | Show installed version of CharFinder                                                                |
 
 #### Advanced CLI Tips
 
