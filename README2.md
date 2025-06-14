@@ -478,4 +478,92 @@ for item in results:
 
 For detailed documentation on the core logic and API, see [docs/core\_logic.md](docs/core_logic.md).
 
+---
+
+## 8. Internals and Architecture
+
+CharFinder is designed with a **layered, modular architecture** to ensure clean separation of concerns, testability, and reuse across CLI and Python library usage.
+
+### 8.1. Architecture Overview
+
+The architecture is composed of several logical layers:
+
+1. **Core Logic Layer** (`src/charfinder/core`)
+
+   * Contains business logic for Unicode character search.
+   * Implements exact and fuzzy matching.
+   * Provides normalized name cache.
+   * Independent of CLI and I/O.
+
+2. **CLI Layer** (`src/charfinder/cli`)
+
+   * Implements `charfinder` command-line interface.
+   * Provides CLI argument parsing, routing, and output formatting.
+   * Manages CLI color output, JSON/text output.
+
+3. **Utilities Layer** (`src/charfinder/utils`)
+
+   * Shared utilities: logging setup, color formatting, Unicode normalization.
+   * Used by both core and CLI layers.
+
+4. **Settings Layer** (`src/charfinder/settings.py`)
+
+   * Centralized environment and configuration management.
+   * Loads `.env` files or system variables.
+   * Supports multi-environment behavior (DEV, UAT, PROD, TEST).
+
+5. **Testing Layer** (`tests/`)
+
+   * Unit tests and CLI integration tests.
+   * 100% test coverage.
+   * Fixtures for isolated testing.
+
+### 8.2. Key Components
+
+#### Caching
+
+* Unicode name normalization and name cache building is expensive.
+* CharFinder implements:
+
+  * An **LRU cache** for normalized name lookup (`cached_normalize`).
+  * A persistent **Unicode name cache** (`unicode_name_cache.json`).
+  * Cached data can be cleared or rebuilt via API or CLI.
+
+See: [docs/caching.md](docs/caching.md)
+
+#### Environment Management
+
+* CharFinder supports multiple runtime environments:
+
+  * **DEV** (default)
+  * **UAT**
+  * **PROD**
+  * **TEST** (auto-detected via `PYTEST_CURRENT_TEST`)
+
+* Configuration priority chain:
+
+  1. `DOTENV_PATH` override
+  2. `.env` in project root
+  3. System environment variables
+
+* Verbose debug of `.env` resolution available via `MYPROJECT_DEBUG_ENV_LOAD=1`.
+
+See: [docs/environment\_config.md](docs/environment_config.md)
+
+#### Logging
+
+* Centralized logging using `charfinder` logger.
+
+* Features:
+
+  * Rotating file handler (`logs/{ENV}/charfinder.log`)
+  * Console handler with `--debug` and `--verbose` options
+  * Multi-environment log filtering
+  * Colorized CLI output
+
+* Logger setup is shared between CLI and library.
+
+See: [docs/logging\_system.md](docs/logging_system.md)
+
+
 
