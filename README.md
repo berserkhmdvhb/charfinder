@@ -202,6 +202,10 @@ The project is structured for ease of contribution and for flexible usage as bot
 
 ### 3.1 📂 Structure
 
+### 3.1 Structure
+
+The project is organized as follows:
+
 ```
 charfinder/
 ├── .github/workflows/               # GitHub Actions CI pipeline
@@ -229,12 +233,14 @@ charfinder/
 │   │   ├── args.py                  # CLI argument definitions
 │   │   ├── cli_main.py              # CLI main controller
 │   │   ├── diagnostics.py           # CLI diagnostics output
+│   │   ├── diagnostics_match.py     # Debug output for match strategy
 │   │   ├── handlers.py              # CLI command handlers
 │   │   └── parser.py                # CLI parser and argument preprocessing
 │   │
 │   ├── core/                        # Core Unicode search logic
 │   │   ├── __init__.py
 │   │   ├── core_main.py             # Public API functions (find_chars, etc.)
+│   │   ├── finders.py               # Match mode and algorithm routing
 │   │   ├── matching.py              # Exact and fuzzy matching helpers
 │   │   ├── name_cache.py            # Unicode name cache builder
 │   │   └── unicode_data_loader.py   # UnicodeData.txt loader and parser
@@ -254,6 +260,7 @@ charfinder/
     ├── conftest.py                  # Shared test fixtures
     └── manual/demo.ipynb            # Interactive notebook for manual testing
 ```
+
 
 ### 3.2 🧱 Architecture
 
