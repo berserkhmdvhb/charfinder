@@ -42,13 +42,13 @@ Designed for both technical and non-technical users, charfinder enables reliable
      * [Caching](#caching)
      * [Environment Management](#environment-management)
      * [Logging](#logging)
-8. [🧪 Testing](#8--testing)
+8. [🧪 Testing](#-8-testing)
 
    * [Running Tests](#running-tests)
    * [Code Quality Enforcement](#code-quality-enforcement)
    * [Coverage Policy](#coverage-policy)
    * [Test Layers](#test-layers)
-9. [👨‍💼 Developer Guide](#9--developer-guide)
+9. [👨‍💼 Developer Guide](#-9-developer-guide)
 
    * [🔨 Cloning & Installation](#--cloning--installation)
    * [🔧 Makefile Commands](#--makefile-commands)
