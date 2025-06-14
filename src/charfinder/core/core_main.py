@@ -25,6 +25,10 @@ from collections.abc import Generator
 from typing import TYPE_CHECKING, Literal
 
 from charfinder.constants import (
+    DEFAULT_EXACT_MATCH_MODE,
+    DEFAULT_FUZZY_ALGO,
+    DEFAULT_FUZZY_MATCH_MODE,
+    DEFAULT_HYBRID_AGG_FUNC,
     DEFAULT_THRESHOLD,
     VALID_HYBRID_AGG_FUNCS,
     FuzzyAlgorithm,
@@ -88,10 +92,10 @@ def find_chars(
     name_cache: dict[str, dict[str, str]] | None = None,
     verbose: bool = True,
     use_color: bool = True,
-    fuzzy_algo: FuzzyAlgorithm = "sequencematcher",
-    fuzzy_match_mode: MatchMode = "single",
-    exact_match_mode: ExactMatchMode = "word-subset",
-    agg_fn: VALID_HYBRID_AGG_FUNCS = "mean",
+    fuzzy_algo: FuzzyAlgorithm = DEFAULT_FUZZY_ALGO,
+    fuzzy_match_mode: MatchMode = DEFAULT_FUZZY_MATCH_MODE,
+    exact_match_mode: ExactMatchMode = DEFAULT_EXACT_MATCH_MODE,
+    agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
 ) -> Generator[str, None, None]:
     """
@@ -138,10 +142,10 @@ def find_chars_raw(
     name_cache: dict[str, dict[str, str]] | None = None,
     verbose: bool = True,
     use_color: bool = True,
-    fuzzy_algo: FuzzyAlgorithm = "sequencematcher",
-    fuzzy_match_mode: MatchMode = "single",
-    exact_match_mode: ExactMatchMode = "word-subset",
-    agg_fn: VALID_HYBRID_AGG_FUNCS = "mean",
+    fuzzy_algo: FuzzyAlgorithm = DEFAULT_FUZZY_ALGO,
+    fuzzy_match_mode: MatchMode = DEFAULT_FUZZY_MATCH_MODE,
+    exact_match_mode: ExactMatchMode = DEFAULT_EXACT_MATCH_MODE,
+    agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
 ) -> list[CharMatch]:
     """
@@ -163,7 +167,7 @@ def find_chars_raw(
         prefer_fuzzy: If True, include fuzzy matches even if exact matches are found (hybrid mode).
 
     Returns:
-        list[CharMatch]: of Unicode character matches, formatted for JSON output.
+        list[CharMatch]: List of Unicode character matches, formatted for JSON output.
     """
     config = _build_config(
         fuzzy=fuzzy,
@@ -188,10 +192,10 @@ def find_chars_with_info(
     name_cache: dict[str, dict[str, str]] | None = None,
     verbose: bool = True,
     use_color: bool = True,
-    fuzzy_algo: FuzzyAlgorithm = "sequencematcher",
-    fuzzy_match_mode: MatchMode = "single",
-    exact_match_mode: ExactMatchMode = "word-subset",
-    agg_fn: VALID_HYBRID_AGG_FUNCS = "mean",
+    fuzzy_algo: FuzzyAlgorithm = DEFAULT_FUZZY_ALGO,
+    fuzzy_match_mode: MatchMode = DEFAULT_FUZZY_MATCH_MODE,
+    exact_match_mode: ExactMatchMode = DEFAULT_EXACT_MATCH_MODE,
+    agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
 ) -> tuple[list[str], bool]:
     """
@@ -236,13 +240,14 @@ def find_chars_with_info(
 
     lines: list[str] = []
     if raw_matches:
-        has_score = "score" in raw_matches[0]
+        has_score = raw_matches and "score" in raw_matches[0]
+        has_score = bool(raw_matches) and "score" in raw_matches[0]
         lines.extend(format_result_header(has_score=has_score))
         lines.extend(
             format_result_row(
-                int(match["code"][2:], 16),
+                code := int(match["code"][2:], 16),
                 match["char"],
-                match["name"].split("  ")[0],
+                match["name"].removesuffix(f"  (\\u{code:04x})"),
                 match.get("score"),
             )
             for match in raw_matches

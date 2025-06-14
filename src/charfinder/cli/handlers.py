@@ -28,6 +28,8 @@ from typing import Any
 from charfinder.cli.args import threshold_range
 from charfinder.constants import (
     DEFAULT_COLOR_MODE,
+    DEFAULT_FUZZY_ALGO,
+    DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_THRESHOLD,
     EXIT_CANCELLED,
     EXIT_INVALID_USAGE,
@@ -130,9 +132,9 @@ def apply_fuzzy_defaults(args: Namespace) -> None:
     """
     if args.fuzzy:
         if not getattr(args, "fuzzy_algo", None):
-            args.fuzzy_algo = "token_sort_ratio"
+            args.fuzzy_algo = DEFAULT_FUZZY_ALGO
         if not getattr(args, "fuzzy_match_mode", None):
-            args.fuzzy_match_mode = "hybrid"
+            args.fuzzy_match_mode = DEFAULT_FUZZY_MATCH_MODE
 
 
 # ---------------------------------------------------------------------

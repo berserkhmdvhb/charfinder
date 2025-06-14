@@ -100,12 +100,13 @@ def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple]
     ]
 
     fuzzy_matches: list[MatchTuple] = []
-    used_fuzzy = False
+    fuzzy_executed = False
 
     # === Decides whether to run fuzzy matching
     run_fuzzy = config.fuzzy and (config.prefer_fuzzy or not exact_matches)
 
     if run_fuzzy:
+        fuzzy_executed = True
         context = FuzzyMatchContext(
             threshold=config.threshold,
             fuzzy_algo=resolved_algo,
@@ -117,7 +118,6 @@ def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple]
         )
         fuzzy_results = find_fuzzy_matches(norm_query, name_cache, context)
         fuzzy_matches.extend(MatchTuple(*tpl) for tpl in fuzzy_results)
-        used_fuzzy = bool(fuzzy_matches)
 
     # === Logging (INFO messages)
     if config.verbose and exact_matches:
@@ -154,7 +154,7 @@ def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple]
         log_method="info",
     )
 
-    return all_matches, used_fuzzy
+    return all_matches, fuzzy_executed
 
 
 # ---------------------------------------------------------------------

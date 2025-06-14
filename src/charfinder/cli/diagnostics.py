@@ -78,7 +78,7 @@ def print_debug_diagnostics(
         log_method="debug",
     )
 
-    for key, value in vars(args).items():
+    for key, value in sorted(vars(args).items()):
         message = f"  {key:<20} = {value}"
         echo(
             message,
@@ -135,6 +135,10 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
     Args:
         use_color (bool): Whether to apply ANSI formatting.
         show: If True, print to terminal; always logged.
+
+    Raises:
+        OSError: If reading the .env file fails due to IO issues.
+        UnicodeDecodeError: If the file contains non-decodable bytes.
     """
     dotenv_path = resolve_dotenv_path()
 

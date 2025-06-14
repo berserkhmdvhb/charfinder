@@ -49,6 +49,9 @@ from rapidfuzz.fuzz import ratio as rapidfuzz_ratio
 from rapidfuzz.fuzz import token_sort_ratio
 
 from charfinder.constants import (
+    DEFAULT_FUZZY_ALGO,
+    DEFAULT_FUZZY_MATCH_MODE,
+    DEFAULT_HYBRID_AGG_FUNC,
     DEFAULT_NORMALIZATION_FORM,
     FUZZY_ALGO_ALIASES,
     FUZZY_HYBRID_WEIGHTS,
@@ -128,7 +131,7 @@ def token_sort_ratio_score(a: str, b: str) -> float:
     return token_sort_ratio(a, b) / 100.0
 
 
-def hybrid_score(a: str, b: str, agg_fn: VALID_HYBRID_AGG_FUNCS = "mean") -> float:
+def hybrid_score(a: str, b: str, agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC) -> float:
     """
     Hybrid score combining multiple algorithms with a chosen aggregate function.
 
@@ -226,9 +229,9 @@ def get_supported_algorithms() -> list[str]:
 def compute_similarity(
     s1: str,
     s2: str,
-    algorithm: FuzzyAlgorithm = "sequencematcher",
-    mode: MatchMode = "single",
-    agg_fn: VALID_HYBRID_AGG_FUNCS = "mean",
+    algorithm: FuzzyAlgorithm = DEFAULT_FUZZY_ALGO,
+    mode: MatchMode = DEFAULT_FUZZY_MATCH_MODE,
+    agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC,
 ) -> float:
     """
     Compute similarity between two strings using a specified fuzzy algorithm
