@@ -15,14 +15,14 @@ Designed for both technical and non-technical users, charfinder enables reliable
 
 ## 📚 Table of Contents
 
-1. [🎥 Demo Video](#1-demo-video)
-2. [✨ Features](#2-features)
-3. [📦 Project Structure](#3-project-structure)
+1. [🎥 Demo Video](#1--demo-video)
+2. [✨ Features](#2--features)
+3. [📦 Project Structure](#3--project-structure)
 
-   * [3.1 📂 Structure](#31-structure)
-   * [3.2 🧱 Architecture](#32-architecture)
-4. [🌐 What is Unicode?](#4-what-is-unicode)
-5. [🎯 Exact and Fuzzy Match](#5-exact-and-fuzzy-match)
+   * [3.1 📂 Structure](#31--structure)
+   * [3.2 🧱 Architecture](#32--architecture)
+4. [🌐 What is Unicode?](#4--what-is-unicode)
+5. [🎯 Exact and Fuzzy Match](#5--exact-and-fuzzy-match)
 
    * [Matching Modes Overview](#6matching-modes-overview)
    * [Available Fuzzy Algorithms](#available-fuzzy-algorithms)
@@ -31,40 +31,40 @@ Designed for both technical and non-technical users, charfinder enables reliable
    * [Matching Flow](#matching-flow)
    * [Normalization](#normalization)
    * [Cross-Reference](#cross-reference)
-6. [🚀 Usage](#6-usage)
+6. [🚀 Usage](#6--usage)
 
    * [6.1 Installation](#61-installation)
 
      * [For Users](#for-users)
      * [For Developers](#for-developers)
-   * [6.2 💻 CLI Usage](#62-cli-usage)
-   * [6.3 🐍 Python Library Usage](#73-python-library-usage)
-7. [🧱 Internals and Architecture](#7-internals-and-architecture)
+   * [6.2 💻 CLI Usage](#62--cli-usage)
+   * [6.3 🐍 Python Library Usage](#63--python-library-usage)
+7. [🧱 Internals and Architecture](#7--internals-and-architecture)
 
-   * [7.1 Architecture Overview](#71-architecture-overview)
-   * [7.2 Key Components](#72-key-components)
+   * [7.1 Architecture Overview](#71--architecture-overview)
+   * [7.2 Key Components](#72--key-components)
 
      * [Caching](#caching)
      * [Environment Management](#environment-management)
      * [Logging](#logging)
-8. [🧪 Testing](#-8-testing)
+8. [🧪 Testing](#8--testing)
 
    * [Running Tests](#running-tests)
    * [Code Quality Enforcement](#code-quality-enforcement)
    * [Coverage Policy](#coverage-policy)
    * [Test Layers](#test-layers)
-9. [👨‍💼 Developer Guide](#-9-developer-guide)
+9. [👨‍💼 Developer Guide](#9--developer-guide)
 
-   * [🔨 Cloning & Installation](#-cloning--installation)
-   * [🔧 Makefile Commands](#-makefile-commands)
-   * [🗒️ Onboarding Tips](#-onboarding-tips)
-10. [⚡ Performance](#-10-performance)
+   * [🔨 Cloning & Installation](#--cloning--installation)
+   * [🔧 Makefile Commands](#--makefile-commands)
+   * [🗒️ Onboarding Tips](#--onboarding-tips)
+10. [⚡ Performance](#10--performance)
 
     * [Key Optimizations](#key-optimizations)
     * [Benchmarks (Informal)](#benchmarks-informal)
     * [Profiling Tips](#profiling-tips)
     * [Future Improvements](#future-improvements)
-11. [🚧 Limitations / Known Issues](#-11-limitations--known-issues)
+11. [🚧 Limitations / Known Issues](#11--limitations--known-issues)
 
     * [Fuzzy Algorithms Scope](#fuzzy-algorithms-scope)
     * [Limitations for Embedding in APIs or External Applications](#limitations-for-embedding-in-apis-or-external-applications)
@@ -72,8 +72,8 @@ Designed for both technical and non-technical users, charfinder enables reliable
     * [Limitations of Matching Model](#limitations-of-matching-model)
     * [Known Issues](#known-issues)
     * [Embedding Checklist](#embedding-checklist)
-12. [📖 Documentation](#-12-documentation)
-13. [🧾 License](#-13-license)
+12. [📖 Documentation](#12--documentation)
+13. [🧾 License](#13--license)
 
 ---
 
