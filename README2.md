@@ -566,4 +566,100 @@ See: [docs/environment\_config.md](docs/environment_config.md)
 See: [docs/logging\_system.md](docs/logging_system.md)
 
 
+## 🧪 9. Testing
+
+CharFinder has a comprehensive test suite covering core logic, CLI integration, caching, environment handling, and logging.
+
+### Running Tests
+
+Run the full test suite:
+
+```bash
+make test
+```
+
+Run only failed or last tests:
+
+```bash
+make test-fast
+```
+
+Run tests with coverage:
+
+```bash
+make coverage
+```
+
+Generate HTML coverage report:
+
+```bash
+make coverage-html
+```
+
+### Code Quality Enforcement
+
+```bash
+make lint-all
+```
+
+applys ruff formatting, ruff checking, and mypy statis type check.
+It runs all of following commands:
+
+#### Linting and Formatting
+
+```bash
+make lint-ruff
+```
+
+```bash
+nake fmt
+```
+
+#### Static Type Checks
+
+```bash
+make type-check
+```
+
+
+
+CharFinder uses **pre-commit** to enforce code quality automatically on each commit.
+
+Set up hooks:
+
+```bash
+make precommit
+```
+
+Manually run all hooks:
+
+```bash
+make precommit-run
+```
+
+Hooks include:
+
+* Ruff linting
+* MyPy type checking
+* Black formatting check
+* Check for common errors
+
+### Coverage Policy
+
+* Target: **100% coverage** on all Python files under `src/`.
+* CLI integration tests cover all major CLI scenarios via `subprocess.run`.
+* Logging behaviors, `.env` loading, and edge cases are all tested.
+
+### Test Layers
+
+* **Unit tests:** test core logic in isolation (core, caching, normalization, settings, utils).
+* **CLI integration tests:** test full CLI entrypoint via subprocess.
+* **Logging tests:** test rotating logging, suppression, environment filtering.
+* **Settings tests:** test different `.env` and environment variable scenarios.
+
+### Test Documentation
+
+See [docs/unit\_test\_design.md](docs/unit_test_design.md) for detailed design of CharFinder's test architecture and testing strategies.
+
+
 
