@@ -10,11 +10,12 @@ Functions:
     get_log_dir(): Return log directory based on current environment.
     get_cache_file(): Return cache file path.
     get_unicode_data_file(): Return UnicodeData.txt file path.
-    get_environment(): Return current environment (DEV/UAT/PROD).
-    is_dev(), is_uat(), is_prod(): Check current environment.
+    get_environment(): Return current environment (DEV/UAT/PROD/TEST).
+    is_dev(), is_uat(), is_prod(), is_test_mode(), is_test(): Check current environment.
     get_log_max_bytes(): Return maximum log size.
     get_log_backup_count(): Return number of log backups.
 """
+
 
 # ---------------------------------------------------------------------
 # Imports
@@ -48,6 +49,8 @@ __all__ = [
     "get_unicode_data_url",
     "is_dev",
     "is_prod",
+    "is_test",
+    "is_test_mode",
     "is_uat",
     "load_settings",
     "resolve_loaded_dotenv_paths",
@@ -63,7 +66,7 @@ def get_environment() -> str:
     Return CHARFINDER_ENV uppercased (default is DEV).
 
     Returns:
-        One of DEV, UAT, PROD.
+        One of DEV, UAT, PROD, TEST.
     """
     val: str | None = os.getenv(ENV_ENVIRONMENT)
     return val.strip().upper() if val else "DEV"
@@ -82,6 +85,52 @@ def is_uat() -> bool:
 def is_prod() -> bool:
     """Check if environment is PROD."""
     return get_environment() == "PROD"
+
+
+def is_test_mode() -> bool:
+    """
+    Check if CHARFINDER_ENV is explicitly set to TEST.
+
+    Returns:
+        True if test mode is explicitly enabled via environment variable.
+    """
+    return get_environment() == "TEST"
+
+
+def is_test() -> bool:
+    """
+    Check if running in test context.
+
+    Returns:
+        True if CHARFINDER_ENV is TEST or Pytest is active (PYTEST_CURRENT_TEST set).
+    """
+    return is_test_mode() or "PYTEST_CURRENT_TEST" in os.environ
+
+
+# ---------------------------------------------------------------------
+# Environment variable safe access helpers
+# ---------------------------------------------------------------------
+
+
+def safe_int(env_var: str, default: int) -> int:
+    """
+    Safely retrieve an integer from an environment variable, falling back to a default.
+
+    Args:
+        env_var: Name of the environment variable.
+        default: Default value to use if missing or invalid.
+
+    Returns:
+        Integer from the environment or default.
+    """
+    val: str | None = os.getenv(env_var)
+    if val is not None:
+        try:
+            return int(val)
+        except ValueError:
+            message = f"Invalid int for {env_var!r} = {val!r}; using default {default}"
+            echo(msg=message, style=format_error, show=True, log=False, log_method="warning")
+    return default
 
 
 def get_log_max_bytes() -> int:
@@ -136,37 +185,6 @@ def resolve_dotenv_path() -> Path | None:
     return default_env if default_env.exists() else None
 
 
-def is_test_mode() -> bool:
-    """Return True if running under pytest (PYTEST_CURRENT_TEST env var is set)."""
-    return "PYTEST_CURRENT_TEST" in os.environ
-
-
-# ---------------------------------------------------------------------
-# Environment variable safe access helpers
-# ---------------------------------------------------------------------
-
-
-def safe_int(env_var: str, default: int) -> int:
-    """
-    Safely retrieve an integer from an environment variable, falling back to a default.
-
-    Args:
-        env_var: Name of the environment variable.
-        default: Default value to use if missing or invalid.
-
-    Returns:
-        Integer from the environment or default.
-    """
-    val: str | None = os.getenv(env_var)
-    if val is not None:
-        try:
-            return int(val)
-        except ValueError:
-            message = f"Invalid int for {env_var!r} = {val!r}; using default {default}"
-            echo(msg=message, style=format_error, show=True, log=False, log_method="warning")
-    return default
-
-
 # ---------------------------------------------------------------------
 # .env loading
 # ---------------------------------------------------------------------
@@ -190,20 +208,13 @@ def load_settings(
     dotenv_path = resolve_dotenv_path()
 
     if do_load_dotenv and dotenv_path and dotenv_path.is_file():
-        load_dotenv(dotenv_path=dotenv_path)
+        load_dotenv(dotenv_path=dotenv_path, override=is_test())
         loaded.append(dotenv_path)
 
     if not loaded:
         message = "No .env file loaded — using system env or defaults."
         echo(msg=message, style=format_settings, show=debug or verbose, log=True, log_method="info")
     return loaded
-
-
-def get_unicode_data_url() -> str:
-    return os.getenv(
-        "UNICODE_DATA_URL",
-        "https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt",
-    )
 
 
 # ---------------------------------------------------------------------
@@ -221,10 +232,17 @@ def get_cache_file() -> Path:
 
 def get_unicode_data_file() -> Path:
     """Return the UnicodeData.txt file path."""
-    env_value = os.getenv("UNICODE_DATA_FILE_PATH")
+    env_value = os.getenv("CHARFINDER_UNICODE_DATA_FILE_PATH")
     if env_value:
         return get_root_dir() / env_value
     return get_root_dir() / "data" / "UnicodeData.txt"
+
+
+def get_unicode_data_url() -> str:
+    return os.getenv(
+        "UNICODE_DATA_URL",
+        "https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt",
+    )
 
 
 # ---------------------------------------------------------------------

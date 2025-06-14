@@ -1,12 +1,12 @@
 """
-Global pytest fixtures for charfinder test suite (refactored).
+Global pytest fixtures for charfinder test suite.
 
 This file provides reusable fixtures to:
 - Clean up logger state
 - Isolate environment variables and .env usage
 - Simulate test/non-test execution behavior
 - Capture CLI, logging, and echo output
-- Reload settings with precise control over ROOT_DIR and DOTENV_PATH
+- Reload settings with optional DOTENV_PATH
 """
 
 from __future__ import annotations
@@ -14,7 +14,6 @@ from __future__ import annotations
 import importlib
 import logging
 import os
-import sys
 import tempfile
 from collections.abc import Callable, Generator
 from io import StringIO
@@ -58,44 +57,33 @@ def clean_charfinder_logger() -> Generator[None, None, None]:
 @pytest.fixture(autouse=True)
 def clear_charfinder_env(monkeypatch: MonkeyPatch) -> None:
     """
-    Automatically clears all CHARFINDER-related env vars before each test
-    to ensure test isolation.
+    Clears all CHARFINDER-related env vars before each test to ensure test isolation.
     """
-    vars_to_clear = [
+    for var in [
         "CHARFINDER_ENV",
         "CHARFINDER_LOG_MAX_BYTES",
         "CHARFINDER_LOG_BACKUP_COUNT",
         "CHARFINDER_DEBUG_ENV_LOAD",
         "DOTENV_PATH",
-        "CHARFINDER_ROOT_DIR_FOR_TESTS",
-    ]
-    for var in vars_to_clear:
+    ]:
         monkeypatch.delenv(var, raising=False)
 
-    # Prevent verbose debug output unless test sets it
     monkeypatch.setenv("CHARFINDER_DEBUG_ENV_LOAD", "0")
 
 # ---------------------------------------------------------------------
-# Settings Reload (Test Mode)
+# Settings Reload (with optional .env)
 # ---------------------------------------------------------------------
 
 @pytest.fixture
-def load_fresh_settings(monkeypatch: MonkeyPatch) -> Callable[[Path | None, Path | None], ModuleType]:
+def load_fresh_settings(monkeypatch: MonkeyPatch) -> Callable[[Path | None], ModuleType]:
     """
-    Reload settings with test mode enabled.
-    Useful for simulating typical test behavior with isolated .env and root dir.
+    Reload settings with optional DOTENV_PATH override.
     """
-    def _load(dotenv_path: Path | None = None, root_dir: Path | None = None) -> ModuleType:
-        monkeypatch.setenv("PYTEST_CURRENT_TEST", "dummy")
+    def _load(dotenv_path: Path | None = None) -> ModuleType:
         if dotenv_path:
             monkeypatch.setenv("DOTENV_PATH", str(dotenv_path.resolve()))
         else:
             monkeypatch.delenv("DOTENV_PATH", raising=False)
-
-        if root_dir:
-            monkeypatch.setenv("CHARFINDER_ROOT_DIR_FOR_TESTS", str(root_dir.resolve()))
-        else:
-            monkeypatch.delenv("CHARFINDER_ROOT_DIR_FOR_TESTS", raising=False)
 
         import charfinder.settings as sett
         importlib.reload(sett)
@@ -105,37 +93,7 @@ def load_fresh_settings(monkeypatch: MonkeyPatch) -> Callable[[Path | None, Path
     return _load
 
 # ---------------------------------------------------------------------
-# Settings Reload (Non-Test Mode)
-# ---------------------------------------------------------------------
-
-@pytest.fixture
-def load_fresh_settings_no_test_mode(monkeypatch: MonkeyPatch) -> Callable[[Path | None, Path | None], ModuleType]:
-    """
-    Reload settings with PYTEST_CURRENT_TEST unset to simulate runtime behavior.
-    """
-    def _load(dotenv_path: Path | None = None, root_dir: Path | None = None) -> ModuleType:
-        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
-        os.environ.pop("PYTEST_CURRENT_TEST", None)
-
-        if dotenv_path:
-            monkeypatch.setenv("DOTENV_PATH", str(dotenv_path.resolve()))
-        else:
-            monkeypatch.delenv("DOTENV_PATH", raising=False)
-
-        if root_dir:
-            monkeypatch.setenv("CHARFINDER_ROOT_DIR_FOR_TESTS", str(root_dir.resolve()))
-        else:
-            monkeypatch.delenv("CHARFINDER_ROOT_DIR_FOR_TESTS", raising=False)
-
-        import charfinder.settings as sett
-        importlib.reload(sett)
-        sett.load_settings()
-        return sett
-
-    return _load
-
-# ---------------------------------------------------------------------
-# Setup test root and optional .env files
+# Setup test root and patch ROOT_DIR global
 # ---------------------------------------------------------------------
 
 @pytest.fixture
@@ -144,9 +102,7 @@ def setup_test_root(monkeypatch: MonkeyPatch, tmp_path: Path) -> Callable[[], Pa
     Patch project root to tmp_path and reload settings.
     Used to isolate test-specific file systems and config roots.
     """
-
     def _setup() -> Path:
-        monkeypatch.setenv("PYTEST_CURRENT_TEST", "1")
         monkeypatch.setitem(globals(), "ROOT_DIR", tmp_path.resolve())
 
         import charfinder.settings as sett

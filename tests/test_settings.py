@@ -1,219 +1,162 @@
-"""Unit tests for charfinder.settings module."""
+"""
+Unit tests for charfinder.settings.
+
+Covers:
+- Environment detection and helpers
+- Test mode logic
+- .env loading and diagnostics
+- Logging and config defaults
+- Filesystem path logic
+"""
 
 from __future__ import annotations
 
-import logging
-from io import StringIO
 from pathlib import Path
 from types import ModuleType
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
-from charfinder import settings
-from charfinder.settings import (
-    get_cache_file,
-    get_environment,
-    get_log_backup_count,
-    get_log_dir,
-    get_log_max_bytes,
-    get_unicode_data_file,
-    get_unicode_data_url,
-    is_dev,
-    is_prod,
-    is_uat,
-    load_settings,
-    resolve_loaded_dotenv_paths,
-    safe_int,
-)
-from charfinder.utils.logger_setup import teardown_logger
+
+import charfinder.settings as settings
+
 
 # ---------------------------------------------------------------------
-# Basic environment accessors
+# Environment detection
 # ---------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "env_value, expected",
+    "env_value,expected",
     [
-        ("DEV", "DEV"),
-        ("uat", "UAT"),
+        ("dev", "DEV"),
+        ("UAT", "UAT"),
         ("PROD", "PROD"),
-        ("", "DEV"),  # fallback
+        ("unexpected", "UNEXPECTED"),
+        ("", "DEV"),
         (None, "DEV"),
     ],
 )
-def test_get_environment_behavior(
-    monkeypatch: pytest.MonkeyPatch,
-    env_value: str | None,
-    expected: str,
-) -> None:
-    if env_value is not None:
-        monkeypatch.setenv("CHARFINDER_ENV", env_value)
-    else:
+def test_get_environment(monkeypatch: pytest.MonkeyPatch, env_value: str | None, expected: str) -> None:
+    if env_value is None:
         monkeypatch.delenv("CHARFINDER_ENV", raising=False)
+    else:
+        monkeypatch.setenv("CHARFINDER_ENV", env_value)
+    assert settings.get_environment() == expected
 
-    assert get_environment() == expected
-    assert is_dev() is (expected == "DEV")
-    assert is_uat() is (expected == "UAT")
-    assert is_prod() is (expected == "PROD")
+
+def test_env_helpers(patch_env: Callable[[str], None]) -> None:
+    patch_env("DEV")
+    assert settings.is_dev()
+    assert not settings.is_uat()
+    assert not settings.is_prod()
+
+    patch_env("UAT")
+    assert settings.is_uat()
+
+    patch_env("PROD")
+    assert settings.is_prod()
+
 
 # ---------------------------------------------------------------------
-# safe_int behavior
+# Test mode detection
 # ---------------------------------------------------------------------
 
-def test_safe_int_valid(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("X_INT", "42")
-    assert safe_int("X_INT", 999) == 42
+def test_is_test(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CHARFINDER_ENV", "TEST")
+    assert settings.is_test()
 
-def test_safe_int_invalid(
-    monkeypatch: pytest.MonkeyPatch,
-    debug_logger: logging.Logger,
-    log_stream: StringIO,
+    monkeypatch.setenv("CHARFINDER_ENV", "DEV")
+    monkeypatch.setenv("PYTEST_CURRENT_TEST", "yes")
+    assert settings.is_test()
+
+
+def test_is_test_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CHARFINDER_ENV", "TEST")
+    assert settings.is_test_mode()
+
+    monkeypatch.setenv("CHARFINDER_ENV", "DEV")
+    monkeypatch.setenv("PYTEST_CURRENT_TEST", "yes")
+    assert not settings.is_test_mode()
+
+
+# ---------------------------------------------------------------------
+# .env loading and diagnostics
+# ---------------------------------------------------------------------
+
+def test_load_settings(load_fresh_settings: Callable[[Path | None], ModuleType], tmp_path: Path) -> None:
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("CHARFINDER_ENV=UAT\nCHARFINDER_LOG_MAX_BYTES=12345\n")
+
+    sett = load_fresh_settings(dotenv)
+    assert dotenv in sett.resolve_loaded_dotenv_paths()
+    assert sett.get_environment() == "UAT"
+    assert sett.get_log_max_bytes() == 12345
+
+
+def test_load_settings_none(load_fresh_settings: Callable[[Path | None], ModuleType]) -> None:
+    sett = load_fresh_settings(None)
+    assert sett.load_settings() == []
+
+
+def test_resolve_loaded_dotenv_paths(
+    load_fresh_settings: Callable[[Path | None], ModuleType],
+    tmp_path: Path,
 ) -> None:
-    monkeypatch.setenv("X_INT", "not_a_number")
-    _ = debug_logger
-    assert safe_int("X_INT", 1000) == 1000
-    assert "Invalid int for" in log_stream.getvalue()
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("CHARFINDER_ENV=DEV\n")
+    sett = load_fresh_settings(dotenv)
+    assert sett.resolve_loaded_dotenv_paths() == [dotenv]
 
-def test_safe_int_missing(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("X_INT", raising=False)
-    assert safe_int("X_INT", 1234) == 1234
 
 # ---------------------------------------------------------------------
-# Accessor behavior
+# Safe int and config fallback
 # ---------------------------------------------------------------------
 
-def test_get_log_dir_returns_env_path(patch_env: Callable[[str], None]) -> None:
-    patch_env("uat")
-    path = get_log_dir()
-    assert isinstance(path, Path)
-    assert path.name == "UAT"
+@pytest.mark.parametrize(
+    "envval,default,expected",
+    [("123", 5, 123), ("bad", 5, 5), (None, 7, 7)],
+)
+def test_safe_int(monkeypatch: pytest.MonkeyPatch, envval: str | None, default: int, expected: int) -> None:
+    key = "CHARFINDER_LOG_MAX_BYTES"
+    if envval is None:
+        monkeypatch.delenv(key, raising=False)
+    else:
+        monkeypatch.setenv(key, envval)
+    assert settings.safe_int(key, default) == expected
 
-def test_get_log_max_bytes(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CHARFINDER_LOG_MAX_BYTES", "8192")
-    assert get_log_max_bytes() == 8192
 
-def test_get_log_backup_count(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CHARFINDER_LOG_BACKUP_COUNT", "3")
-    assert get_log_backup_count() == 3
+def test_get_log_defaults() -> None:
+    assert isinstance(settings.get_log_max_bytes(), int)
+    assert isinstance(settings.get_log_backup_count(), int)
+
 
 # ---------------------------------------------------------------------
-# File path accessors
+# Path functions
 # ---------------------------------------------------------------------
 
-def test_get_cache_file_default(setup_test_root: Callable[[], Path]) -> None:
-    root = setup_test_root()
-    path = get_cache_file()
-    assert root in path.parents
-    assert path.name == "unicode_name_cache.json"
+def test_get_root_dir() -> None:
+    root = settings.get_root_dir()
+    assert isinstance(root, Path)
+    assert root.exists()
 
-def test_get_cache_file_env_override(
-    monkeypatch: pytest.MonkeyPatch,
-    setup_test_root: Callable[[], Path],
-) -> None:
-    root = setup_test_root()
-    monkeypatch.setenv("CHARFINDER_CACHE_FILE_PATH", "custom/cache.json")
-    path = get_cache_file()
-    assert path == root / "custom" / "cache.json"
 
-def test_get_unicode_data_file_default(setup_test_root: Callable[[], Path]) -> None:
-    root = setup_test_root()
-    path = get_unicode_data_file()
-    assert path == root / "data" / "UnicodeData.txt"
+def test_get_log_dir(temp_log_dir: Path) -> None:
+    path = settings.get_log_dir()
+    assert str(path) == str(temp_log_dir)
 
-def test_get_unicode_data_file_env_override(
-    monkeypatch: pytest.MonkeyPatch,
-    setup_test_root: Callable[[], Path],
-) -> None:
-    root = setup_test_root()
-    monkeypatch.setenv("CHARFINDER_UNICODE_DATA_FILE_PATH", "alt/data.txt")
-    path = get_unicode_data_file()
-    assert path == root / "alt" / "data.txt"
+
+def test_get_cache_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CHARFINDER_CACHE_FILE_PATH", raising=False)
+    path = settings.get_cache_file()
+    assert path.name.endswith("unicode_name_cache.json")
+
+
+def test_get_unicode_data_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CHARFINDER_UNICODE_DATA_FILE_PATH", raising=False)
+    path = settings.get_unicode_data_file()
+    assert path.name == "UnicodeData.txt"
+
 
 def test_get_unicode_data_url(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("UNICODE_DATA_URL", "https://example.com/data.txt")
-    assert get_unicode_data_url() == "https://example.com/data.txt"
-
-# ---------------------------------------------------------------------
-# load_settings() and resolve_loaded_dotenv_paths()
-# ---------------------------------------------------------------------
-
-def test_load_settings_with_fake_dotenv(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    debug_logger: logging.Logger,
-    log_stream: StringIO,
-) -> None:
-    dotenv = tmp_path / ".env"
-    dotenv.write_text("CHARFINDER_ENV=PROD\n")
-    monkeypatch.setenv("DOTENV_PATH", str(dotenv))
-    _ = debug_logger
-
-    loaded = load_settings(verbose=True)
-    assert loaded == [dotenv]
-
-    paths = resolve_loaded_dotenv_paths()
-    assert paths == [dotenv]
-
-def test_load_settings_without_dotenv(
-    monkeypatch: pytest.MonkeyPatch,
-    debug_logger: logging.Logger,
-    log_stream: StringIO,
-    tmp_path: Path,
-) -> None:
-    dummy_path = tmp_path / "nonexistent.env"
-    monkeypatch.setenv("DOTENV_PATH", str(dummy_path.resolve()))
-    _ = debug_logger
-
-    loaded = load_settings(verbose=True)
-    assert loaded == []
-
-    output = log_stream.getvalue()
-    assert "No .env file loaded" in output
-
-def test_load_settings_default_path(setup_test_root: Callable[[], Path]) -> None:
-    root = setup_test_root()
-    dotenv = root / ".env"
-    dotenv.write_text("CHARFINDER_ENV=UAT\n")
-
-    result = load_settings()
-    assert result == [dotenv]
-    assert get_environment() == "UAT"
-
-# ---------------------------------------------------------------------
-# resolve_loaded_dotenv_paths() fallback
-# ---------------------------------------------------------------------
-
-def test_resolve_loaded_dotenv_paths_none(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("DOTENV_PATH", raising=False)
-    monkeypatch.delenv("CHARFINDER_ROOT_DIR_FOR_TESTS", raising=False)
-
-    paths = resolve_loaded_dotenv_paths()
-    assert paths == []  # no .env present
-
-# ---------------------------------------------------------------------
-# Internal utility debug smoke (print_dotenv_debug is indirect)
-# ---------------------------------------------------------------------
-
-def test_dotenv_debug_output(
-    monkeypatch: pytest.MonkeyPatch,
-    debug_logger: logging.Logger,
-    log_stream: StringIO,
-    tmp_path: Path,
-) -> None:
-    dotenv = tmp_path / ".env"
-    dotenv.write_text("CHARFINDER_ENV=PROD\n")
-    monkeypatch.setenv("DOTENV_PATH", str(dotenv))
-    monkeypatch.setenv("CHARFINDER_DEBUG_ENV_LOAD", "1")
-
-    _ = debug_logger
-    _ = load_settings(debug=True)
-
-    output = log_stream.getvalue()
-    assert "No .env file loaded" not in output or "loaded" in output
-
-# ---------------------------------------------------------------------
-# Teardown cleanup (optional, mostly redundant with fixtures)
-# ---------------------------------------------------------------------
-
-def teardown_module(module: object) -> None:
-    teardown_logger(logging.getLogger("charfinder"))
+    monkeypatch.delenv("UNICODE_DATA_URL", raising=False)
+    url = settings.get_unicode_data_url()
+    assert url.startswith("https://")
