@@ -60,13 +60,6 @@ Designed for both technical and non-technical users, charfinder enables reliable
     * [Profiling Tips](#profiling-tips)
     * [Future Improvements](#future-improvements)
 11. [🚧 Limitations / Known Issues](#-11-limitations--known-issues)
-
-    * [Fuzzy Algorithms Scope](#fuzzy-algorithms-scope)
-    * [Limitations for Embedding in APIs or External Applications](#limitations-for-embedding-in-apis-or-external-applications)
-    * [UnicodeData.txt Updates](#unicodedatattxt-updates)
-    * [Limitations of Matching Model](#limitations-of-matching-model)
-    * [Known Issues](#known-issues)
-    * [Embedding Checklist](#embedding-checklist)
 12. [📖 Documentation](#12--documentation)
 13. [🧾 License](#13--license)
 
