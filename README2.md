@@ -15,56 +15,56 @@ Designed for both technical and non-technical users, charfinder enables reliable
 
 ## 📚 Table of Contents
 
-1. [🎥 Demo Video](#-demo-video)
-2. [✨ Features](#-features)
-3. [📦 Project Structure](#-project-structure)
+1. [🎥 Demo Video](#1-demo-video)
+2. [✨ Features](#2-features)
+3. [📦 Project Structure](#3-project-structure)
 
    * [3.1 📂 Structure](#31-structure)
    * [3.2 🧱 Architecture](#32-architecture)
-4. [🌐 What is Unicode?](#-what-is-unicode)
-5. [🎯 Exact and Fuzzy Match](#-exact-and-fuzzy-match)
+4. [🌐 What is Unicode?](#4-what-is-unicode)
+5. [🎯 Exact and Fuzzy Match](#5-exact-and-fuzzy-match)
 
-   * [Matching Modes Overview](#matching-modes-overview)
+   * [Matching Modes Overview](#6matching-modes-overview)
    * [Available Fuzzy Algorithms](#available-fuzzy-algorithms)
    * [Aggregation Functions (Hybrid Mode)](#aggregation-functions-hybrid-mode)
    * [Combination Matrix](#combination-matrix)
    * [Matching Flow](#matching-flow)
    * [Normalization](#normalization)
    * [Cross-Reference](#cross-reference)
-6. [🚀 Usage](#-usage)
+6. [🚀 Usage](#6-usage)
 
-   * [7.1 Installation](#71-installation)
+   * [6.1 Installation](#61-installation)
 
      * [For Users](#for-users)
      * [For Developers](#for-developers)
-   * [7.2 💻 CLI Usage](#72-cli-usage)
-   * [7.3 🐍 Python Library Usage](#73-python-library-usage)
-7. [8. 🧱 Internals and Architecture](#8-internals-and-architecture)
+   * [6.2 💻 CLI Usage](#62-cli-usage)
+   * [6.3 🐍 Python Library Usage](#73-python-library-usage)
+7. [7. 🧱 Internals and Architecture](#7-internals-and-architecture)
 
-   * [8.1 Architecture Overview](#81-architecture-overview)
-   * [8.2 Key Components](#82-key-components)
+   * [7.1 Architecture Overview](#71-architecture-overview)
+   * [7.2 Key Components](#72-key-components)
 
      * [Caching](#caching)
      * [Environment Management](#environment-management)
      * [Logging](#logging)
-8. [🧪 9. Testing](#-9-testing)
+8. [🧪 9. Testing](#-8-testing)
 
    * [Running Tests](#running-tests)
    * [Code Quality Enforcement](#code-quality-enforcement)
    * [Coverage Policy](#coverage-policy)
    * [Test Layers](#test-layers)
-9. [👨‍💼 10. Developer Guide](#-10-developer-guide)
+9. [👨‍💼 9. Developer Guide](#-9-developer-guide)
 
    * [🔨 Cloning & Installation](#-cloning--installation)
    * [🔧 Makefile Commands](#-makefile-commands)
    * [🗒️ Onboarding Tips](#-onboarding-tips)
-10. [⚡ 11. Performance](#-11-performance)
+10. [⚡ 10. Performance](#-10-performance)
 
     * [Key Optimizations](#key-optimizations)
     * [Benchmarks (Informal)](#benchmarks-informal)
     * [Profiling Tips](#profiling-tips)
     * [Future Improvements](#future-improvements)
-11. [🚧 12. Limitations / Known Issues](#-12-limitations--known-issues)
+11. [🚧 11. Limitations / Known Issues](#-11-limitations--known-issues)
 
     * [Fuzzy Algorithms Scope](#fuzzy-algorithms-scope)
     * [Limitations for Embedding in APIs or External Applications](#limitations-for-embedding-in-apis-or-external-applications)
@@ -72,8 +72,8 @@ Designed for both technical and non-technical users, charfinder enables reliable
     * [Limitations of Matching Model](#limitations-of-matching-model)
     * [Known Issues](#known-issues)
     * [Embedding Checklist](#embedding-checklist)
-12. [📖 13. Documentation](#-13-documentation)
-13. [🧾 License](#-license)
+12. [📖 12. Documentation](#-12-documentation)
+13. [🧾 13. License](#-13-license)
 
 ---
 
@@ -411,11 +411,11 @@ For a deeper technical dive, see:
 
 ---
 
-## 7. 🚀 Usage
+## 6. 🚀 Usage
 
 The following usage guide shows how to install, run, and integrate CharFinder both via its command-line interface (CLI) and as a Python library. Whether you are an end user, developer, or automator, CharFinder is designed to fit seamlessly into your workflow.
 
-### 7.1 Installation
+### 6.1 Installation
 
 #### 👤 For Users
 
@@ -451,7 +451,7 @@ pip install -e .[dev]
 
 ---
 
-### 7.2 💻 CLI Usage
+### 6.2 💻 CLI Usage
 
 CharFinder provides a rich CLI for exploring Unicode characters.
 
@@ -499,7 +499,7 @@ For more details on CLI internals, see [docs/cli\_architecture.md](docs/cli_arch
 
 ---
 
-### 7.3 🐍 Python Library Usage
+### 6.3 🐍 Python Library Usage
 
 CharFinder can also be used as a pure Python library:
 
@@ -544,11 +544,11 @@ For detailed documentation on the core logic and API, see [docs/core\_logic.md](
 
 ---
 
-## 8. 🧱 Internals and Architecture
+## 7. 🧱 Internals and Architecture
 
 CharFinder is designed with a **layered, modular architecture** to ensure clean separation of concerns, testability, and reuse across CLI and Python library usage.
 
-### 8.1. Architecture Overview
+### 7.1. Architecture Overview
 
 The architecture is composed of several logical layers:
 
@@ -582,7 +582,7 @@ The architecture is composed of several logical layers:
    * 100% test coverage.
    * Fixtures for isolated testing.
 
-### 8.2. Key Components
+### 7.2. Key Components
 
 #### Caching
 
@@ -630,7 +630,7 @@ See: [docs/environment\_config.md](docs/environment_config.md)
 See: [docs/logging\_system.md](docs/logging_system.md)
 
 
-## 🧪 9. Testing
+## 🧪 8. Testing
 
 CharFinder has a comprehensive test suite covering core logic, CLI integration, caching, environment handling, and logging.
 
@@ -725,7 +725,7 @@ See [docs/unit\_test\_design.md](docs/unit_test_design.md)
 
 ---
 
-### 👨‍💻 10. Developer Guide
+### 👨‍💻 9. Developer Guide
 
 #### 🔨 Cloning & Installation
 
@@ -804,7 +804,7 @@ make develop
 
 ---
 
-### ⚡ 11. Performance
+### ⚡ 10. Performance
 
 `charfinder` is designed with a focus on speed, efficiency, and responsiveness—even when processing the entire Unicode space (1.1M+ code points).
 
@@ -866,7 +866,7 @@ make develop
 
 ---
 
-## 🚧 12. Limitations / Known Issues
+## 🚧 11. Limitations / Known Issues
 
 While **CharFinder** is a robust and flexible tool, it is important to be aware of the following current limitations and known constraints:
 
@@ -969,7 +969,7 @@ Advanced embedding features (pre-built cache injection, multi-process sharing, a
 
 ---
 
-## 📖 13. Documentation
+## 📖 12. Documentation
 
 This project includes detailed internal documentation to help both developers and advanced users understand its design, architecture, and internals.
 
@@ -993,7 +993,7 @@ The following documents are located in the [`docs/`](docs/) directory:
 
 ---
 
-## 🧾 License
+## 🧾 13. License
 
 MIT License © 2025 [berserkhmdvhb](https://github.com/berserkhmdvhb)
 
