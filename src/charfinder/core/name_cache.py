@@ -93,7 +93,7 @@ def build_name_cache(
     )
 
     # Load alternate names once
-    alternate_names = load_alternate_names(show=show)
+    alternate_names = load_alternate_names(show=show, use_color=use_color)
 
     cache = {}
     for code in range(sys.maxunicode + 1):

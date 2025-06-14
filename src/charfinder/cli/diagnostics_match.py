@@ -234,6 +234,15 @@ def print_fuzzy_match_diagnostics(
                 log=True,
                 log_method="debug",
             )
+    else:
+        algo_used = match_info.get("fuzzy_algo", "unknown")
+        echo(
+            MSG_FUZZY_ALGO.format(algo_used),
+            style=lambda m: format_debug(m, use_color=use_color),
+            show=show,
+            log=True,
+            log_method="debug",
+        )
 
     echo(
         MSG_MATCH_FOOTER,
