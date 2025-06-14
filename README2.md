@@ -158,6 +158,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 * Cross-ref: [docs/logging\_system.md](docs/logging_system.md), [docs/env-logging-scenarios.md](docs/env-logging-scenarios.md).
 
 ---
+
 ## 3. 📦 Project Structure
 
 CharFinder follows a **clean, layered architecture** to ensure separation of concerns, maintainability, and testability.
@@ -239,7 +240,9 @@ CharFinder implements a **layered architecture** with clear boundaries:
 * [docs/logging\_system.md](docs/logging_system.md)
 * [docs/caching.md](docs/caching.md)
 
-## 6. 🌐 What is Unicode?
+---
+
+## 4. 🌐 What is Unicode?
 
 Unicode is the universal standard for encoding text across all writing systems, symbols, and emojis in the world. It assigns a unique code point to every character, ensuring that text is represented consistently across different platforms, languages, and applications.
 
@@ -277,8 +280,9 @@ For deeper insights into Unicode normalization and its impact on search:
 * [Unicode® Standard Annex #15 — Unicode Normalization Forms](https://unicode.org/reports/tr15/)
 * CharFinder documentation: [docs/normalization.md](docs/normalization.md)
 
+---
 
-## 🎯 Exact and Fuzzy Match
+## 🎯 5. Exact and Fuzzy Match
 
 CharFinder offers a rich and flexible matching system to search for Unicode characters by name. You can combine exact matching, fuzzy matching, different algorithms, and match modes to suit your needs.
 
@@ -340,4 +344,138 @@ For a deeper technical dive, see:
 
 * [docs/matching.md](docs/matching.md)
 * [docs/core\_logic.md](docs/core_logic.md)
+
+---
+
+## 7. 🚀 Usage
+
+The following usage guide shows how to install, run, and integrate CharFinder both via its command-line interface (CLI) and as a Python library. Whether you are an end user, developer, or automator, CharFinder is designed to fit seamlessly into your workflow.
+
+### 7.1 Installation
+
+#### For Users
+
+##### PyPI (Recommended)
+
+```bash
+pip install charfinder
+```
+
+##### GitHub (Development Version)
+
+```bash
+pip install git+https://github.com/berserkhmdvhb/charfinder.git
+```
+
+#### For Developers
+
+##### Clone and Install in Editable Mode
+
+```bash
+git clone https://github.com/berserkhmdvhb/charfinder.git
+cd charfinder
+make develop
+```
+
+Alternatively:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+pip install -e .[dev]
+```
+
+---
+
+### 7.2 💻 CLI Usage
+
+CharFinder provides a rich CLI for exploring Unicode characters.
+
+#### Basic Example
+
+```bash
+charfinder heart
+```
+
+Example output:
+
+```bash
+U+2764      ❤     HEAVY BLACK HEART  (\u2764)
+```
+
+#### Full Help
+
+```bash
+charfinder --help
+```
+
+#### Common CLI Options
+
+| Option               | Description                                                           |
+| -------------------- | --------------------------------------------------------------------- |
+| `--fuzzy`            | Enable fuzzy search if no exact matches                               |
+| `--threshold`        | Fuzzy match threshold (0.0 to 1.0)                                    |
+| `--fuzzy-algo`       | Choose fuzzy algorithm: `sequencematcher`, `rapidfuzz`, `levenshtein` |
+| `--fuzzy-match-mode` | Fuzzy match mode: `single` or `hybrid`                                |
+| `--exact-match-mode` | Exact match mode: `substring` or `word-subset`                        |
+| `--hybrid-agg-fn`    | Aggregation function for hybrid mode: `mean`, `median`, `max`, `min`  |
+| `--color`            | Output color mode: `auto`, `always`, `never`                          |
+| `--format`           | Output format: `text` or `json`                                       |
+| `--verbose`, `-v`    | Enable verbose console output                                         |
+| `--debug`            | Enable diagnostic output                                              |
+| `--version`          | Show version                                                          |
+
+#### Advanced CLI Tips
+
+* Use `--fuzzy` and `--threshold` for typo tolerance.
+* Use `--format json` for scripting and automation.
+* Enable diagnostics with `--debug` or by setting `CHARFINDER_DEBUG_ENV_LOAD=1`.
+
+For more details on CLI internals, see [docs/cli\_architecture.md](docs/cli_architecture.md).
+
+---
+
+### 7.3 🐉 Python Library Usage
+
+CharFinder can also be used as a pure Python library:
+
+#### Example: Basic Search
+
+```python
+from charfinder.core.core_main import find_chars
+
+for line in find_chars("snowman"):
+    print(line)
+```
+
+#### Example: Fuzzy Search with Options
+
+```python
+from charfinder.core.core_main import find_chars
+
+for line in find_chars(
+    "snwmn",
+    fuzzy=True,
+    threshold=0.6,
+    fuzzy_algo="rapidfuzz",
+    fuzzy_match_mode="single",
+    exact_match_mode="word-subset",
+    agg_fn="mean",
+):
+    print(line)
+```
+
+#### Example: Raw Results (for Scripting)
+
+```python
+from charfinder.core.core_main import find_chars_raw
+
+results = find_chars_raw("grinning", fuzzy=True, threshold=0.7)
+
+for item in results:
+    print(item)
+```
+
+For detailed documentation on the core logic and API, see [docs/core\_logic.md](docs/core_logic.md).
+
 
