@@ -189,7 +189,14 @@ def handle_find_chars(args: Namespace) -> int:
     query_str = " ".join(query_list).strip()
 
     if not query_str:
-        logger.error(format_error("Query must not be empty.", use_color=use_color))
+        message = "Query must not be empty."
+        echo(
+            message,
+            style=lambda m: format_error(m, use_color=use_color),
+            show=True,
+            log=False,
+            log_method="error",
+        )
         return EXIT_INVALID_USAGE
 
     try:
@@ -235,11 +242,12 @@ def handle_find_chars(args: Namespace) -> int:
 
     except KeyboardInterrupt:
         if args.verbose:
-            logger.error(format_error("Search cancelled by user.", use_color=use_color))
+            message = "Search cancelled by user."
+            echo(
+                message,
+                style=lambda m: format_error(m, use_color=use_color),
+                show=True,
+                log=False,
+                log_method="warning",
+            )
         return EXIT_CANCELLED
-
-    except Exception:
-        message = "An unexpected error occurred during search."
-        logger.error(format_error(message=message, use_color=use_color))
-        logger.exception("Full exception details:")
-        return EXIT_INVALID_USAGE

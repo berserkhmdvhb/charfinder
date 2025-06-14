@@ -62,7 +62,8 @@ def main() -> None:
     query_str = " ".join(query_list).strip()
 
     if not query_str:
-        parser.error("Query must not be empty.")
+        parser.print_help()
+        sys.exit(EXIT_SUCCESS)
 
     # Auto-enable --debug if CHARFINDER_DEBUG_ENV_LOAD=1
     if os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1" and not args.debug:
@@ -143,7 +144,7 @@ def main() -> None:
             stream=sys.stderr,
             show=True,  # Always show KeyboardInterrupt message
             log=True,
-            log_method="error",
+            log_method="warning",
         )
         sys.exit(EXIT_CANCELLED)
 
@@ -155,7 +156,7 @@ def main() -> None:
             stream=sys.stderr,
             show=True,
             log=True,
-            log_method="error",
+            log_method="exception",
         )
         echo(
             f"Error: {exc}",
@@ -163,7 +164,7 @@ def main() -> None:
             stream=sys.stderr,
             show=True,
             log=True,
-            log_method="error",
+            log_method="exception",
         )
 
         # Optional stack trace for debug mode
