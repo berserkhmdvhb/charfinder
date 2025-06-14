@@ -59,7 +59,7 @@ Designed for both technical and non-technical users, charfinder enables reliable
     * [Benchmarks (Informal)](#benchmarks-informal)
     * [Profiling Tips](#profiling-tips)
     * [Future Improvements](#future-improvements)
-11. [🚧 Limitations / Known Issues](#11--limitations--known-issues)
+11. [🚧 Limitations / Known Issues](#-11-limitations--known-issues)
 
     * [Fuzzy Algorithms Scope](#fuzzy-algorithms-scope)
     * [Limitations for Embedding in APIs or External Applications](#limitations-for-embedding-in-apis-or-external-applications)
