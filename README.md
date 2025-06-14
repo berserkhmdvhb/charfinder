@@ -11,22 +11,20 @@
 
 Designed for both technical and non-technical users, charfinder enables reliable Unicode search in terminals, scripts, and applications. It can power developer workflows, automation scripts, data pipelines, and user-facing interfaces such as chatbots and messaging apps, while providing transparency and precise control over matching behavior.
 
-[3. 📦 Project Structure](#3--project-structure)
-
 ---
 
 ## 📚 Table of Contents
 
 1. [🎥 Demo Video](#1-demo-video)
 2. [✨ Features](#2--features)
-3. [📦 Project Structure](#3-project-structure)
+3. [📦 Project Structure](#3--project-structure)
 
    * [3.1 📂 Structure](#31--structure)
    * [3.2 🧱 Architecture](#32--architecture)
 4. [🌐 What is Unicode?](#4--what-is-unicode)
 5. [🎯 Exact and Fuzzy Match](#5--exact-and-fuzzy-match)
 
-   * [Matching Modes Overview](#6matching-modes-overview)
+   * [Matching Modes Overview](#matching-modes-overview)
    * [Available Fuzzy Algorithms](#available-fuzzy-algorithms)
    * [Aggregation Functions (Hybrid Mode)](#aggregation-functions-hybrid-mode)
    * [Combination Matrix](#combination-matrix)
