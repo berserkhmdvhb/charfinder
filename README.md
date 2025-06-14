@@ -53,7 +53,7 @@ Designed for both technical and non-technical users, charfinder enables reliable
    * [🔨 Cloning & Installation](#--cloning--installation)
    * [🔧 Makefile Commands](#--makefile-commands)
    * [🗒️ Onboarding Tips](#--onboarding-tips)
-10. [⚡ Performance](#10--performance)
+10. [⚡ Performance](#-10-performance)
 
     * [Key Optimizations](#key-optimizations)
     * [Benchmarks (Informal)](#benchmarks-informal)
