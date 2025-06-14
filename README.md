@@ -11,6 +11,11 @@
 
 Designed for both technical and non-technical users, charfinder enables reliable Unicode search in terminals, scripts, and applications. It can power developer workflows, automation scripts, data pipelines, and user-facing interfaces such as chatbots and messaging apps, while providing transparency and precise control over matching behavior.
 
+[3. Project Structure](#3-project-structure)
+[📦 Project Structure](#project-structure)
+[3 Project Structure](#3-project-structure)
+[Project Structure](#project-structure)
+
 ---
 
 ## 📚 Table of Contents
