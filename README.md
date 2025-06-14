@@ -32,9 +32,6 @@ Designed for both technical and non-technical users, charfinder enables reliable
 6. [🚀 Usage](#6--usage)
 
    * [6.1 Installation](#61-installation)
-
-     * [For Users](#for-users)
-     * [For Developers](#for-developers)
    * [6.2 💻 CLI Usage](#62--cli-usage)
    * [6.3 🐍 Python Library Usage](#63--python-library-usage)
 7. [🧱 Internals and Architecture](#7--internals-and-architecture)
