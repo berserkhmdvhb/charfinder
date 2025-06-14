@@ -101,7 +101,7 @@ def levenshtein_ratio(a: str, b: str) -> float:
     Returns:
         Similarity score in the range [0.0, 1.0].
     """
-    return Levenshtein.ratio(a, b)
+    return float(Levenshtein.ratio(a, b))
 
 
 def hybrid_score(a: str, b: str, agg_fn: VALID_HYBRID_AGG_FUNCS = "mean") -> float:
@@ -221,7 +221,7 @@ def compute_similarity(
     if algorithm == "sequencematcher":
         return SequenceMatcher(None, s1, s2).ratio()
     if algorithm == "rapidfuzz":
-        return rapidfuzz_ratio(s1, s2) / 100.0
+        return float(rapidfuzz_ratio(s1, s2)) / 100.0
     if algorithm == "levenshtein":
         return levenshtein_ratio(s1, s2)
 

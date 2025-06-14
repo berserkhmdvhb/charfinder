@@ -61,7 +61,8 @@ def load_alternate_names(
             with urlopen(unicode_data_url, timeout=5) as response:  # noqa: S310
                 text = response.read().decode("utf-8")
             unicode_data_file.parent.mkdir(parents=True, exist_ok=True)
-            unicode_data_file.write_text(text, encoding="utf-8")
+            if text is not None:
+                unicode_data_file.write_text(text, encoding="utf-8")
             message = f'Downloaded and cached "UnicodeData.txt" from {unicode_data_url}'
             echo(
                 message,
@@ -94,6 +95,18 @@ def load_alternate_names(
             log_method="info",
         )
 
+    if text is None:
+        message = "UnicodeData text must not be None at this point"
+        echo(
+            message,
+            style=lambda m: format_warning(m, use_color=use_color),
+            stream=sys.stderr,
+            show=show,
+            log=True,
+            log_method="error",
+        )
+        return {}
+    # early-returned above, now guaranteed to be str
     alt_names: dict[str, str] = {}
     for line in text.splitlines():
         stripped_line = line.strip()
