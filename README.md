@@ -36,8 +36,8 @@ Designed for both technical and non-technical users, charfinder enables reliable
    * [6.3 🐍 Python Library Usage](#63--python-library-usage)
 7. [🧱 Internals and Architecture](#7--internals-and-architecture)
 
-   * [7.1 Architecture Overview](#71--architecture-overview)
-   * [7.2 Key Components](#72--key-components)
+   * [7.1 Architecture Overview](#71-architecture-overview)
+   * [7.2 Key Components](#72-key-components)
 
      * [Caching](#caching)
      * [Environment Management](#environment-management)
