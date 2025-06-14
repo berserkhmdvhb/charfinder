@@ -271,32 +271,7 @@ charfinder/
 
 CharFinder implements a **layered architecture** with clear boundaries:
 
-* **CLI Layer**
-
-  * User-facing command line interface.
-  * Argument parsing, CLI options, formatted output.
-  * Implements `cli_main.py`, `handlers.py`, `formatter.py`, and utilities.
-
-* **Core Layer**
-
-  * Unicode name cache builder.
-  * Exact and fuzzy matching logic.
-  * Unicode normalization.
-  * Pure, reusable business logic.
-
-* **Utilities Layer**
-
-  * Logging system with rotating file handlers.
-  * Environment configuration.
-  * Type-safe, cached normalization.
-
-* **Tests Layer**
-
-  * Comprehensive unit and CLI tests.
-  * 100% coverage enforced.
-  * Supports isolated environment behavior during tests.
-
-**Cross-reference:** see [Internals and Architecture](#9-internals-and-architecture) for deeper technical insights, and refer to these detailed documents:
+See section [Internals and Architecture](#9-internals-and-architecture), and following documentatoins:
 
 * [docs/cli\_architecture.md](docs/cli_architecture.md)
 * [docs/core\_logic.md](docs/core_logic.md)
@@ -337,10 +312,8 @@ For example:
 | café        | café (U+00E9)         | Matches correctly         |
 | café       | café (U+00E9)         | Matches correctly         |
 
-### Learn More
 
-For deeper insights into Unicode normalization and its impact on search:
-
+See following:
 * [Unicode® Standard Annex #15 — Unicode Normalization Forms](https://unicode.org/reports/tr15/)
 * CharFinder documentation: [docs/normalization.md](docs/normalization.md)
 
@@ -411,10 +384,9 @@ When using `--fuzzy-match-mode hybrid`, you can select how the algorithm scores 
 
 All matching is performed on Unicode **NFC-normalized** and **uppercased** character names and query strings to ensure consistency.
 
-### Cross-Reference
 
-For a deeper technical dive, see:
 
+See
 * [docs/matching.md](docs/matching.md)
 * [docs/core\_logic.md](docs/core_logic.md)
 
@@ -462,7 +434,7 @@ pip install -e .[dev]
 
 ### 6.2 💻 CLI Usage
 
-CharFinder provides a rich CLI for exploring Unicode characters.
+CharFinder provides a CLI for exploring Unicode characters.
 
 #### Basic Example
 
@@ -504,7 +476,7 @@ charfinder --help
 * Use `--format json` for scripting and automation.
 * Enable diagnostics with `--debug` or by setting `CHARFINDER_DEBUG_ENV_LOAD=1`.
 
-For more details on CLI internals, see [docs/cli\_architecture.md](docs/cli_architecture.md).
+See [docs/cli\_architecture.md](docs/cli_architecture.md).
 
 ---
 
@@ -549,7 +521,7 @@ for item in results:
     print(item)
 ```
 
-For detailed documentation on the core logic and API, see [docs/core\_logic.md](docs/core_logic.md).
+See [docs/core\_logic.md](docs/core_logic.md).
 
 ---
 
