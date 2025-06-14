@@ -541,93 +541,110 @@ See [docs/core\_logic.md](docs/core_logic.md).
 
 ## 7. 🧱 Internals and Architecture
 
-CharFinder is designed with a **layered, modular architecture** to ensure clean separation of concerns, testability, and reuse across CLI and Python library usage.
+CharFinder is built with a **layered, modular architecture** that emphasizes clean separation of concerns, testability, and extensibility. It supports both robust CLI interaction and Python library usage.
 
 ### 7.1. Architecture Overview
 
-The architecture is composed of several logical layers:
+The system is divided into well-defined layers:
 
-1. **Core Logic Layer** (`src/charfinder/core`)
+1. **Core Logic Layer** (`src/charfinder/core/`)
 
-   * Contains business logic for Unicode character search.
-   * Implements exact and fuzzy matching.
-   * Provides normalized name cache.
-   * Independent of CLI and I/O.
+   * Implements the core Unicode search logic.
+   * Supports both exact and fuzzy matching.
+   * Manages normalization and cache integration.
+   * Fully decoupled from CLI and I/O code.
 
-2. **CLI Layer** (`src/charfinder/cli`)
+2. **Finder API Layer** (`src/charfinder/core/finders.py`)
 
-   * Implements `charfinder` command-line interface.
-   * Provides CLI argument parsing, routing, and output formatting.
-   * Manages CLI color output, JSON/text output.
+   * Provides unified public APIs: `find_chars()`, `find_chars_raw()`, `find_chars_with_info()`.
+   * Orchestrates exact and fuzzy match flow.
+   * Determines when fuzzy fallback or hybrid mode applies.
+   * Used by both CLI and any programmatic consumers.
 
-3. **Utilities Layer** (`src/charfinder/utils`)
+3. **CLI Layer** (`src/charfinder/cli/`)
 
-   * Shared utilities: logging setup, color formatting, Unicode normalization.
-   * Used by both core and CLI layers.
+   * Parses arguments and flags (`args.py`, `parser.py`).
+   * Executes logic and outputs results (`cli_main.py`, `handlers.py`).
+   * Renders formatted or JSON output (`diagnostics.py`, `formatter.py`).
 
-4. **Settings Layer** (`src/charfinder/settings.py`)
+4. **Diagnostics Layer** (`cli/diagnostics_match.py`, `cli/diagnostics.py`)
 
-   * Centralized environment and configuration management.
-   * Loads `.env` files or system variables.
-   * Supports multi-environment behavior (DEV, UAT, PROD, TEST).
+   * Outputs enriched match diagnostics.
+   * Explains which matching strategy was used and why.
+   * Reports fuzzy algorithm scores, aggregation, and fallback logic.
 
-5. **Testing Layer** (`tests/`)
+5. **Utilities Layer** (`src/charfinder/utils/`)
 
-   * Unit tests and CLI integration tests.
-   * 100% test coverage.
-   * Fixtures for isolated testing.
+   * Provides cross-cutting functionality:
+
+     * Logging setup and filtering
+     * Unicode normalization
+     * Styled output formatting
+   * Shared across CLI and core layers.
+
+6. **Configuration Layer** (`src/charfinder/settings.py`)
+
+   * Loads and validates environment variables and `.env` files.
+   * Supports per-environment behavior (DEV, UAT, PROD, TEST).
+   * Ensures safe `.env` resolution with optional debug diagnostics.
+
+
 
 ### 7.2. Key Components
 
 #### Caching
 
-* Unicode name normalization and name cache building is expensive.
-* CharFinder implements:
+CharFinder minimizes redundant computation using both in-memory and persistent caching:
 
-  * An **LRU cache** for normalized name lookup (`cached_normalize`).
-  * A persistent **Unicode name cache** (`unicode_name_cache.json`).
-  * Cached data can be cleared or rebuilt via API or CLI.
+* **In-Memory:**
+
+  * `cached_normalize()` memoizes normalization results.
+
+* **Persistent Cache:**
+
+  * Prebuilt Unicode name cache (`unicode_name_cache.json`).
+  * Loaded from disk or rebuilt from `UnicodeData.txt`.
 
 See: [docs/caching.md](docs/caching.md)
 
 #### Environment Management
 
-* CharFinder supports multiple runtime environments:
+Supports layered environment configuration:
 
-  * **DEV** (default)
-  * **UAT**
-  * **PROD**
-  * **TEST** (auto-detected via `PYTEST_CURRENT_TEST`)
-
-* Configuration priority chain:
+* Runtime environments: `DEV`, `UAT`, `PROD`, `TEST`
+* Config resolution order:
 
   1. `DOTENV_PATH` override
-  2. `.env` in project root
-  3. System environment variables
+  2. `.env` file in root
+  3. System environment
 
-* Verbose debug of `.env` resolution available via `MYPROJECT_DEBUG_ENV_LOAD=1`.
+Enable verbose debug with `CHARFINDER_DEBUG_ENV_LOAD=1`.
 
 See: [docs/environment\_config.md](docs/environment_config.md)
 
 #### Logging
 
-* Centralized logging using `charfinder` logger.
+Unified logging system with environment-aware routing:
 
-* Features:
-
-  * Rotating file handler (`logs/{ENV}/charfinder.log`)
-  * Console handler with `--debug` and `--verbose` options
-  * Multi-environment log filtering
-  * Colorized CLI output
-
-* Logger setup is shared between CLI and library.
+* **Rotating file logs** in `logs/{ENV}/charfinder.log`
+* **Console logging** controlled by `--verbose` and `--debug`
+* **Colorized output** using dynamic terminal styling
+* **Shared logger setup** used across CLI and internal modules
 
 See: [docs/logging\_system.md](docs/logging_system.md)
+
 
 
 ## 🧪 8. Testing
 
 CharFinder has a comprehensive test suite covering core logic, CLI integration, caching, environment handling, and logging.
+
+**Testing Layer** (`tests/`)
+* Unit tests (core, CLI, utils)
+* Integration tests (via CLI subprocess)
+* Logging behavior tests
+* All tests isolated and environment-aware.
+* High test coverage using `pytest`.
 
 ### Running Tests
 
