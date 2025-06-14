@@ -378,12 +378,21 @@ When using `--fuzzy-match-mode hybrid`, you can select how the algorithm scores 
 
 ### Combination Matrix
 
-| Exact Mode        | Fuzzy Mode | Fuzzy Algo                              | Aggregation Function   |
-| ----------------- | ---------- | --------------------------------------- | ---------------------- |
-| substring         | -          | -                                       | -                      |
-| word-subset       | -          | -                                       | -                      |
-| fallback to fuzzy | single     | sequencematcher, rapidfuzz, levenshtein | -                      |
-| fallback to fuzzy | hybrid     | Combination of above                    | mean, median, max, min |
+| Match Path             | Exact Match Mode        | Fuzzy Match Mode | Fuzzy Algorithms                        | Aggregation Function   |
+| ---------------------- | ----------------------- | ---------------- | --------------------------------------- | ---------------------- |
+| Exact only             | substring / word-subset | -                | -                                       | -                      |
+| Exact → Fuzzy fallback | substring / word-subset | single           | sequencematcher, rapidfuzz, levenshtein | -                      |
+| Exact → Fuzzy fallback | substring / word-subset | hybrid           | Combination of above                    | mean, median, max, min |
+
+**Notes**
+
+- Exact match is always attempted first. If `--fuzzy` is enabled and no exact match is found, fuzzy matching is attempted ("fallback to fuzzy").
+- "Fuzzy only" mode is not yet directly supported but may be added in future for advanced use cases.
+- The `--exact-match-mode` controls the exact match phase:
+  - `substring` → substring matching
+  - `word-subset` (default) → all words in query must be present in target name
+- The `--fuzzy-match-mode` and `--fuzzy-algo` control the fuzzy phase.
+- Hybrid mode combines multiple algorithm scores using the selected aggregation function.
 
 ### Matching Flow
 
@@ -484,7 +493,7 @@ charfinder --help
 | `--exact-match-mode` | Exact match mode: `substring` or `word-subset`                        |
 | `--hybrid-agg-fn`    | Aggregation function for hybrid mode: `mean`, `median`, `max`, `min`  |
 | `--color`            | Output color mode: `auto`, `always`, `never`                          |
-| `--format`           | Output format: `text` or `json`                                       |
+| `--format`           | Choose output format: `text` or `json`                                       |
 | `--verbose`, `-v`    | Enable verbose console output                                         |
 | `--debug`            | Enable diagnostic output                                              |
 | `--version`          | Show version                                                          |
@@ -676,7 +685,7 @@ make lint-ruff
 ```
 
 ```bash
-nake fmt
+make fmt
 ```
 
 #### Static Type Checks
@@ -863,6 +872,7 @@ make develop
 * Smarter pre-filtering to skip unrelated blocks.
 * Parallelization of fuzzy matching (via joblib or multiprocessing).
 * Optional faster UnicodeData loaders (binary format).
+* Support for custom user-provided fuzzy match algorithms (plugin architecture)
 
 ---
 
