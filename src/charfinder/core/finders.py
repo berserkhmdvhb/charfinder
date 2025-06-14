@@ -1,22 +1,19 @@
-"""Finder functions for Unicode character search in CharFinder.
-
-This module provides the high-level search orchestration for both CLI output
-(`charfinder find_chars()`) and raw JSON output (`charfinder find_chars_raw()`).
-It handles the following responsibilities:
-
-- Validates query and configuration.
-- Loads or reuses the Unicode name cache.
-- Performs exact matching using the configured strategy (substring or word-subset).
-- If no exact matches are found *and* `--fuzzy` is enabled (and `--prefer-fuzzy` is True),
-  performs fuzzy matching.
-- Formats and yields CLI output lines or structured match dictionaries.
-- Reports whether fuzzy matching was used for diagnostics.
-
-Functions:
-    find_chars(): Search and yield formatted result lines for CLI display.
-    find_chars_raw(): Search and return structured result list for JSON output.
-    find_chars_with_info(): Return results and match diagnostics metadata.
 """
+Routing logic for Unicode character matching in CharFinder.
+
+This module defines the `find_chars_info_router()` function, which routes a
+user query to either exact matching or fuzzy matching logic, depending on
+the configured strategy and CLI arguments.
+
+Responsibilities:
+- Decide whether to attempt fuzzy match first, or fallback to fuzzy after exact match.
+- Delegate to appropriate matching functions (`exact_match`, `fuzzy_match`).
+- Return matched character info along with a flag indicating whether fuzzy was used.
+
+Function:
+    find_chars_info_router(): Perform routing between exact and fuzzy matching.
+"""
+
 
 # ---------------------------------------------------------------------
 # Imports
