@@ -15,6 +15,7 @@ import logging
 from pathlib import Path
 from unittest.mock import patch
 import pytest
+import time
 from typing import ContextManager
 
 from charfinder.utils import logger_helpers as lh
@@ -117,20 +118,28 @@ def test_rotation_filename_standard_and_custom(tmp_path: Path) -> None:
     assert handler.rotation_filename("charfinder.log.1") == "charfinder_1.log"
     assert handler.rotation_filename("randomfile.txt") == "randomfile.txt"
 
+import time
 
 def test_get_files_to_delete(tmp_path: Path) -> None:
     """get_files_to_delete returns old files beyond backup count."""
     base_file = tmp_path / "charfinder.log"
     base_file.write_text("base", encoding="utf-8")
+
     files = []
     for i in range(5):
         f = tmp_path / f"charfinder_{i+1}.log"
         f.write_text(f"content {i}", encoding="utf-8")
         files.append(f)
+        # Ensure unique mtime across platforms
+        time.sleep(0.01)  
 
     handler = lh.CustomRotatingFileHandler(base_file, backupCount=3)
     to_delete = handler.get_files_to_delete()
-    assert set(to_delete) == set(files[:2])
+
+    # Sort files by mtime to align with implementation logic
+    expected = sorted(files, key=lambda p: p.stat().st_mtime)[:2]
+    assert set(to_delete) == set(expected)
+
 
 
 def test_do_rollover_renames_files(tmp_path: Path) -> None:
