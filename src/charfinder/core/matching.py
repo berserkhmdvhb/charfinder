@@ -1,4 +1,5 @@
-"""Matching helpers for CharFinder.
+"""
+Matching helpers for CharFinder.
 
 Provides internal helpers for exact and fuzzy matching of
 Unicode character names, including alternate Unicode aliases.
@@ -17,6 +18,11 @@ from charfinder.types import FuzzyMatchContext
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_debug, format_info
+from charfinder.validators import (
+    validate_exact_match_mode,
+    validate_fuzzy_algo,
+    validate_fuzzy_match_mode,
+)
 
 __all__ = [
     "find_exact_matches",
@@ -25,11 +31,10 @@ __all__ = [
 
 logger = get_logger()
 
+
 # ---------------------------------------------------------------------
 # Exact Matching
 # ---------------------------------------------------------------------
-
-
 def find_exact_matches(
     norm_query: str,
     name_cache: dict[str, dict[str, str]],
@@ -38,20 +43,21 @@ def find_exact_matches(
     """
     Perform exact matching based on the chosen exact match mode,
     using both official and alternate normalized names.
-
-    Args:
-        norm_query (str): Normalized query.
-        name_cache (dict[str, dict[str, str]]): Unicode name cache.
-        exact_match_mode (str): Exact match mode to use ('substring' or 'word-subset').
-
-    Returns:
-        list[tuple[int, str, str, float | None]]:
-            List of matches as (code point, character, name, None).
     """
+    # Validate the exact match mode using validators
+    validate_exact_match_mode(exact_match_mode)
+
+    # Early exit for invalid name_cache
+    if not isinstance(name_cache, dict):
+        raise TypeError("name_cache should be a dictionary of character names.")
 
     matches: list[tuple[int, str, str, float | None]] = []
+
     # Matching Loop
     for char, names in name_cache.items():
+        if not isinstance(names, dict) or "original" not in names or "normalized" not in names:
+            continue  # Skip invalid entries
+
         code_point = ord(char)
         original_name = names["original"]
         norm_name = names["normalized"]
@@ -68,15 +74,9 @@ def find_exact_matches(
             if query_words <= name_words:
                 matches.append((code_point, char, original_name, None))
         else:
-            message = f"Unknown exact match mode: {exact_match_mode}"
-            raise ValueError(message)
+            raise ValueError(f"Unknown exact match mode: {exact_match_mode}")
 
     return matches
-
-
-# ---------------------------------------------------------------------
-# Fuzzy Matching
-# ---------------------------------------------------------------------
 
 
 def find_fuzzy_matches(
@@ -86,15 +86,19 @@ def find_fuzzy_matches(
 ) -> list[tuple[int, str, str, float | None]]:
     """
     Perform fuzzy matching using normalized and alternate normalized names.
-
-    Args:
-        norm_query: Normalized query.
-        name_cache: Unicode name cache.
-        context: FuzzyMatchContext instance.
-
-    Returns:
-        list[tuple[int, str, str, float]]: List of matches as (code point, character, name, score).
     """
+    # Validate fuzzy algorithm and match mode using validators
+    validate_fuzzy_algo(context.fuzzy_algo)
+    validate_fuzzy_match_mode(context.match_mode)
+
+    # Early exit for invalid threshold
+    if context.threshold is not None and not (0.0 <= context.threshold <= 1.0):
+        raise ValueError("Threshold must be between 0.0 and 1.0.")
+
+    # Validate name_cache structure
+    if not isinstance(name_cache, dict):
+        raise TypeError("name_cache should be a dictionary of character names.")
+
     matches: list[tuple[int, str, str, float | None]] = []
 
     if context.verbose:
@@ -129,6 +133,7 @@ def find_fuzzy_matches(
             context.match_mode,
             agg_fn=context.agg_fn,
         )
+
         score2 = (
             compute_similarity(
                 norm_query,
@@ -140,6 +145,7 @@ def find_fuzzy_matches(
             if alt_norm
             else None
         )
+
         score = max(filter(None, [score1, score2]), default=None)
 
         if score is None:

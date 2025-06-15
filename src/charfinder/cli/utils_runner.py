@@ -35,7 +35,10 @@ from charfinder.cli.handlers import (
     handle_find_chars,
     resolve_effective_color_mode,
 )
-from charfinder.constants import EXIT_CANCELLED, EXIT_ERROR
+from charfinder.constants import (
+    EXIT_CANCELLED,
+    EXIT_ERROR,
+)
 from charfinder.fuzzymatchlib import resolve_algorithm_name
 from charfinder.settings import get_environment, is_prod, load_settings
 from charfinder.utils.formatter import echo, should_use_color
@@ -143,7 +146,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
     # Load .env settings
     load_settings(verbose=args.verbose, debug=args.debug)
 
-    # Recompute color mode (after .env)
+    # Resolve settings and color mode (new)
     color_mode = resolve_effective_color_mode(args.color)
     use_color = should_use_color(color_mode)
 
@@ -159,6 +162,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
     logger = get_logger()
 
     try:
+        # Echo environment info
         echo(
             f"Using environment: {get_environment()}",
             style=lambda m: format_settings(m, use_color=use_color),
@@ -167,6 +171,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
             log_method="info",
         )
 
+        # Prod warning
         if is_prod():
             echo(
                 "You are running in PROD environment!",
@@ -177,6 +182,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
                 log_method="warning",
             )
 
+        # CharFinder CLI start
         echo(
             f"CharFinder {get_version()} CLI started",
             style=lambda m: format_info(m, use_color=use_color),
@@ -185,10 +191,10 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
             log_method="info",
         )
 
-        # === STEP 4: Dispatch to character search
+        # Execute the main search handler
         exit_code, match_info = handle_find_chars(args, query_str)
 
-        # === STEP 5: Print diagnostics if --debug is enabled
+        # Print diagnostics if debug is enabled
         if args.debug:
             print_debug_diagnostics(
                 args=args,

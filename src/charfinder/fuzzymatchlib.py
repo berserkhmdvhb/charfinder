@@ -41,11 +41,9 @@ from __future__ import annotations
 import functools
 import statistics
 import unicodedata
-from difflib import SequenceMatcher
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import Levenshtein
-from rapidfuzz.fuzz import ratio as rapidfuzz_ratio
 from rapidfuzz.fuzz import token_sort_ratio
 
 from charfinder.constants import (
@@ -53,18 +51,17 @@ from charfinder.constants import (
     DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_HYBRID_AGG_FUNC,
     DEFAULT_NORMALIZATION_FORM,
-    FUZZY_ALGO_ALIASES,
     FUZZY_HYBRID_WEIGHTS,
-    VALID_FUZZY_MATCH_MODES,
     VALID_HYBRID_AGG_FUNCS,
     FuzzyAlgorithm,
     MatchMode,
 )
+from charfinder.validators import validate_fuzzy_algo, validate_fuzzy_match_mode
 
 if TYPE_CHECKING:
     from charfinder.types import AlgorithmFn
 
-__all__ = ["compute_similarity", "resolve_algorithm_name"]
+__all__ = ["compute_similarity"]
 
 # ---------------------------------------------------------------------
 # Algorithms
@@ -153,6 +150,10 @@ def hybrid_score(a: str, b: str, agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID
         "token_sort_ratio": token_sort_ratio_score(a, b),
     }
 
+    if agg_fn not in VALID_HYBRID_AGG_FUNCS:
+        message = f"Unsupported aggregation function: {agg_fn}."
+        raise ValueError(message)
+
     if agg_fn == "mean":
         return sum(
             components[name] * FUZZY_HYBRID_WEIGHTS.get(name, 0.0) for name in FUZZY_HYBRID_WEIGHTS
@@ -167,7 +168,7 @@ def hybrid_score(a: str, b: str, agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID
     if agg_fn == "min":
         return min(scores)
 
-    message = f"Unsupported agg_fn: {agg_fn!r}"
+    message = f"Unsupported aggregation function: {agg_fn}."
     raise ValueError(message)
 
 
@@ -182,33 +183,6 @@ SUPPORTED_ALGORITHMS: dict[FuzzyAlgorithm, AlgorithmFn] = {
     "token_sort_ratio": token_sort_ratio_score,
     "hybrid_score": functools.partial(hybrid_score, agg_fn="mean"),
 }
-
-
-def resolve_algorithm_name(name: str) -> FuzzyAlgorithm:
-    """
-    Normalize user-specified algorithm name to internal name.
-
-    Args:
-        name: Algorithm name from user input.
-
-    Returns:
-        FuzzyAlgorithm: Validated internal algorithm name.
-
-    Raises:
-        ValueError: If the name is unknown.
-    """
-    folded = name.casefold()
-
-    if folded in SUPPORTED_ALGORITHMS:
-        return cast("FuzzyAlgorithm", folded)
-    if folded in FUZZY_ALGO_ALIASES:
-        return cast("FuzzyAlgorithm", FUZZY_ALGO_ALIASES[folded])
-
-    message = (
-        f"Unknown fuzzy algorithm: '{name}'. "
-        f"Expected one of: {', '.join(sorted(FUZZY_ALGO_ALIASES.keys()))}."
-    )
-    raise ValueError(message)
 
 
 # ---------------------------------------------------------------------
@@ -252,27 +226,15 @@ def compute_similarity(
         ValueError: If match mode is invalid.
         RuntimeError: If an unexpected algorithm is passed.
     """
-    resolved_algo = resolve_algorithm_name(algorithm)
-
-    if mode not in VALID_FUZZY_MATCH_MODES:
-        message = (
-            f"Unsupported match mode: '{mode}'. "
-            f"Expected one of: {', '.join(VALID_FUZZY_MATCH_MODES)}."
-        )
-        raise ValueError(message)
-
-    s1 = s1.strip().upper()
-    s2 = s2.strip().upper()
-
-    if s1 == s2:
-        return 1.0
+    algorithm = validate_fuzzy_algo(algorithm)  # Validate fuzzy algorithm
+    mode = validate_fuzzy_match_mode(mode)  # Validate fuzzy match mode
 
     if mode == "hybrid":
-        return hybrid_score(s1, s2, agg_fn=agg_fn)
+        return hybrid_score(s1, s2, agg_fn)
 
-    if resolved_algo == "sequencematcher":
-        return SequenceMatcher(None, s1, s2).ratio()
-    if resolved_algo == "rapidfuzz":
-        return float(rapidfuzz_ratio(s1, s2)) / 100.0
+    resolved_algo = SUPPORTED_ALGORITHMS.get(algorithm)
+    if not resolved_algo:
+        message = f"Unsupported algorithm: {algorithm}."
+        raise ValueError(message)
 
-    return SUPPORTED_ALGORITHMS[resolved_algo](s1, s2)
+    return resolved_algo(s1, s2)

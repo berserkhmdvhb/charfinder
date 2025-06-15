@@ -40,6 +40,7 @@ MatchMode = Literal["single", "hybrid"]
 ExactMatchMode = Literal["substring", "word-subset"]
 ColorMode = Literal["auto", "always", "never"]
 VALID_HYBRID_AGG_FUNCS = Literal["mean", "median", "max", "min"]
+VALID_OUTPUT_FORMATS = Literal["text", "json"]
 DEFAULT_NORMALIZATION_FORM: Literal["NFC", "NFD", "NFKC", "NFKD"] = "NFC"
 
 # ---------------------------------------------------------------------
@@ -105,6 +106,7 @@ DEFAULT_FUZZY_MATCH_MODE: MatchMode = "single"
 DEFAULT_EXACT_MATCH_MODE: ExactMatchMode = "word-subset"
 DEFAULT_HYBRID_AGG_FUNC: VALID_HYBRID_AGG_FUNCS = "mean"
 DEFAULT_COLOR_MODE: ColorMode = "auto"
+DEFAULT_OUTPUT_FORMAT: VALID_OUTPUT_FORMATS = "text"
 
 # ---------------------------------------------------------------------
 # Hybrid scoring weights for fuzzy match components
@@ -135,6 +137,21 @@ ENV_LOG_BACKUP_COUNT = "CHARFINDER_LOG_BACKUP_COUNT"
 ENV_LOG_LEVEL = "CHARFINDER_LOG_LEVEL"
 ENV_DEBUG_ENV_LOAD = "CHARFINDER_DEBUG_ENV_LOAD"
 
+
+# ---------------------------------------------------------------------
+# Supported Fuzzy Algorithms
+# ---------------------------------------------------------------------
+
+SUPPORTED_ALGORITHMS: dict[str, FuzzyAlgorithm] = {
+    "sequencematcher": "sequencematcher",
+    "rapidfuzz": "rapidfuzz",
+    "levenshtein": "levenshtein",
+    "simple_ratio": "simple_ratio",
+    "normalized_ratio": "normalized_ratio",
+    "token_sort_ratio": "token_sort_ratio",
+    "hybrid_score": "hybrid_score",
+}
+
 # ---------------------------------------------------------------------
 # __all__
 # ---------------------------------------------------------------------
@@ -147,6 +164,7 @@ __all__ = [
     "DEFAULT_FUZZY_MATCH_MODE",
     "DEFAULT_LOG_ROOT",
     "DEFAULT_NORMALIZATION_FORM",
+    "DEFAULT_OUTPUT_FORMAT",
     "DEFAULT_THRESHOLD",
     "ENV_DEBUG_ENV_LOAD",
     "ENV_ENVIRONMENT",
@@ -167,6 +185,7 @@ __all__ = [
     "VALID_FUZZY_MATCH_MODES",
     "VALID_HYBRID_AGG_FUNCS",
     "VALID_LOG_METHODS",
+    "VALID_OUTPUT_FORMATS",
     "ColorMode",
     "ExactMatchMode",
     "FuzzyAlgorithm",

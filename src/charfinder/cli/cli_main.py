@@ -22,17 +22,16 @@ import sys
 
 from charfinder.cli.handlers import (
     apply_fuzzy_defaults,
-    resolve_effective_color_mode,
+    resolve_settings,
 )
 from charfinder.cli.parser import create_parser
 from charfinder.cli.utils_runner import (
     auto_enable_debug,
     handle_cli_workflow,
     resolve_final_query,
-    validate_and_resolve_fuzzy_algo,
 )
 from charfinder.constants import EXIT_SUCCESS
-from charfinder.utils.formatter import should_use_color
+from charfinder.validators import validate_color_mode, validate_fuzzy_algo, validate_threshold
 
 __all__ = ["main"]
 
@@ -52,25 +51,32 @@ def main() -> None:
     parser = create_parser()
     args = parser.parse_args()
 
-    # Initial color mode before loading .env (used for early output)
-    color_mode = resolve_effective_color_mode(args.color)
-    use_color = should_use_color(color_mode)
+    # Resolve settings, including color mode, threshold, and debug flags
+    color_mode, use_color, threshold = resolve_settings(args)
 
-    # Query handling
+    # Query handling: Resolve final query string
     query_str = resolve_final_query(args)
     if not query_str:
         parser.print_help()
         sys.exit(EXIT_SUCCESS)
 
-    # Debug flag override via env
+    # Enable debug mode if required by environment variable (CHARFINDER_DEBUG_ENV_LOAD)
     auto_enable_debug(args)
 
-    # Inject defaults for fuzzy behavior if --fuzzy is enabled
-    apply_fuzzy_defaults(args)
+    # Validate fuzzy algorithm **before** applying defaults
+    args.fuzzy_algo = validate_fuzzy_algo(args.fuzzy_algo)
 
-    # Validate fuzzy algorithm (exit early if invalid)
-    validate_and_resolve_fuzzy_algo(args=args, use_color=use_color)
+    # Validate threshold to ensure it aligns with the .env or CLI
+    args.threshold = validate_threshold(args.threshold)
+
+    # Validate color mode (if set)
+    args.color = validate_color_mode(args.color)
+
+    # Apply defaults for fuzzy behavior if --fuzzy is enabled (after validation)
+    apply_fuzzy_defaults(args)
 
     # Run the full CLI workflow
     exit_code = handle_cli_workflow(args=args, query_str=query_str, use_color=use_color)
+
+    # Exit with the determined exit code
     sys.exit(exit_code)

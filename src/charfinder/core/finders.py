@@ -14,7 +14,6 @@ Function:
     find_chars_info_router(): Perform routing between exact and fuzzy matching.
 """
 
-
 # ---------------------------------------------------------------------
 # Imports
 # ---------------------------------------------------------------------
@@ -24,7 +23,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from typing import NamedTuple
 
-from charfinder.constants import VALID_FUZZY_MATCH_MODES
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import build_name_cache
 from charfinder.fuzzymatchlib import resolve_algorithm_name
@@ -32,6 +30,7 @@ from charfinder.types import CharMatch, FuzzyMatchContext, SearchConfig
 from charfinder.utils.formatter import echo, format_result_header, format_result_row
 from charfinder.utils.logger_styles import format_info
 from charfinder.utils.normalizer import normalize
+from charfinder.validators import validate_fuzzy_match_mode
 
 __all__ = ["find_chars", "find_chars_raw", "find_chars_with_info"]
 
@@ -47,7 +46,6 @@ MSG_MATCH_FOUND = "Found {n} match(es) for query: '{query}'"
 MSG_MATCH_NOT_FOUND = "No matches found for query: '{query}'"
 MSG_EXACT_SKIP_FUZZY = "Exact match found — skipping fuzzy match."
 MSG_EXACT_AND_FUZZY = "Exact match found — also running fuzzy match (prefer-fuzzy mode)."
-
 
 # ---------------------------------------------------------------------
 # Internal Types
@@ -66,6 +64,30 @@ class MatchTuple(NamedTuple):
 # ---------------------------------------------------------------------
 
 
+def log_match_message(matches, query, use_color, verbose):
+    """
+    Logs the match result message based on the matches found.
+
+    Args:
+        matches: List of match tuples.
+        query: Query string.
+        use_color: Whether color formatting should be used.
+        verbose: Whether verbose logging is enabled.
+    """
+    if matches:
+        message = MSG_MATCH_FOUND.format(n=len(matches), query=query)
+    else:
+        message = MSG_MATCH_NOT_FOUND.format(query=query)
+
+    echo(
+        message,
+        style=lambda m: format_info(m, use_color=use_color),
+        show=verbose,
+        log=True,
+        log_method="info",
+    )
+
+
 def _validate_query(query: str, config: SearchConfig) -> None:
     if not isinstance(query, str):
         raise TypeError(MSG_QUERY_TYPE_ERROR)
@@ -73,12 +95,16 @@ def _validate_query(query: str, config: SearchConfig) -> None:
     if not query.strip():
         raise ValueError(MSG_QUERY_EMPTY_ERROR)
 
-    if config.fuzzy_match_mode not in VALID_FUZZY_MATCH_MODES:
-        raise ValueError(MSG_INVALID_MATCH_MODE.format(mode=config.fuzzy_match_mode))
+    # Validate fuzzy match mode using the validator
+    validate_fuzzy_match_mode(config.fuzzy_match_mode)
 
 
 def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple], bool]:
     _validate_query(query, config)
+
+    # Early return if query is empty
+    if not query.strip():
+        return [], False
 
     try:
         resolved_algo = resolve_algorithm_name(config.fuzzy_algo)
@@ -99,7 +125,7 @@ def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple]
     fuzzy_matches: list[MatchTuple] = []
     fuzzy_executed = False
 
-    # === Decides whether to run fuzzy matching
+    # Decides whether to run fuzzy matching
     run_fuzzy = config.fuzzy and (config.prefer_fuzzy or not exact_matches)
 
     if run_fuzzy:
@@ -116,40 +142,11 @@ def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple]
         fuzzy_results = find_fuzzy_matches(norm_query, name_cache, context)
         fuzzy_matches.extend(MatchTuple(*tpl) for tpl in fuzzy_results)
 
-    # === Logging (INFO messages)
-    if config.verbose and exact_matches:
-        if config.fuzzy and not config.prefer_fuzzy:
-            echo(
-                MSG_EXACT_SKIP_FUZZY,
-                style=lambda m: format_info(m, use_color=config.use_color),
-                show=True,
-                log=True,
-                log_method="info",
-            )
-        elif config.fuzzy and config.prefer_fuzzy:
-            echo(
-                MSG_EXACT_AND_FUZZY,
-                style=lambda m: format_info(m, use_color=config.use_color),
-                show=True,
-                log=True,
-                log_method="info",
-            )
+    # Log match message based on whether we found exact matches
+    log_match_message(fuzzy_matches + exact_matches, query, config.use_color, config.verbose)
 
-    # === Combine matches
+    # Combine exact and fuzzy matches
     all_matches = exact_matches + fuzzy_matches
-
-    message = (
-        MSG_MATCH_FOUND.format(n=len(all_matches), query=query)
-        if all_matches
-        else MSG_MATCH_NOT_FOUND.format(query=query)
-    )
-    echo(
-        message,
-        style=lambda m: format_info(m, use_color=config.use_color),
-        show=config.verbose,
-        log=True,
-        log_method="info",
-    )
 
     return all_matches, fuzzy_executed
 

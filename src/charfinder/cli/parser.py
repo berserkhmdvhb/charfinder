@@ -25,19 +25,39 @@ import argparse
 
 from charfinder.cli.args import (
     ARG_COLOR,
+    ARG_DEBUG,
     ARG_EXACT_MATCH_MODE,
     ARG_FORMAT,
+    ARG_FUZZY,
+    ARG_FUZZY_ALGO,
     ARG_FUZZY_MATCH_MODE,
+    ARG_HYBRID_AGG_FN,
+    ARG_POSITIONAL_QUERY,
+    ARG_PREFER_FUZZY,
+    ARG_QUERY,
+    ARG_QUERY_LONG,
     ARG_THRESHOLD,
+    ARG_VERBOSE,
+    ARG_VERBOSE_LONG,
+    ARG_VERSION,
+)
+from charfinder.cli.handlers import get_version
+from charfinder.constants import (
     DEFAULT_EXACT_MATCH_MODE,
     DEFAULT_FUZZY_ALGO,
     DEFAULT_FUZZY_MATCH_MODE,
+    DEFAULT_HYBRID_AGG_FUNC,
+    DEFAULT_OUTPUT_FORMAT,
+    DEFAULT_THRESHOLD,
+    VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
     VALID_FUZZY_MATCH_MODES,
+    VALID_OUTPUT_FORMATS,
+)
+from charfinder.validators import (
     fuzzy_algo_validator,
     threshold_range,
 )
-from charfinder.cli.handlers import get_version
 
 __all__ = ["create_parser"]
 
@@ -52,7 +72,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     Defines the following arguments:
     - query: The search query string (required positional).
-    - --fuzzy: Enable fuzzy search if no exact matches.+
+    - --fuzzy: Enable fuzzy search if no exact matches.
     - --prefer-fuzzy: Include fuzzy results even if exact matches exist (hybrid mode).
     - --threshold: Fuzzy match threshold (float between 0.0 and 1.0).
     - --color: Color output mode ('auto', 'always', 'never').
@@ -84,15 +104,15 @@ def create_parser() -> argparse.ArgumentParser:
     # ---------------------------------------------------------------------
 
     parser.add_argument(
-        "positional_query",
+        ARG_POSITIONAL_QUERY,
         nargs="*",
         help="Search query for Unicode characters (positional).",
     )
 
     # Optional query
     parser.add_argument(
-        "-q",
-        "--query",
+        ARG_QUERY,
+        ARG_QUERY_LONG,
         dest="option_query",
         nargs="+",
         help="Search query for Unicode characters (alternative to positional).",
@@ -103,13 +123,13 @@ def create_parser() -> argparse.ArgumentParser:
     # ---------------------------------------------------------------------
 
     parser.add_argument(
-        "--fuzzy",
+        ARG_FUZZY,
         action="store_true",
         help="Enable fuzzy search if no exact matches.",
     )
 
     parser.add_argument(
-        "--prefer-fuzzy",
+        ARG_PREFER_FUZZY,
         action="store_true",
         help="Include fuzzy results even if exact matches are found (hybrid mode).",
     )
@@ -117,20 +137,20 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         ARG_THRESHOLD,
         type=threshold_range,
-        default=None,
+        default=DEFAULT_THRESHOLD,
         help="Fuzzy match threshold (0.0 to 1.0).",
     )
 
     parser.add_argument(
         ARG_COLOR,
-        choices=["auto", "always", "never"],
+        choices=VALID_COLOR_MODES,
         default=None,
         help="Control color output.",
     )
 
     parser.add_argument(
-        "--verbose",
-        "-v",
+        ARG_VERBOSE,
+        ARG_VERBOSE_LONG,
         dest="verbose",
         action="store_true",
         default=False,
@@ -138,7 +158,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--debug",
+        ARG_DEBUG,
         action="store_true",
         help="Enable debug diagnostics output.",
     )
@@ -148,7 +168,7 @@ def create_parser() -> argparse.ArgumentParser:
     # ---------------------------------------------------------------------
 
     parser.add_argument(
-        f"--{ARG_EXACT_MATCH_MODE.replace('_', '-')}",
+        ARG_EXACT_MATCH_MODE,
         choices=VALID_EXACT_MATCH_MODES,
         default=DEFAULT_EXACT_MATCH_MODE,
         help=(
@@ -160,7 +180,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--fuzzy-algo",
+        ARG_FUZZY_ALGO,
         dest="fuzzy_algo",
         type=fuzzy_algo_validator,
         default=DEFAULT_FUZZY_ALGO,
@@ -171,26 +191,27 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        f"--{ARG_FUZZY_MATCH_MODE.replace('_', '-')}",
+        ARG_FUZZY_MATCH_MODE,
         choices=VALID_FUZZY_MATCH_MODES,
         default=DEFAULT_FUZZY_MATCH_MODE,
         help="Fuzzy match mode when --fuzzy is enabled.",
     )
 
     parser.add_argument(
-        "--hybrid-agg-fn",
+        ARG_HYBRID_AGG_FN,
         choices=["mean", "median", "max", "min"],
-        default="mean",
+        default=DEFAULT_HYBRID_AGG_FUNC,
         help="Aggregation function for hybrid match mode (default: mean).",
     )
+
     # ---------------------------------------------------------------------
     # Output Options
     # ---------------------------------------------------------------------
 
     parser.add_argument(
         ARG_FORMAT,
-        choices=["text", "json"],
-        default="text",
+        choices=VALID_OUTPUT_FORMATS,
+        default=DEFAULT_OUTPUT_FORMAT,
         help=(
             "Output format: "
             "'text' for human-friendly table (default), 'json' for structured output."
@@ -210,7 +231,7 @@ def create_parser() -> argparse.ArgumentParser:
     # ---------------------------------------------------------------------
 
     parser.add_argument(
-        "--version",
+        ARG_VERSION,
         action="version",
         version=get_version(),
     )
