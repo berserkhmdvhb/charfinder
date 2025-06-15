@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import cast
 
 from dotenv import load_dotenv
 
@@ -152,10 +151,14 @@ def get_root_dir() -> Path:
     """
     Dynamically return the project root directory.
 
+    Honors CHARFINDER_ROOT_DIR_FOR_TESTS for patching in unit tests.
+
     Returns:
         Absolute path to the project's root directory.
     """
-    return cast("Path", globals().get("ROOT_DIR", Path(__file__).resolve().parents[2]))
+    if "CHARFINDER_ROOT_DIR_FOR_TESTS" in os.environ:
+        return Path(os.environ["CHARFINDER_ROOT_DIR_FOR_TESTS"]).resolve()
+    return Path(__file__).resolve().parents[2]
 
 
 # ---------------------------------------------------------------------

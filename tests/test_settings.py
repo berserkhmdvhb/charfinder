@@ -82,28 +82,37 @@ def test_is_test_mode(monkeypatch: pytest.MonkeyPatch) -> None:
 # .env loading and diagnostics
 # ---------------------------------------------------------------------
 
-def test_load_settings(load_fresh_settings: Callable[[Path | None], ModuleType], tmp_path: Path) -> None:
+def test_load_settings(
+    load_fresh_settings: Callable[[Path | None, Path | None], ModuleType],
+    tmp_path: Path,
+) -> None:
     dotenv = tmp_path / ".env"
     dotenv.write_text("CHARFINDER_ENV=UAT\nCHARFINDER_LOG_MAX_BYTES=12345\n")
 
-    sett = load_fresh_settings(dotenv)
+    sett = load_fresh_settings(dotenv, tmp_path)
     assert dotenv in sett.resolve_loaded_dotenv_paths()
     assert sett.get_environment() == "UAT"
     assert sett.get_log_max_bytes() == 12345
 
 
-def test_load_settings_none(load_fresh_settings: Callable[[Path | None], ModuleType]) -> None:
-    sett = load_fresh_settings(None)
-    assert sett.load_settings() == []
+def test_load_settings_none(
+    load_fresh_settings: Callable[[Path | None, Path | None], ModuleType],
+    tmp_path: Path,
+) -> None:
+    # Pass a root_dir that has no .env file to simulate true empty env
+    sett = load_fresh_settings(None, tmp_path)
+    loaded = sett.load_settings()
+    assert loaded == []
+
 
 
 def test_resolve_loaded_dotenv_paths(
-    load_fresh_settings: Callable[[Path | None], ModuleType],
+    load_fresh_settings: Callable[[Path | None, Path | None], ModuleType],
     tmp_path: Path,
 ) -> None:
     dotenv = tmp_path / ".env"
     dotenv.write_text("CHARFINDER_ENV=DEV\n")
-    sett = load_fresh_settings(dotenv)
+    sett = load_fresh_settings(dotenv, tmp_path)
     assert sett.resolve_loaded_dotenv_paths() == [dotenv]
 
 

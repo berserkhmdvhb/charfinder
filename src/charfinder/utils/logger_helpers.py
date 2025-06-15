@@ -14,20 +14,19 @@ Functions:
         Context manager to temporarily suppress StreamHandler (console) output.
 """
 
-# ---------------------------------------------------------------------
-# Imports
-# ---------------------------------------------------------------------
-
 from __future__ import annotations
 
 import logging
 import re
 import threading
 from collections.abc import Iterator
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
+from io import TextIOWrapper
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
+
+from charfinder.utils.logger_styles import format_warning
 
 __all__ = [
     "CustomRotatingFileHandler",
@@ -37,11 +36,11 @@ __all__ = [
     "suppress_console_logging",
 ]
 
+logger = logging.getLogger("charfinder.logger")
 
 # ---------------------------------------------------------------------
 # Console Output Suppression
 # ---------------------------------------------------------------------
-
 
 _SUPPRESS_CONSOLE_OUTPUT = threading.local()
 _SUPPRESS_CONSOLE_OUTPUT.value = False
@@ -77,7 +76,6 @@ class EnvironmentFilter(logging.Filter):
     """Injects the current environment (e.g., DEV, UAT, PROD) into log records."""
 
     def filter(self, record: logging.LogRecord) -> bool:
-        # Delayed import to avoid circular import issues
         from charfinder.settings import get_environment
 
         record.env = get_environment()
@@ -101,7 +99,7 @@ class SafeFormatter(logging.Formatter):
         super().__init__(fmt=fmt, datefmt=datefmt, style=style)
 
     def format(self, record: logging.LogRecord) -> str:
-        if not hasattr(record, "env"):
+        if not hasattr(record, "env") or not isinstance(record.env, str):
             record.env = "UNKNOWN"
         return super().format(record)
 
@@ -117,12 +115,9 @@ class CustomRotatingFileHandler(RotatingFileHandler):
 
     Behavior:
         charfinder.log → charfinder_1.log, charfinder_2.log, ...
-
-    This improves readability of rotated log filenames.
     """
 
     def rotation_filename(self, default_name: str) -> str:
-        """Rename rotated files: charfinder.log.1 → charfinder_1.log."""
         if default_name.endswith(".log"):
             return default_name
         if ".log." in default_name:
@@ -131,34 +126,78 @@ class CustomRotatingFileHandler(RotatingFileHandler):
         return default_name
 
     def do_rollover(self) -> None:
-        """Perform rollover with custom filename logic."""
-        if self.stream:
-            self.stream.close()
-            self.stream = None  # type: ignore[assignment]
+        self._close_stream()
 
         if self.backupCount > 0:
-            for path in self.get_files_to_delete():
-                with suppress(OSError):
-                    path.unlink()
-
-            for i in range(self.backupCount - 1, 0, -1):
-                src = Path(self.rotation_filename(f"{self.baseFilename}.{i}"))
-                dst = Path(self.rotation_filename(f"{self.baseFilename}.{i + 1}"))
-                if src.exists():
-                    if dst.exists():
-                        dst.unlink()
-                    src.rename(dst)
-
-            rollover_path = Path(self.rotation_filename(f"{self.baseFilename}.1"))
-            current_log = Path(self.baseFilename)
-            if current_log.exists():
-                current_log.rename(rollover_path)
+            self._delete_old_logs()
+            self._rotate_existing_logs()
 
         if not self.delay:
             self.stream = self._open()
 
+    def _close_stream(self) -> None:
+        if self.stream:
+            self.stream.close()
+            self.stream = None  # type: ignore[assignment]
+
+    def _delete_old_logs(self) -> None:
+        for path in self.get_files_to_delete():
+            try:
+                path.unlink()
+            except OSError:  # noqa: PERF203
+                from charfinder.utils.formatter import log_optionally_echo
+
+                message = f"Failed to delete old log file: {path}"
+                log_optionally_echo(
+                    message,
+                    level="warning",
+                    show=False,
+                    style=format_warning,
+                )
+
+    def _rotate_existing_logs(self) -> None:
+        from charfinder.utils.formatter import log_optionally_echo
+
+        for i in range(self.backupCount - 1, 0, -1):
+            src = Path(self.rotation_filename(f"{self.baseFilename}.{i}"))
+            dst = Path(self.rotation_filename(f"{self.baseFilename}.{i + 1}"))
+            if src.exists():
+                if dst.exists():
+                    try:
+                        dst.unlink()
+                    except OSError:
+                        message = f"Failed to delete rollover target: {dst}"
+                        log_optionally_echo(
+                            message,
+                            level="warning",
+                            show=False,
+                            style=format_warning,
+                        )
+                        continue
+                src.rename(dst)
+
+        rollover_path = Path(self.rotation_filename(f"{self.baseFilename}.1"))
+        current_log = Path(self.baseFilename)
+        if current_log.exists():
+            if rollover_path.exists():
+                try:
+                    rollover_path.unlink()
+                except OSError:
+                    message = f"Failed to delete existing rollover log: {rollover_path}"
+                    log_optionally_echo(
+                        message,
+                        level="warning",
+                        show=False,
+                        style=format_warning,
+                    )
+                    return
+            current_log.rename(rollover_path)
+
+    def _open(self) -> TextIOWrapper:
+        """Open log file using UTF-8 encoding to ensure consistent Unicode support."""
+        return cast("TextIOWrapper", Path(self.baseFilename).open(self.mode, encoding="utf-8"))
+
     def get_files_to_delete(self) -> list[Path]:
-        """Return list of rotated log files to delete to enforce backup count."""
         base_path = Path(self.baseFilename)
         prefix = base_path.stem
         ext = base_path.suffix

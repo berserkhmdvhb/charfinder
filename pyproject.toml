@@ -105,3 +105,6 @@ norecursedirs = ["tests/cli/old"]
 filterwarnings = [
   "ignore::pytest.PytestUnhandledThreadExceptionWarning"
 ]
+markers = [
+  "unit: marks tests as unit tests"
+]
