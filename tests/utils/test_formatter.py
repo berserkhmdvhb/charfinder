@@ -3,9 +3,7 @@ Unit tests for formatter.py in charfinder.utils.
 Covers formatting functions, color wrapping, and header/row formatting.
 """
 
-# ---------------------------------------------------------------------
-# Imports
-# ---------------------------------------------------------------------
+from __future__ import annotations
 
 import sys
 from io import StringIO
@@ -16,6 +14,8 @@ import pytest
 from colorama import Fore, Style
 
 from charfinder.utils import formatter as F
+from charfinder.types import EchoFunc
+
 
 # ---------------------------------------------------------------------
 # Fixtures
@@ -23,7 +23,7 @@ from charfinder.utils import formatter as F
 
 @pytest.fixture(autouse=True)
 def init_colorama() -> None:
-    """Ensure colorama is initialized cleanly before each test."""
+    """Ensure colorama is initialized cleanly before each test (resets ANSI)."""
     from colorama import init
     init(autoreset=True)
 
@@ -33,14 +33,14 @@ def init_colorama() -> None:
 # ---------------------------------------------------------------------
 
 def test_color_wrap_with_color() -> None:
-    """Test _color_wrap applies color when use_color=True."""
+    """_color_wrap applies color when use_color=True."""
     result = F._color_wrap("test", Fore.RED, use_color=True)
     expected = f"{Fore.RED}test{Style.RESET_ALL}"
     assert result == expected
 
 
 def test_color_wrap_without_color() -> None:
-    """Test _color_wrap returns plain text when use_color=False."""
+    """_color_wrap returns plain text when use_color=False."""
     result = F._color_wrap("test", Fore.RED, use_color=False)
     assert result == "test"
 
@@ -50,17 +50,17 @@ def test_color_wrap_without_color() -> None:
 # ---------------------------------------------------------------------
 
 def test_should_use_color_always() -> None:
-    """Test 'always' mode forces color usage."""
+    """'always' mode forces color usage."""
     assert F.should_use_color("always") is True
 
 
 def test_should_use_color_never() -> None:
-    """Test 'never' mode disables color usage."""
+    """'never' mode disables color usage."""
     assert F.should_use_color("never") is False
 
 
 def test_should_use_color_auto(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test 'auto' mode reflects sys.stdout.isatty()."""
+    """'auto' mode reflects sys.stdout.isatty()."""
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
     assert F.should_use_color("auto") is True
     monkeypatch.setattr(sys.stdout, "isatty", lambda: False)
@@ -72,7 +72,7 @@ def test_should_use_color_auto(monkeypatch: pytest.MonkeyPatch) -> None:
 # ---------------------------------------------------------------------
 
 def test_format_result_line_colored() -> None:
-    """Test format_result_line applies yellow color when enabled."""
+    """format_result_line applies yellow color when enabled."""
     line = "result"
     formatted = F.format_result_line(line, use_color=True)
     expected = f"{Fore.YELLOW}result{Style.RESET_ALL}"
@@ -80,7 +80,7 @@ def test_format_result_line_colored() -> None:
 
 
 def test_format_result_line_plain() -> None:
-    """Test format_result_line returns plain line when color disabled."""
+    """format_result_line returns plain line when color disabled."""
     line = "result"
     formatted = F.format_result_line(line, use_color=False)
     assert formatted == "result"
@@ -91,14 +91,14 @@ def test_format_result_line_plain() -> None:
 # ---------------------------------------------------------------------
 
 def test_format_result_header_with_score() -> None:
-    """Test header and divider line when score column is shown."""
+    """Header and divider line when score column is shown."""
     header, divider = F.format_result_header(has_score=True)
     assert "CODE" in header and "SCORE" in header
     assert len(divider) == len(header)
 
 
 def test_format_result_header_without_score() -> None:
-    """Test header and divider when score column is hidden."""
+    """Header and divider when score column is hidden."""
     header, divider = F.format_result_header(has_score=False)
     assert "CODE" in header and "SCORE" not in header
     assert len(divider) == len(header)
@@ -109,7 +109,7 @@ def test_format_result_header_without_score() -> None:
 # ---------------------------------------------------------------------
 
 def test_format_result_row_with_score() -> None:
-    """Test formatting of result row with a score."""
+    """Formatting of result row with a score."""
     row = F.format_result_row(0x1F600, "😀", "GRINNING FACE", 0.98765)
     assert "U+1F600" in row
     assert "😀" in row
@@ -118,14 +118,14 @@ def test_format_result_row_with_score() -> None:
 
 
 def test_format_result_row_without_score() -> None:
-    """Test result row formatting when score is None."""
+    """Result row formatting when score is None."""
     row = F.format_result_row(0x1F600, "😀", "GRINNING FACE", None)
     assert "U+1F600" in row
     assert "0.988" not in row
 
 
 # ---------------------------------------------------------------------
-# echo and log_optionally_echo (mocked)
+# echo and log_optionally_echo (mocked logger, real stream)
 # ---------------------------------------------------------------------
 
 def fake_logger() -> SimpleNamespace:
@@ -147,37 +147,50 @@ def fake_logger() -> SimpleNamespace:
     )
 
 
-def test_echo_logs_and_prints(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test echo writes styled message and logs it."""
+def test_echo_logs_and_prints(monkeypatch: pytest.MonkeyPatch, log_stream: StringIO) -> None:
+    """echo writes styled message and logs it."""
     logger = fake_logger()
     monkeypatch.setattr("charfinder.utils.logger_setup.get_logger", lambda: logger)
-    stream = StringIO()
 
-    F.echo("test message", str.upper, stream=stream, log=True, log_method="info")
+    F.echo("test message", str.upper, stream=log_stream, log=True, log_method="info")
 
-    assert stream.getvalue().strip() == "TEST MESSAGE"
+    assert log_stream.getvalue().strip() == "TEST MESSAGE"
     assert "info" in logger._calls
     assert logger._calls["info"] == ["test message"]
 
 
-def test_echo_invalid_log_method(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test echo raises ValueError for invalid log method."""
+def test_echo_applies_style(monkeypatch: pytest.MonkeyPatch, log_stream: StringIO) -> None:
+    """echo should apply custom style function to output stream."""
     logger = fake_logger()
     monkeypatch.setattr("charfinder.utils.logger_setup.get_logger", lambda: logger)
+
+    def star_wrap(msg: str) -> str:
+        return f"***{msg}***"
+
+    F.echo("styled", star_wrap, stream=log_stream, show=True, log=False)
+    assert log_stream.getvalue().strip() == "***styled***"
+
+
+def test_echo_invalid_log_method(monkeypatch: pytest.MonkeyPatch) -> None:
+    """echo raises ValueError for invalid log method."""
+    logger = fake_logger()
+    monkeypatch.setattr("charfinder.utils.logger_setup.get_logger", lambda: logger)
+
     with pytest.raises(ValueError, match="Invalid log_method: foobar"):
         F.echo("oops", str, log=True, log_method="foobar")
 
 
 def test_echo_missing_log_method(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test echo raises ValueError if log_method is missing."""
+    """echo raises ValueError if log_method is missing when log=True."""
     logger = fake_logger()
     monkeypatch.setattr("charfinder.utils.logger_setup.get_logger", lambda: logger)
+
     with pytest.raises(ValueError, match="log_method must be provided if log=True"):
         F.echo("oops", str, log=True, log_method=None)
 
 
 def test_log_optionally_echo_logs_only(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test log_optionally_echo logs but does not print when show=False."""
+    """log_optionally_echo logs but does not print when show=False."""
     logger = fake_logger()
     monkeypatch.setattr("charfinder.utils.logger_setup.get_logger", lambda: logger)
 
@@ -186,12 +199,11 @@ def test_log_optionally_echo_logs_only(monkeypatch: pytest.MonkeyPatch) -> None:
     assert logger._calls["info"] == ["log only"]
 
 
-def test_log_optionally_echo_logs_and_prints(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test log_optionally_echo logs and prints styled message."""
+def test_log_optionally_echo_logs_and_prints(monkeypatch: pytest.MonkeyPatch, log_stream: StringIO) -> None:
+    """log_optionally_echo logs and prints styled message."""
     logger = fake_logger()
     monkeypatch.setattr("charfinder.utils.logger_setup.get_logger", lambda: logger)
-    stream = StringIO()
 
-    F.log_optionally_echo("hi", level="warning", show=True, stream=stream, style=str.lower)
-    assert stream.getvalue().strip() == "hi"
+    F.log_optionally_echo("hi", level="warning", show=True, stream=log_stream, style=str.lower)
+    assert log_stream.getvalue().strip() == "hi"
     assert "warning" in logger._calls

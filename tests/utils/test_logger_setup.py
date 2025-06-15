@@ -25,7 +25,7 @@ from charfinder.utils.logger_helpers import (
 
 def test_setup_logging_creates_expected_handlers(
     temp_log_dir: Path,
-    log_stream: StringIO,
+    log_stream: StringIO,  # Replaced StringIO with log_stream
     patched_stream_handler: Callable[[list[logging.Handler]], None],
 ) -> None:
     """setup_logging should return StreamHandler and FileHandler, and emit logs."""
@@ -84,7 +84,7 @@ def test_reset_true_reconfigures_handlers(temp_log_dir: Path) -> None:
 
 def test_console_log_level_respects_debug_flag(
     temp_log_dir: Path,
-    log_stream: StringIO,
+    log_stream: StringIO,  # Replaced StringIO with log_stream
     patched_stream_handler: Callable[[list[logging.Handler]], None],
 ) -> None:
     """StreamHandler should emit DEBUG when log_level=DEBUG is passed."""
@@ -106,7 +106,7 @@ def test_console_log_level_respects_debug_flag(
 
 def test_console_log_level_defaults_to_info(
     temp_log_dir: Path,
-    log_stream: StringIO,
+    log_stream: StringIO,  # Replaced StringIO with log_stream
     patched_stream_handler: Callable[[list[logging.Handler]], None],
 ) -> None:
     """StreamHandler defaults to INFO level and should not emit DEBUG logs."""
@@ -133,6 +133,7 @@ def test_console_log_level_defaults_to_info(
     output = log_stream.getvalue()
     assert "should not appear" not in output
     assert "should appear" in output
+
 
 @pytest.mark.parametrize("suppress_echo", [True, False])
 def test_handlers_always_include_filters(

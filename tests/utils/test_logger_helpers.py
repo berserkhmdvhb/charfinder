@@ -19,6 +19,7 @@ import time
 from typing import ContextManager
 
 from charfinder.utils import logger_helpers as lh
+from charfinder.types import EchoFunc
 
 # Optional marker for test categorization
 pytestmark = pytest.mark.unit
@@ -60,13 +61,13 @@ def test_suppress_console_logging_context_restores_flag() -> None:
 # EnvironmentFilter Tests
 # ---------------------------------------------------------------------
 
-def test_environment_filter_sets_env() -> None:
+def test_environment_filter_sets_env(patch_env: Callable[[str], None]) -> None:
     """EnvironmentFilter adds `env` to the log record."""
     record = logging.LogRecord("name", logging.INFO, "", 0, "msg", None, None)
     env_filter = lh.EnvironmentFilter()
-    with patch("charfinder.settings.get_environment", return_value="TEST_ENV"):
-        assert env_filter.filter(record) is True
-        assert getattr(record, "env", None) == "TEST_ENV"
+    patch_env("TEST_ENV")  # Use fixture to patch environment
+    assert env_filter.filter(record) is True
+    assert getattr(record, "env", None) == "TEST_ENV"
 
 
 # ---------------------------------------------------------------------
@@ -118,6 +119,7 @@ def test_rotation_filename_standard_and_custom(tmp_path: Path) -> None:
     assert handler.rotation_filename("charfinder.log.1") == "charfinder_1.log"
     assert handler.rotation_filename("randomfile.txt") == "randomfile.txt"
 
+
 import time
 
 def test_get_files_to_delete(tmp_path: Path) -> None:
@@ -139,7 +141,6 @@ def test_get_files_to_delete(tmp_path: Path) -> None:
     # Sort files by mtime to align with implementation logic
     expected = sorted(files, key=lambda p: p.stat().st_mtime)[:2]
     assert set(to_delete) == set(expected)
-
 
 
 def test_do_rollover_renames_files(tmp_path: Path) -> None:

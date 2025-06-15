@@ -36,12 +36,13 @@ import charfinder.settings as settings
     ],
 )
 def test_get_environment(monkeypatch: pytest.MonkeyPatch, env_value: str | None, expected: str) -> None:
+    # Although clear_charfinder_env runs automatically, we explicitly patch CHARFINDER_ENV
+    # here to test how get_environment() handles specific values and edge cases.
     if env_value is None:
         monkeypatch.delenv("CHARFINDER_ENV", raising=False)
     else:
         monkeypatch.setenv("CHARFINDER_ENV", env_value)
     assert settings.get_environment() == expected
-
 
 def test_env_helpers(patch_env: Callable[[str], None]) -> None:
     patch_env("DEV")
