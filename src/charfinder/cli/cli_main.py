@@ -21,7 +21,6 @@ Functions:
 import sys
 
 from charfinder.cli.handlers import (
-    apply_fuzzy_defaults,
     resolve_settings,
 )
 from charfinder.cli.parser import create_parser
@@ -31,7 +30,12 @@ from charfinder.cli.utils_runner import (
     resolve_final_query,
 )
 from charfinder.constants import EXIT_SUCCESS
-from charfinder.validators import validate_color_mode, validate_fuzzy_algo, validate_threshold
+from charfinder.validators import (
+    validate_color_mode,
+    validate_fuzzy_algo,
+    validate_threshold,
+    apply_fuzzy_defaults
+)
 
 __all__ = ["main"]
 

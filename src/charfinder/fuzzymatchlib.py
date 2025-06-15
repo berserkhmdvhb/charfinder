@@ -41,8 +41,7 @@ from __future__ import annotations
 import functools
 import statistics
 import unicodedata
-from typing import TYPE_CHECKING
-
+from typing import TYPE_CHECKING, cast
 import Levenshtein
 from rapidfuzz.fuzz import token_sort_ratio
 
@@ -55,6 +54,7 @@ from charfinder.constants import (
     VALID_HYBRID_AGG_FUNCS,
     FuzzyAlgorithm,
     MatchMode,
+    FUZZY_ALGO_ALIASES
 )
 from charfinder.validators import validate_fuzzy_algo, validate_fuzzy_match_mode
 
@@ -184,7 +184,31 @@ SUPPORTED_ALGORITHMS: dict[FuzzyAlgorithm, AlgorithmFn] = {
     "hybrid_score": functools.partial(hybrid_score, agg_fn="mean"),
 }
 
+def resolve_algorithm_name(name: str) -> FuzzyAlgorithm:
+    """
+    Normalize user-specified algorithm name to internal name.
 
+    Args:
+        name: Algorithm name from user input.
+
+    Returns:
+        FuzzyAlgorithm: Validated internal algorithm name.
+
+    Raises:
+        ValueError: If the name is unknown.
+    """
+    folded = name.casefold()
+
+    if folded in SUPPORTED_ALGORITHMS:
+        return cast("FuzzyAlgorithm", folded)
+    if folded in FUZZY_ALGO_ALIASES:
+        return cast("FuzzyAlgorithm", FUZZY_ALGO_ALIASES[folded])
+
+    message = (
+        f"Unknown fuzzy algorithm: '{name}'. "
+        f"Expected one of: {', '.join(sorted(FUZZY_ALGO_ALIASES.keys()))}."
+    )
+    raise ValueError(message)
 # ---------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------

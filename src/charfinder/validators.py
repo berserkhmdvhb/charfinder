@@ -44,7 +44,6 @@ from charfinder.constants import (
     DEFAULT_COLOR_MODE,
     DEFAULT_FUZZY_ALGO,
     DEFAULT_THRESHOLD,
-    ERROR_INVALID_THRESHOLD,
     FUZZY_ALGO_ALIASES,
     VALID_EXACT_MATCH_MODES,
     VALID_FUZZY_MATCH_MODES,
@@ -56,6 +55,7 @@ from charfinder.settings import get_cache_file
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_warning
 
+ERROR_INVALID_THRESHOLD = "Invalied Threshold Used."
 # ------------------------------------------------------------------------
 # Type Guard for Fuzzy Algorithm Validation
 # ------------------------------------------------------------------------
