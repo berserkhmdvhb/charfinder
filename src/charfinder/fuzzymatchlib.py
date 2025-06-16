@@ -42,6 +42,7 @@ import functools
 import statistics
 import unicodedata
 from typing import TYPE_CHECKING, cast
+
 import Levenshtein
 from rapidfuzz.fuzz import token_sort_ratio
 
@@ -50,11 +51,13 @@ from charfinder.constants import (
     DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_HYBRID_AGG_FUNC,
     DEFAULT_NORMALIZATION_FORM,
+    FUZZY_ALGO_ALIASES,
     FUZZY_HYBRID_WEIGHTS,
     VALID_HYBRID_AGG_FUNCS,
     FuzzyAlgorithm,
-    MatchMode,
-    FUZZY_ALGO_ALIASES
+    FuzzyMatchMode,
+    HybridAggFunc,
+    NormalizationForm,
 )
 from charfinder.validators import validate_fuzzy_algo, validate_fuzzy_match_mode
 
@@ -83,7 +86,11 @@ def simple_ratio(a: str, b: str) -> float:
     return matches / max(len(a), len(b)) if max(len(a), len(b)) > 0 else 0.0
 
 
-def normalized_ratio(a: str, b: str) -> float:
+def normalized_ratio(
+    a: str,
+    b: str,
+    normalization_form: NormalizationForm = DEFAULT_NORMALIZATION_FORM,
+) -> float:
     """
     Compute ratio after Unicode normalization and uppercasing.
 
@@ -94,8 +101,8 @@ def normalized_ratio(a: str, b: str) -> float:
     Returns:
         float: Similarity score in the range [0.0, 1.0].
     """
-    norm_a = unicodedata.normalize(DEFAULT_NORMALIZATION_FORM, a).upper()
-    norm_b = unicodedata.normalize(DEFAULT_NORMALIZATION_FORM, b).upper()
+    norm_a = unicodedata.normalize(normalization_form, a).upper()
+    norm_b = unicodedata.normalize(normalization_form, b).upper()
     matches = sum(1 for c1, c2 in zip(norm_a, norm_b, strict=False) if c1 == c2)
     return matches / max(len(norm_a), len(norm_b)) if max(len(norm_a), len(norm_b)) > 0 else 0.0
 
@@ -128,7 +135,7 @@ def token_sort_ratio_score(a: str, b: str) -> float:
     return token_sort_ratio(a, b) / 100.0
 
 
-def hybrid_score(a: str, b: str, agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC) -> float:
+def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC) -> float:
     """
     Hybrid score combining multiple algorithms with a chosen aggregate function.
 
@@ -184,6 +191,7 @@ SUPPORTED_ALGORITHMS: dict[FuzzyAlgorithm, AlgorithmFn] = {
     "hybrid_score": functools.partial(hybrid_score, agg_fn="mean"),
 }
 
+
 def resolve_algorithm_name(name: str) -> FuzzyAlgorithm:
     """
     Normalize user-specified algorithm name to internal name.
@@ -209,6 +217,8 @@ def resolve_algorithm_name(name: str) -> FuzzyAlgorithm:
         f"Expected one of: {', '.join(sorted(FUZZY_ALGO_ALIASES.keys()))}."
     )
     raise ValueError(message)
+
+
 # ---------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------
@@ -228,8 +238,8 @@ def compute_similarity(
     s1: str,
     s2: str,
     algorithm: FuzzyAlgorithm = DEFAULT_FUZZY_ALGO,
-    mode: MatchMode = DEFAULT_FUZZY_MATCH_MODE,
-    agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC,
+    mode: FuzzyMatchMode = DEFAULT_FUZZY_MATCH_MODE,
+    agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
 ) -> float:
     """
     Compute similarity between two strings using a specified fuzzy algorithm

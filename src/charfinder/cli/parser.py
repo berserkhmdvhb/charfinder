@@ -168,7 +168,7 @@ def create_parser() -> argparse.ArgumentParser:
     # ---------------------------------------------------------------------
 
     parser.add_argument(
-        ARG_EXACT_MATCH_MODE,
+        f"--{ARG_EXACT_MATCH_MODE.replace('_', '-')}",
         choices=VALID_EXACT_MATCH_MODES,
         default=DEFAULT_EXACT_MATCH_MODE,
         help=(
@@ -191,7 +191,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        ARG_FUZZY_MATCH_MODE,
+        f"--{ARG_FUZZY_MATCH_MODE.replace('_', '-')}",
         choices=VALID_FUZZY_MATCH_MODES,
         default=DEFAULT_FUZZY_MATCH_MODE,
         help="Fuzzy match mode when --fuzzy is enabled.",

@@ -35,9 +35,10 @@ both the core logic and CLI components of the project.
 """
 
 import os
-from argparse import Action, Namespace
-from dataclasses import dataclass
+from argparse import Action, ArgumentParser, Namespace
+from collections.abc import Sequence
 from pathlib import Path
+from typing import cast
 from urllib.parse import urlparse
 
 from charfinder.constants import (
@@ -45,11 +46,14 @@ from charfinder.constants import (
     DEFAULT_FUZZY_ALGO,
     DEFAULT_THRESHOLD,
     FUZZY_ALGO_ALIASES,
+    VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
     VALID_FUZZY_MATCH_MODES,
     ColorMode,
     ExactMatchMode,
     FuzzyAlgorithm,
+    FuzzyConfig,
+    FuzzyMatchMode,
 )
 from charfinder.settings import get_cache_file
 from charfinder.utils.formatter import echo
@@ -64,17 +68,6 @@ ERROR_INVALID_THRESHOLD = "Invalied Threshold Used."
 def is_valid_fuzzy_algo(value: str) -> bool:
     """Type guard to check if the algorithm is valid."""
     return value in FUZZY_ALGO_ALIASES
-
-
-# ------------------------------------------------------------------------
-# Dataclasses for Fuzzy Configuration
-# ------------------------------------------------------------------------
-
-
-@dataclass
-class FuzzyConfig:
-    fuzzy_algo: FuzzyAlgorithm
-    fuzzy_match_mode: ExactMatchMode
 
 
 # ------------------------------------------------------------------------
@@ -124,23 +117,18 @@ def fuzzy_algo_validator(value: str) -> FuzzyAlgorithm:
 
 def validate_fuzzy_algo(fuzzy_algo: str) -> FuzzyAlgorithm:
     """
-    Validates the fuzzy algorithm name. If the provided algorithm name is invalid,
-    it returns the default fuzzy algorithm.
+    Validate and normalize a fuzzy algorithm name.
 
     Args:
-        fuzzy_algo (str): The fuzzy algorithm to validate.
+        fuzzy_algo (str): The fuzzy algorithm name (e.g., 'levenshtein', 'simple').
 
     Returns:
-        FuzzyAlgorithm: A valid fuzzy algorithm name.
+        FuzzyAlgorithm: The validated and normalized fuzzy algorithm.
     """
-    if not fuzzy_algo.strip():
-        message = "Fuzzy algorithm cannot be empty."
-        raise ValueError(message)
-
     fuzzy_algo = fuzzy_algo.lower()
     if not is_valid_fuzzy_algo(fuzzy_algo):
-        return DEFAULT_FUZZY_ALGO  # Use the default algorithm from constants.py
-    return fuzzy_algo
+        return DEFAULT_FUZZY_ALGO
+    return cast("FuzzyAlgorithm", FUZZY_ALGO_ALIASES[fuzzy_algo])
 
 
 def validate_threshold(threshold: float | None) -> float:
@@ -164,37 +152,36 @@ def validate_threshold(threshold: float | None) -> float:
 
 def validate_color_mode(color_mode: str | None) -> ColorMode:
     """
-    Validates and returns the color mode. Ensures it's one of 'auto', 'always', or 'never'.
+    Validate the color mode string and cast to the correct ColorMode literal.
 
     Args:
-        color_mode (str | None): The color mode value to validate.
+        color_mode (str | None): The input color mode (e.g., 'auto', 'always', 'never').
 
     Returns:
-        str: The validated color mode.
+        ColorMode: A valid color mode literal.
     """
-    if color_mode in {"auto", "always", "never"}:
-        return color_mode
+    from typing import cast
 
-    return DEFAULT_COLOR_MODE  # Use the default color mode from constants.py
+    if color_mode in VALID_COLOR_MODES:
+        return cast("ColorMode", color_mode)
+    return DEFAULT_COLOR_MODE
 
 
-def validate_fuzzy_match_mode(fuzzy_match_mode: str) -> str:
+def validate_fuzzy_match_mode(mode: str) -> FuzzyMatchMode:
     """
     Validates the fuzzy match mode. It must be either "single" or "hybrid".
 
     Args:
-        fuzzy_match_mode (str): The fuzzy match mode to validate.
+        mode (str): The fuzzy match mode to validate.
 
     Returns:
         str: A valid fuzzy match mode ("single" or "hybrid").
     """
-    if fuzzy_match_mode not in VALID_FUZZY_MATCH_MODES:
-        message = (
-            f"Invalid fuzzy match mode: {fuzzy_match_mode}. "
-            f"Valid options are: {VALID_FUZZY_MATCH_MODES}"
-        )
+    mode = mode.lower()
+    if mode not in VALID_FUZZY_MATCH_MODES:
+        message = f"Invalid fuzzy match mode: {mode}. Valid options are: {VALID_FUZZY_MATCH_MODES}"
         raise ValueError(message)
-    return fuzzy_match_mode
+    return cast("FuzzyMatchMode", mode)
 
 
 def validate_exact_match_mode(exact_match_mode: str) -> ExactMatchMode:
@@ -213,7 +200,7 @@ def validate_exact_match_mode(exact_match_mode: str) -> ExactMatchMode:
             f"Valid options are: {VALID_EXACT_MATCH_MODES}"
         )
         raise ValueError(message)
-    return exact_match_mode
+    return cast("ExactMatchMode", exact_match_mode)
 
 
 def resolve_effective_threshold(cli_threshold: float | None, *, use_color: bool = True) -> float:
@@ -246,10 +233,11 @@ def resolve_effective_threshold(cli_threshold: float | None, *, use_color: bool 
 
 
 def resolve_effective_color_mode(cli_color_mode: str | None) -> ColorMode:
-    """Resolve color mode from CLI arg, env var, or default.
+    """
+    Determine the effective color mode based on CLI input or environment variables.
 
     Args:
-        cli_color_mode (str | None): Color mode from CLI argument, or None.
+        cli_color_mode (str | None): CLI-specified color mode.
 
     Returns:
         ColorMode: The resolved color mode.
@@ -258,10 +246,12 @@ def resolve_effective_color_mode(cli_color_mode: str | None) -> ColorMode:
         return validate_color_mode(cli_color_mode)
 
     env_value = os.getenv("CHARFINDER_COLOR_MODE")
-    if env_value in {"auto", "always", "never"}:
-        return env_value
+    if env_value in VALID_COLOR_MODES:
+        from typing import cast
 
-    return DEFAULT_COLOR_MODE  # Use the default color mode from constants.py
+        return cast("ColorMode", env_value)
+
+    return DEFAULT_COLOR_MODE
 
 
 def apply_fuzzy_defaults(args: Namespace, config: FuzzyConfig) -> None:
@@ -284,8 +274,17 @@ def apply_fuzzy_defaults(args: Namespace, config: FuzzyConfig) -> None:
 
 
 class ValidateFuzzyAlgoAction(Action):
-    def __call__(self, namespace: Namespace, values: str, __: str | None = None) -> None:
-        validated_value = validate_fuzzy_algo(values)
+    def __call__(
+        self,
+        _: ArgumentParser,
+        namespace: Namespace,
+        values: str | Sequence[str] | None,
+        __: str | None = None,
+    ) -> None:
+        target = (
+            values[0] if isinstance(values, Sequence) and not isinstance(values, str) else values
+        )
+        validated_value = validate_fuzzy_algo(cast("str", target))
         setattr(namespace, self.dest, validated_value)
 
 
@@ -294,7 +293,7 @@ class ValidateFuzzyAlgoAction(Action):
 # ------------------------------------------------------------------------
 
 
-def validate_dict_str_keys(name_cache: dict) -> dict:
+def validate_dict_str_keys(name_cache: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
     """
     Validates that a dictionary has string keys and the values are dictionaries.
 

@@ -17,6 +17,7 @@ Defines:
 # Imports
 # ---------------------------------------------------------------------
 
+from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Literal
@@ -36,12 +37,12 @@ FuzzyAlgorithm = Literal[
     "hybrid_score",
 ]
 
-MatchMode = Literal["single", "hybrid"]
 ExactMatchMode = Literal["substring", "word-subset"]
+FuzzyMatchMode = Literal["single", "hybrid"]
 ColorMode = Literal["auto", "always", "never"]
-VALID_HYBRID_AGG_FUNCS = Literal["mean", "median", "max", "min"]
-VALID_OUTPUT_FORMATS = Literal["text", "json"]
-DEFAULT_NORMALIZATION_FORM: Literal["NFC", "NFD", "NFKC", "NFKD"] = "NFC"
+HybridAggFunc = Literal["mean", "median", "max", "min"]
+OutputFormat = Literal["text", "json"]
+NormalizationForm = Literal["NFC", "NFD", "NFKC", "NFKD"]
 
 # ---------------------------------------------------------------------
 # Package Info
@@ -58,6 +59,9 @@ VALID_COLOR_MODES = ("auto", "never", "always")
 VALID_FUZZY_MATCH_MODES = ("single", "hybrid")
 VALID_EXACT_MATCH_MODES = ("substring", "word-subset")
 VALID_LOG_METHODS = {"debug", "info", "warning", "error", "exception"}
+VALID_HYBRID_AGG_FUNCS = {"mean", "median", "max", "min"}
+VALID_OUTPUT_FORMATS = {"text", "json"}
+VALID_NORMALIZATION_FORMS = {"NFC", "NFD", "NFKC", "NFKD"}
 
 LOG_METHODS = SimpleNamespace(
     DEBUG="debug",
@@ -103,12 +107,12 @@ FIELD_WIDTHS = {
 
 DEFAULT_THRESHOLD: float = 0.7
 DEFAULT_FUZZY_ALGO: FuzzyAlgorithm = "token_sort_ratio"
-DEFAULT_FUZZY_MATCH_MODE: MatchMode = "single"
+DEFAULT_FUZZY_MATCH_MODE: FuzzyMatchMode = "single"
 DEFAULT_EXACT_MATCH_MODE: ExactMatchMode = "word-subset"
-DEFAULT_HYBRID_AGG_FUNC: VALID_HYBRID_AGG_FUNCS = "mean"
+DEFAULT_HYBRID_AGG_FUNC: HybridAggFunc = "mean"
 DEFAULT_COLOR_MODE: ColorMode = "auto"
-DEFAULT_OUTPUT_FORMAT: VALID_OUTPUT_FORMATS = "text"
-
+DEFAULT_OUTPUT_FORMAT: OutputFormat = "text"
+DEFAULT_NORMALIZATION_FORM: NormalizationForm = "NFC"
 # ---------------------------------------------------------------------
 # Hybrid scoring weights for fuzzy match components
 # ---------------------------------------------------------------------
@@ -153,6 +157,17 @@ SUPPORTED_ALGORITHMS: dict[str, FuzzyAlgorithm] = {
     "hybrid_score": "hybrid_score",
 }
 
+# ------------------------------------------------------------------------
+# Dataclasses for Fuzzy Configuration
+# ------------------------------------------------------------------------
+
+
+@dataclass
+class FuzzyConfig:
+    fuzzy_algo: FuzzyAlgorithm
+    fuzzy_match_mode: FuzzyMatchMode
+
+
 # ---------------------------------------------------------------------
 # __all__
 # ---------------------------------------------------------------------
@@ -190,5 +205,8 @@ __all__ = [
     "ColorMode",
     "ExactMatchMode",
     "FuzzyAlgorithm",
-    "MatchMode",
+    "FuzzyMatchMode",
+    "HybridAggFunc",
+    "NormalizationForm",
+    "OutputFormat",
 ]

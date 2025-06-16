@@ -33,6 +33,7 @@ Functions:
 import sys
 from pathlib import Path
 from urllib.error import URLError
+from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from charfinder.settings import get_unicode_data_file, get_unicode_data_url
@@ -55,7 +56,7 @@ EXPECTED_MIN_FIELDS = 11
 def validate_files_and_url(
     unicode_data_url: str,
     unicode_data_file: Path,
-    *,  # Make show and use_color keyword-only
+    *,
     show: bool = True,
 ) -> str | None:
     """
@@ -82,46 +83,45 @@ def validate_files_and_url(
 def download_and_cache_unicode_data(
     unicode_data_url: str,
     unicode_data_file: Path,
-    *,  # Make show and use_color keyword-only
+    *,
     show: bool = True,
+    use_color: bool = True,
 ) -> bool:
     """
     Attempt to download and cache the UnicodeData.txt file if not found locally.
 
     Args:
-        unicode_data_url (str): The URL for the Unicode data file.
-        unicode_data_file (Path): The local path to the Unicode data file.
-        show (bool): If True, display progress messages.
+        unicode_data_url (str): The URL to download the file from.
+        unicode_data_file (Path): The path where the file should be cached.
+        show (bool): If True, show progress messages.
+        use_color (bool): If True, show colorized log output.
 
     Returns:
-        bool: True if download and cache were successful, False if not.
+        bool: True if successful, False otherwise.
 
     Raises:
-        URLError: If the URL cannot be reached.
-        TimeoutError: If the download times out.
-        OSError: If there are issues with file writing.
+        ValueError: If the URL scheme is not HTTP/HTTPS.
     """
-    # Ensure only http/https schemes are used
-    allowed_schemes = ["http", "https"]
-    if not any(unicode_data_url.startswith(f"{scheme}://") for scheme in allowed_schemes):
+    scheme = urlparse(unicode_data_url).scheme
+    if scheme not in {"http", "https"}:
         message = f"Invalid URL scheme for {unicode_data_url}. Only HTTP/HTTPS are allowed."
         raise ValueError(message)
 
     try:
-        with urlopen(unicode_data_url, timeout=5) as response:
+        response = urlopen(unicode_data_url, timeout=5)  # noqa: S310
+        with response:
             text = response.read().decode("utf-8")
         unicode_data_file.parent.mkdir(parents=True, exist_ok=True)
         unicode_data_file.write_text(text, encoding="utf-8")
         message = f'Downloaded and cached "UnicodeData.txt" from {unicode_data_url}'
         echo(
             message,
-            style=lambda m: format_info(m),
+            style=lambda m: format_info(m, use_color=use_color),
             stream=sys.stderr,
             show=show,
             log=True,
             log_method="info",
         )
-        return True
     except (URLError, TimeoutError, OSError) as e:
         message = f'Error downloading "UnicodeData.txt": {e}. No local fallback found.'
         echo(
@@ -133,25 +133,24 @@ def download_and_cache_unicode_data(
             log_method="warning",
         )
         return False
+    else:
+        return True
 
 
 def load_unicode_data_from_file(
     unicode_data_file: Path,
-    *,  # Make show and use_color keyword-only
+    *,
     show: bool = True,
 ) -> str | None:
     """
     Load the Unicode data from a local file.
 
     Args:
-        unicode_data_file (Path): The local path to the Unicode data file.
+        unicode_data_file (Path): The file path to read from.
         show (bool): If True, display progress messages.
 
     Returns:
-        str | None: The content of the file as a string, or None if there was an error.
-
-    Raises:
-        OSError: If there is an issue reading the file.
+        str | None: The content of the file or None if reading failed.
     """
     try:
         text = unicode_data_file.read_text(encoding="utf-8")
@@ -164,7 +163,6 @@ def load_unicode_data_from_file(
             log=True,
             log_method="info",
         )
-        return text
     except OSError as e:
         message = f"Failed to read file {unicode_data_file}: {e}"
         echo(
@@ -176,6 +174,8 @@ def load_unicode_data_from_file(
             log_method="warning",
         )
         return None
+    else:
+        return text
 
 
 def parse_unicode_data(text: str, *, show: bool = True) -> dict[str, str]:
@@ -216,7 +216,7 @@ def parse_unicode_data(text: str, *, show: bool = True) -> dict[str, str]:
     return alt_names
 
 
-def load_alternate_names(*, show: bool = True) -> dict[str, str]:
+def load_alternate_names(*, show: bool = True, use_color: bool = True) -> dict[str, str]:
     """
     Load alternate names from UnicodeData.txt.
 
@@ -237,21 +237,17 @@ def load_alternate_names(*, show: bool = True) -> dict[str, str]:
     unicode_data_url = get_unicode_data_url()
     unicode_data_file = get_unicode_data_file()
 
-    # Validate URL and file path
     validation_message = validate_files_and_url(unicode_data_url, unicode_data_file, show=show)
     if validation_message:
         return {}
 
-    # Attempt to download if local file is missing
     if not unicode_data_file.is_file() and not download_and_cache_unicode_data(
-        unicode_data_url, unicode_data_file, show=show
+        unicode_data_url, unicode_data_file, show=show, use_color=use_color
     ):
         return {}
 
-    # Load data from file
     text = load_unicode_data_from_file(unicode_data_file, show=show)
     if not text:
         return {}
 
-    # Parse the Unicode data and return the alternate names
     return parse_unicode_data(text, show=show)

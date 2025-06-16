@@ -29,15 +29,25 @@ from charfinder.cli.utils_runner import (
     handle_cli_workflow,
     resolve_final_query,
 )
-from charfinder.constants import EXIT_SUCCESS
+from charfinder.constants import (
+    DEFAULT_FUZZY_ALGO,
+    DEFAULT_FUZZY_MATCH_MODE,
+    EXIT_SUCCESS,
+    FuzzyConfig,
+)
 from charfinder.validators import (
+    apply_fuzzy_defaults,
     validate_color_mode,
     validate_fuzzy_algo,
     validate_threshold,
-    apply_fuzzy_defaults
 )
 
 __all__ = ["main"]
+
+config = FuzzyConfig(
+    fuzzy_algo=DEFAULT_FUZZY_ALGO,
+    fuzzy_match_mode=DEFAULT_FUZZY_MATCH_MODE,
+)
 
 # ---------------------------------------------------------------------
 # Public API
@@ -77,7 +87,7 @@ def main() -> None:
     args.color = validate_color_mode(args.color)
 
     # Apply defaults for fuzzy behavior if --fuzzy is enabled (after validation)
-    apply_fuzzy_defaults(args)
+    apply_fuzzy_defaults(args, config)
 
     # Run the full CLI workflow
     exit_code = handle_cli_workflow(args=args, query_str=query_str, use_color=use_color)

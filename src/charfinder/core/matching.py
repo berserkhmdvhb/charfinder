@@ -49,7 +49,8 @@ def find_exact_matches(
 
     # Early exit for invalid name_cache
     if not isinstance(name_cache, dict):
-        raise TypeError("name_cache should be a dictionary of character names.")
+        message = "name_cache should be a dictionary of character names."
+        raise TypeError(message)
 
     matches: list[tuple[int, str, str, float | None]] = []
 
@@ -74,7 +75,8 @@ def find_exact_matches(
             if query_words <= name_words:
                 matches.append((code_point, char, original_name, None))
         else:
-            raise ValueError(f"Unknown exact match mode: {exact_match_mode}")
+            message = f"Unknown exact match mode: {exact_match_mode}"
+            raise ValueError(message)
 
     return matches
 
@@ -93,11 +95,13 @@ def find_fuzzy_matches(
 
     # Early exit for invalid threshold
     if context.threshold is not None and not (0.0 <= context.threshold <= 1.0):
-        raise ValueError("Threshold must be between 0.0 and 1.0.")
+        message = "Threshold must be between 0.0 and 1.0."
+        raise ValueError(message)
 
     # Validate name_cache structure
     if not isinstance(name_cache, dict):
-        raise TypeError("name_cache should be a dictionary of character names.")
+        message = "name_cache should be a dictionary of character names."
+        raise TypeError(message)
 
     matches: list[tuple[int, str, str, float | None]] = []
 

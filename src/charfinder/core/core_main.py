@@ -18,9 +18,9 @@ from charfinder.constants import (
     DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_HYBRID_AGG_FUNC,
     DEFAULT_THRESHOLD,
-    VALID_HYBRID_AGG_FUNCS,
     FuzzyAlgorithm,
-    MatchMode,
+    FuzzyMatchMode,
+    HybridAggFunc,
 )
 from charfinder.core.finders import find_chars as _find_chars_impl
 from charfinder.core.finders import find_chars_raw as _find_chars_raw_impl
@@ -52,9 +52,9 @@ def _build_config(
     verbose: bool,
     use_color: bool,
     fuzzy_algo: FuzzyAlgorithm,
-    fuzzy_match_mode: MatchMode,
+    fuzzy_match_mode: FuzzyMatchMode,
     exact_match_mode: ExactMatchMode,
-    agg_fn: VALID_HYBRID_AGG_FUNCS,
+    agg_fn: HybridAggFunc,
     prefer_fuzzy: bool,
 ) -> SearchConfig:
     """
@@ -67,7 +67,7 @@ def _build_config(
         verbose (bool): Whether to log progress.
         use_color (bool): Whether to colorize the output.
         fuzzy_algo (FuzzyAlgorithm): Fuzzy algorithm to use.
-        fuzzy_match_mode (MatchMode): The match mode for fuzzy scoring.
+        fuzzy_match_mode (FuzzyMatchMode): The match mode for fuzzy scoring.
         exact_match_mode (ExactMatchMode): Exact match mode to use.
         agg_fn (VALID_HYBRID_AGG_FUNCS): Aggregation function for hybrid matching.
         prefer_fuzzy (bool): Whether to prefer fuzzy matches.
@@ -104,9 +104,9 @@ def find_chars(
     verbose: bool = True,
     use_color: bool = True,
     fuzzy_algo: FuzzyAlgorithm = DEFAULT_FUZZY_ALGO,
-    fuzzy_match_mode: MatchMode = DEFAULT_FUZZY_MATCH_MODE,
+    fuzzy_match_mode: FuzzyMatchMode = DEFAULT_FUZZY_MATCH_MODE,
     exact_match_mode: ExactMatchMode = DEFAULT_EXACT_MATCH_MODE,
-    agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC,
+    agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
 ) -> Generator[str, None, None]:
     """
@@ -173,9 +173,9 @@ def find_chars_raw(
     verbose: bool = True,
     use_color: bool = True,
     fuzzy_algo: FuzzyAlgorithm = DEFAULT_FUZZY_ALGO,
-    fuzzy_match_mode: MatchMode = DEFAULT_FUZZY_MATCH_MODE,
+    fuzzy_match_mode: FuzzyMatchMode = DEFAULT_FUZZY_MATCH_MODE,
     exact_match_mode: ExactMatchMode = DEFAULT_EXACT_MATCH_MODE,
-    agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC,
+    agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
 ) -> list[CharMatch]:
     """
@@ -241,9 +241,9 @@ def find_chars_with_info(
     verbose: bool = True,
     use_color: bool = True,
     fuzzy_algo: FuzzyAlgorithm = DEFAULT_FUZZY_ALGO,
-    fuzzy_match_mode: MatchMode = DEFAULT_FUZZY_MATCH_MODE,
+    fuzzy_match_mode: FuzzyMatchMode = DEFAULT_FUZZY_MATCH_MODE,
     exact_match_mode: ExactMatchMode = DEFAULT_EXACT_MATCH_MODE,
-    agg_fn: VALID_HYBRID_AGG_FUNCS = DEFAULT_HYBRID_AGG_FUNC,
+    agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
 ) -> tuple[list[str], bool]:
     """
@@ -261,7 +261,7 @@ def find_chars_with_info(
         verbose (bool): Whether to show progress messages.
         use_color (bool): Whether to enable ANSI color formatting.
         fuzzy_algo (FuzzyAlgorithm): Algorithm used for fuzzy scoring.
-        fuzzy_match_mode (MatchMode): 'single' or 'hybrid' match scoring mode.
+        fuzzy_match_mode (FuzzyMatchMode): 'single' or 'hybrid' match scoring mode.
         exact_match_mode (ExactMatchMode): 'substring' or 'word-subset' for exact match logic.
         agg_fn (VALID_HYBRID_AGG_FUNCS): Aggregation function to use for hybrid fuzzy matching.
         prefer_fuzzy (bool): If True, include fuzzy matches even if exact matches are found.

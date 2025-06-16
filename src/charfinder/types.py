@@ -18,12 +18,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from typing_extensions import NotRequired, TypedDict
 
 if TYPE_CHECKING:
-    from charfinder.constants import VALID_HYBRID_AGG_FUNCS, FuzzyAlgorithm, MatchMode
+    from charfinder.constants import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
 
 # ---------------------------------------------------------------------
 # Callable type aliases
@@ -36,12 +36,15 @@ AlgorithmFn = Callable[[str, str], float]
 # ---------------------------------------------------------------------
 
 
+CLIResult = tuple[int, dict[str, Any] | None]
+
+
 @dataclass
 class FuzzyMatchContext:
     threshold: float
     fuzzy_algo: FuzzyAlgorithm
-    match_mode: MatchMode
-    agg_fn: VALID_HYBRID_AGG_FUNCS
+    match_mode: FuzzyMatchMode
+    agg_fn: HybridAggFunc
     verbose: bool
     use_color: bool
     query: str
@@ -55,9 +58,9 @@ class SearchConfig:
     verbose: bool
     use_color: bool
     fuzzy_algo: FuzzyAlgorithm
-    fuzzy_match_mode: MatchMode
+    fuzzy_match_mode: FuzzyMatchMode
     exact_match_mode: str
-    agg_fn: VALID_HYBRID_AGG_FUNCS
+    agg_fn: HybridAggFunc
     prefer_fuzzy: bool
 
 
