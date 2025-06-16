@@ -16,9 +16,9 @@ Functions:
 import json
 import sys
 from argparse import Namespace
+from dataclasses import dataclass
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
-from typing import Any
 
 from charfinder.constants import (
     EXIT_CANCELLED,
@@ -27,7 +27,7 @@ from charfinder.constants import (
     EXIT_SUCCESS,
 )
 from charfinder.core.core_main import find_chars_raw, find_chars_with_info
-from charfinder.types import CLIResult
+from charfinder.types import MatchDiagnosticsInfo, MatchResult
 from charfinder.utils.formatter import echo, format_result_line, should_use_color
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error, format_warning
@@ -46,6 +46,25 @@ __all__ = [
 ]
 
 logger = get_logger()
+
+# ---------------------------------------------------------------------
+# Dataclasses
+# ---------------------------------------------------------------------
+
+
+@dataclass
+class SearchParams:
+    query: str
+    fuzzy: bool
+    fuzzy_algo: str
+    fuzzy_match_mode: str
+    exact_match_mode: str
+    hybrid_agg_fn: str | None
+    prefer_fuzzy: bool
+    verbose: bool
+    use_color: bool
+    threshold: float
+
 
 # ---------------------------------------------------------------------
 # Metadata Helpers
@@ -89,7 +108,7 @@ def print_result_lines(lines: list[str], *, use_color: bool = False) -> None:
 # ---------------------------------------------------------------------
 
 
-def handle_find_chars(args: Namespace, query_str: str) -> CLIResult:
+def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
     """
     Main CLI execution handler.
 
@@ -101,49 +120,76 @@ def handle_find_chars(args: Namespace, query_str: str) -> CLIResult:
         query_str (str): Query string to search for.
 
     Returns:
-        CLIResult: Exit code and match info for diagnostics.
+        MatchResult: Exit code and diagnostics for the CLI run.
     """
     try:
-        # Validate and resolve settings
         color_mode, use_color, threshold = resolve_settings(args)
 
-        # Validate fuzzy algorithm and modes using validators
         args.fuzzy_algo = validate_fuzzy_algo(args.fuzzy_algo)
         args.fuzzy_match_mode = validate_fuzzy_match_mode(args.fuzzy_match_mode)
         args.exact_match_mode = validate_exact_match_mode(args.exact_match_mode)
 
-        # Check for an empty query
         if not query_str:
             return handle_empty_query(use_color=use_color)
 
-        # Handle the search logic based on output format
-        if args.format == "json":
-            return handle_output_json(query_str, args, use_color=use_color, threshold=threshold)
+        params = SearchParams(
+            query=query_str,
+            fuzzy=args.fuzzy,
+            fuzzy_algo=args.fuzzy_algo,
+            fuzzy_match_mode=args.fuzzy_match_mode,
+            exact_match_mode=args.exact_match_mode,
+            hybrid_agg_fn=args.hybrid_agg_fn,
+            prefer_fuzzy=args.prefer_fuzzy,
+            verbose=args.verbose,
+            use_color=use_color,
+            threshold=threshold,
+        )
 
-        # Handle the main fuzzy search and output
-        return handle_output_text(query_str, args, use_color=use_color, threshold=threshold)
+        return _run_query_and_return(params, output_format=args.format, args=args)
 
     except KeyboardInterrupt:
         return handle_keyboard_interrupt(verbose=args.verbose, use_color=use_color)
+
+
+def _run_query_and_return(
+    params: SearchParams,
+    *,
+    output_format: str,
+    args: Namespace,
+) -> MatchResult:
+    """
+    Internal helper to run the appropriate query and return structured output.
+
+    Args:
+        params (SearchParams): All resolved parameters for search execution.
+        output_format (str): Either "json" or "text".
+        args (Namespace): CLI args for additional context (e.g., for diagnostics).
+
+    Returns:
+        MatchResult: Exit code and diagnostics info.
+    """
+    if output_format == "json":
+        rows = find_chars_raw(**params.__dict__)
+        sys.stdout.write(json.dumps(rows, ensure_ascii=False, indent=2) + "\n")
+        sys.stdout.flush()
+        return build_match_result(args, fuzzy_used=params.fuzzy, exit_code=EXIT_SUCCESS)
+
+    results, fuzzy_used = find_chars_with_info(**params.__dict__)
+    if not results:
+        return MatchResult(exit_code=EXIT_NO_RESULTS, match_info=None)
+    print_result_lines(results, use_color=params.use_color)
+    return build_match_result(args, fuzzy_used=fuzzy_used, exit_code=EXIT_SUCCESS)
 
 
 def resolve_settings(args: Namespace) -> tuple[str, bool, float]:
     """
     Resolve runtime settings such as color mode and match threshold.
 
-    This function computes:
-    - The effective color mode from CLI arguments and environment.
-    - Whether to use colored output.
-    - The threshold to use for fuzzy matching.
-
     Args:
         args (Namespace): Parsed command-line arguments.
 
     Returns:
-        tuple[str, bool, float]: A tuple containing:
-            - color_mode (str): Effective color mode.
-            - use_color (bool): Whether to use colored output.
-            - threshold (float): Effective fuzzy match threshold.
+        tuple[str, bool, float]: Effective (color_mode, use_color, threshold)
     """
     color_mode = resolve_effective_color_mode(args.color)
     use_color = should_use_color(color_mode)
@@ -151,7 +197,7 @@ def resolve_settings(args: Namespace) -> tuple[str, bool, float]:
     return color_mode, use_color, threshold
 
 
-def handle_empty_query(*, use_color: bool) -> tuple[int, None]:
+def handle_empty_query(*, use_color: bool) -> MatchResult:
     """
     Handle the case when the user provides an empty query.
 
@@ -159,7 +205,7 @@ def handle_empty_query(*, use_color: bool) -> tuple[int, None]:
         use_color (bool): Whether to use colored formatting.
 
     Returns:
-        tuple[int, None]: An exit code indicating invalid usage, and no diagnostic info.
+        MatchResult: Exit code and no diagnostic info.
     """
     message = "Query must not be empty."
     echo(
@@ -169,87 +215,10 @@ def handle_empty_query(*, use_color: bool) -> tuple[int, None]:
         log=False,
         log_method="error",
     )
-    return EXIT_INVALID_USAGE, None
+    return MatchResult(exit_code=EXIT_INVALID_USAGE, match_info=None)
 
 
-def handle_output_json(
-    query_str: str,
-    args: Namespace,
-    *,
-    use_color: bool,
-    threshold: float,
-) -> tuple[int, dict[str, Any]]:
-    """
-    Handle the JSON output mode by invoking the raw search function and printing as JSON.
-
-    Args:
-        query_str (str): The search query string.
-        args (Namespace): Parsed CLI arguments.
-        use_color (bool): Whether to apply colored formatting (has no effect on JSON).
-        threshold (float): Fuzzy matching threshold.
-
-    Returns:
-        tuple[int, dict[str, Any]]: Exit code and match diagnostics dictionary.
-    """
-    rows = find_chars_raw(
-        query=query_str,
-        fuzzy=args.fuzzy,
-        threshold=threshold,
-        verbose=args.verbose,
-        use_color=use_color,
-        fuzzy_algo=args.fuzzy_algo,
-        fuzzy_match_mode=args.fuzzy_match_mode,
-        exact_match_mode=args.exact_match_mode,
-        agg_fn=args.hybrid_agg_fn,
-        prefer_fuzzy=args.prefer_fuzzy,
-    )
-
-    message = json.dumps(rows, ensure_ascii=False, indent=2)
-    sys.stdout.write(message + "\n")
-    sys.stdout.flush()
-    return EXIT_SUCCESS, {"fuzzy": args.fuzzy, "fuzzy_algo": args.fuzzy_algo}
-
-
-def handle_output_text(
-    query_str: str,
-    args: Namespace,
-    *,
-    use_color: bool,
-    threshold: float,
-) -> CLIResult:
-    """
-    Handle the text output mode: run search, format, and print to console.
-
-    Args:
-        query_str (str): The search query string.
-        args (Namespace): Parsed CLI arguments.
-        use_color (bool): Whether to use colored output.
-        threshold (float): Fuzzy matching threshold.
-
-    Returns:
-        tuple[int, dict[str, Any]]: Exit code and match diagnostics dictionary.
-    """
-    results, fuzzy_used = find_chars_with_info(
-        query=query_str,
-        fuzzy=args.fuzzy,
-        threshold=threshold,
-        verbose=args.verbose,
-        use_color=use_color,
-        fuzzy_algo=args.fuzzy_algo,
-        fuzzy_match_mode=args.fuzzy_match_mode,
-        exact_match_mode=args.exact_match_mode,
-        agg_fn=args.hybrid_agg_fn,
-        prefer_fuzzy=args.prefer_fuzzy,
-    )
-
-    if not results:
-        return EXIT_NO_RESULTS, None
-
-    print_result_lines(results, use_color=use_color)
-    return EXIT_SUCCESS, {"fuzzy_was_used": fuzzy_used}
-
-
-def handle_keyboard_interrupt(*, verbose: bool, use_color: bool) -> tuple[int, None]:
+def handle_keyboard_interrupt(*, verbose: bool, use_color: bool) -> MatchResult:
     """
     Handle a KeyboardInterrupt during CLI execution (e.g., Ctrl+C).
 
@@ -258,7 +227,7 @@ def handle_keyboard_interrupt(*, verbose: bool, use_color: bool) -> tuple[int, N
         use_color (bool): Whether to apply colored formatting.
 
     Returns:
-        tuple[int, None]: Exit code indicating user cancelled, and no diagnostics.
+        MatchResult: Exit code indicating cancellation and no diagnostics.
     """
     if verbose:
         message = "Search cancelled by user."
@@ -269,4 +238,29 @@ def handle_keyboard_interrupt(*, verbose: bool, use_color: bool) -> tuple[int, N
             log=False,
             log_method="warning",
         )
-    return EXIT_CANCELLED, None
+    return MatchResult(exit_code=EXIT_CANCELLED, match_info=None)
+
+
+def build_match_result(args: Namespace, *, fuzzy_used: bool, exit_code: int) -> MatchResult:
+    """
+    Build a MatchResult with structured diagnostics.
+
+    Args:
+        args (Namespace): CLI arguments with match settings.
+        fuzzy_used (bool): Whether fuzzy matching was executed.
+        exit_code (int): Exit code of the operation.
+
+    Returns:
+        MatchResult: Structured result including exit code and optional diagnostics.
+    """
+    match_info = MatchDiagnosticsInfo(
+        fuzzy=args.fuzzy,
+        fuzzy_was_used=fuzzy_used,
+        fuzzy_algo=args.fuzzy_algo,
+        fuzzy_match_mode=args.fuzzy_match_mode,
+        hybrid_agg_fn=args.hybrid_agg_fn if args.fuzzy_match_mode == "hybrid" else None,
+        prefer_fuzzy=args.prefer_fuzzy,
+        exact_match_mode=args.exact_match_mode,
+        threshold=args.threshold,
+    )
+    return MatchResult(exit_code=exit_code, match_info=match_info)

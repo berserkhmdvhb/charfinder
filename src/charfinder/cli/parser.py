@@ -52,10 +52,11 @@ from charfinder.constants import (
     VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
     VALID_FUZZY_MATCH_MODES,
+    VALID_HYBRID_AGG_FUNCS,
     VALID_OUTPUT_FORMATS,
 )
 from charfinder.validators import (
-    fuzzy_algo_validator,
+    ValidateFuzzyAlgoAction,
     threshold_range,
 )
 
@@ -182,7 +183,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         ARG_FUZZY_ALGO,
         dest="fuzzy_algo",
-        type=fuzzy_algo_validator,
+        action=ValidateFuzzyAlgoAction,
         default=DEFAULT_FUZZY_ALGO,
         help=(
             "Fuzzy matching algorithm (case-insensitive). "
@@ -199,7 +200,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         ARG_HYBRID_AGG_FN,
-        choices=["mean", "median", "max", "min"],
+        choices=VALID_HYBRID_AGG_FUNCS,
         default=DEFAULT_HYBRID_AGG_FUNC,
         help="Aggregation function for hybrid match mode (default: mean).",
     )

@@ -14,7 +14,7 @@ Functions:
 # ---------------------------------------------------------------------
 
 from charfinder.fuzzymatchlib import compute_similarity
-from charfinder.types import FuzzyMatchContext
+from charfinder.types import CharMatch, FuzzyMatchContext, MatchTuple
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_debug, format_info
@@ -168,3 +168,23 @@ def find_fuzzy_matches(
             matches.append((ord(char), char, names["original"], score))
 
     return matches
+
+
+def matchtuple_to_charmatch(mt: MatchTuple) -> CharMatch:
+    """
+    Converts a MatchTuple to a CharMatch dictionary for structured output.
+
+    Args:
+        mt (MatchTuple): A match record with optional fuzzy score.
+
+    Returns:
+        CharMatch: A dictionary formatted for JSON/text output.
+    """
+    result: CharMatch = {
+        "code": f"U+{mt.code:04X}",
+        "char": mt.char,
+        "name": f"{mt.name}  (\\u{mt.code:04x})",
+    }
+    if mt.score is not None:
+        result["score"] = round(mt.score, 3)
+    return result

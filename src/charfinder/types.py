@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, NamedTuple
 
 from typing_extensions import NotRequired, TypedDict
 
@@ -34,9 +34,6 @@ AlgorithmFn = Callable[[str, str], float]
 # ---------------------------------------------------------------------
 # Dataclass-based type definitions
 # ---------------------------------------------------------------------
-
-
-CLIResult = tuple[int, dict[str, Any] | None]
 
 
 @dataclass
@@ -74,6 +71,26 @@ class CharMatch(TypedDict):
     char: str
     name: str
     score: NotRequired[float]
+
+
+@dataclass
+@dataclass
+class MatchDiagnosticsInfo:
+    """
+    Dataclass for structured match diagnostics used in --debug CLI output.
+    """
+
+    fuzzy: bool
+    fuzzy_was_used: bool
+    fuzzy_algo: str
+    fuzzy_match_mode: str
+    prefer_fuzzy: bool
+    exact_match_mode: str
+    threshold: float
+    hybrid_agg_fn: str | None = None
+
+
+CLIResult = tuple[int, dict[str, Any] | MatchDiagnosticsInfo | None]
 
 
 # ---------------------------------------------------------------------
@@ -135,3 +152,19 @@ class UnicodeDataLoader(Protocol):
     """
 
     def __call__(self, file_path: Path) -> dict[str, dict[str, str]]: ...
+
+
+@dataclass
+class MatchResult:
+    """
+    Represents the outcome of a character search, including the exit code and optional diagnostics.
+    """
+
+    exit_code: int
+    match_info: MatchDiagnosticsInfo | None = None
+
+class MatchTuple(NamedTuple):
+    code: int
+    char: str
+    name: str
+    score: float | None

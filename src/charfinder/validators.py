@@ -1,37 +1,38 @@
 """
-Centralized Validators for CharFinder.
+Validation utilities for CharFinder configuration and CLI input.
 
-This module provides shared validation functions that are used by both
-the core and CLI modules of CharFinder. The validators ensure that input
-values such as fuzzy algorithms, thresholds, match modes, and color modes
-are validated consistently across the project.
-
-Key Features:
-- Centralized validation for core configuration options used across the project.
-- Validation for fuzzy algorithms, thresholds, color modes, and match modes.
-- Type guards for better type safety.
-- Use of a dataclass to organize fuzzy configuration settings.
-- Custom argparse actions for CLI validation.
+Provides centralized validation logic shared by both core and CLI modules. Ensures that
+all user-provided inputs—such as fuzzy algorithm names, thresholds, color modes, and
+match modes—are consistently interpreted, validated, and normalized across the project.
 
 Functions:
-- threshold_range(value: str): Validates and converts the threshold value.
-- fuzzy_algo_validator(value: str): Validates and normalizes the fuzzy algorithm.
-- validate_fuzzy_algo(fuzzy_algo: str): Ensures the fuzzy algorithm is valid.
-- validate_threshold(threshold: float | None): Validates the threshold value.
-- validate_color_mode(color_mode: str | None): Validates the color mode.
-- validate_fuzzy_match_mode(fuzzy_match_mode: str): Validates the fuzzy match mode.
-- validate_exact_match_mode(exact_match_mode: str): Validates the exact match mode.
-- resolve_effective_threshold(cli_threshold: float | None, use_color: bool):
-    Resolves the effective threshold from CLI, environment, or default.
-- resolve_effective_color_mode(cli_color_mode: str | None):
-    Resolves the effective color mode from CLI, environment, or default.
-- apply_fuzzy_defaults(args: Namespace, config: FuzzyConfig):
-    Applies default fuzzy settings if necessary.
-- ValidateFuzzyAlgoAction: Custom argparse action for validating fuzzy algorithm.
+    validate_fuzzy_algo(): Normalize and validate fuzzy algorithm names.
+    validate_threshold(): Ensure numeric threshold is within accepted bounds.
+    validate_color_mode(): Validate and cast color display mode.
+    validate_fuzzy_match_mode(): Check validity of fuzzy match mode.
+    validate_exact_match_mode(): Check validity of exact match mode.
+    resolve_effective_threshold(): Resolve CLI, environment, or default threshold.
+    resolve_effective_color_mode(): Resolve CLI, environment, or default color mode.
+    apply_fuzzy_defaults(): Apply default fuzzy config when CLI args are partial.
 
-This module centralizes the validation logic for CharFinder, ensuring that all
-configuration values are validated in a consistent and maintainable way across
-both the core logic and CLI components of the project.
+Type guards:
+    is_supported_fuzzy_algo(): Check whether an algorithm is supported.
+
+Custom argparse:
+    ValidateFuzzyAlgoAction: Argparse Action class to validate --fuzzy-algo input.
+
+Cache and Unicode data validators:
+    validate_dict_str_keys(): Ensure cache dictionary structure is valid.
+    validate_cache_rebuild_flag(): Enforce boolean flag integrity.
+    validate_normalized_name(): Ensure a normalized name is valid.
+    validate_cache_file_path(): Validate existence of a cache file path.
+    validate_unicode_data_url(): Ensure Unicode data source URL is well-formed.
+    validate_unicode_data_file(): Check that a Unicode data file exists and is readable.
+
+Constants:
+    ERROR_INVALID_THRESHOLD, ERROR_INVALID_NAME, ERROR_INVALID_CACHE_PATH:
+        Standardized error messages.
+    ENV_MATCH_THRESHOLD, ENV_COLOR_MODE: Environment variable names for config overrides.
 """
 
 import os
@@ -45,6 +46,8 @@ from charfinder.constants import (
     DEFAULT_COLOR_MODE,
     DEFAULT_FUZZY_ALGO,
     DEFAULT_THRESHOLD,
+    ENV_COLOR_MODE,
+    ENV_MATCH_THRESHOLD,
     FUZZY_ALGO_ALIASES,
     VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
@@ -59,19 +62,76 @@ from charfinder.settings import get_cache_file
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_warning
 
-ERROR_INVALID_THRESHOLD = "Invalied Threshold Used."
 # ------------------------------------------------------------------------
-# Type Guard for Fuzzy Algorithm Validation
+# Error Messages
+# ------------------------------------------------------------------------
+
+ERROR_INVALID_THRESHOLD = "Invalid threshold used."
+ERROR_INVALID_CACHE_PATH = "Cache file path does not exist"
+ERROR_INVALID_NAME = "Normalized name must be a non-empty string"
+ERROR_EXPECTED_BOOL = "Expected a boolean value"
+ERROR_EXPECTED_DICT = "Expected 'name_cache' to be a dictionary."
+ERROR_EXPECTED_DICT_KEY = "Dictionary key must be a string"
+ERROR_EXPECTED_DICT_VAL = "Value must be a dictionary"
+ERROR_EXPECTED_PATH = "Expected 'cache_file_path' to be a Path object"
+
+# ------------------------------------------------------------------------
+# Fuzzy Algorithm Validators
 # ------------------------------------------------------------------------
 
 
-def is_valid_fuzzy_algo(value: str) -> bool:
-    """Type guard to check if the algorithm is valid."""
+def is_supported_fuzzy_algo(value: str) -> bool:
+    """Check if a fuzzy algorithm name is supported."""
     return value in FUZZY_ALGO_ALIASES
 
 
+def validate_fuzzy_algo(fuzzy_algo: str) -> FuzzyAlgorithm:
+    """
+    Validate and normalize a fuzzy algorithm name.
+
+    Args:
+        fuzzy_algo (str): The fuzzy algorithm name (e.g., 'levenshtein', 'simple').
+
+    Returns:
+        FuzzyAlgorithm: The validated and normalized fuzzy algorithm.
+    """
+    fuzzy_algo = fuzzy_algo.lower()
+    if not is_supported_fuzzy_algo(fuzzy_algo):
+        return DEFAULT_FUZZY_ALGO
+    return cast("FuzzyAlgorithm", FUZZY_ALGO_ALIASES[fuzzy_algo])
+
+
+class ValidateFuzzyAlgoAction(Action):
+    def __call__(
+        self,
+        _: ArgumentParser,
+        namespace: Namespace,
+        values: str | Sequence[str] | None,
+        __: str | None = None,
+    ) -> None:
+        target = (
+            values[0] if isinstance(values, Sequence) and not isinstance(values, str) else values
+        )
+        validated_value = validate_fuzzy_algo(cast("str", target))
+        setattr(namespace, self.dest, validated_value)
+
+
+def apply_fuzzy_defaults(args: Namespace, config: FuzzyConfig) -> None:
+    """Apply default fuzzy match algorithm and mode if --fuzzy is set.
+
+    Args:
+        args (Namespace): Parsed CLI arguments.
+        config (FuzzyConfig): Configuration object for fuzzy settings.
+    """
+    if args.fuzzy:
+        if not getattr(args, "fuzzy_algo", None):
+            args.fuzzy_algo = config.fuzzy_algo
+        if not getattr(args, "fuzzy_match_mode", None):
+            args.fuzzy_match_mode = config.fuzzy_match_mode
+
+
 # ------------------------------------------------------------------------
-# Validators
+# Threshold Validators
 # ------------------------------------------------------------------------
 
 
@@ -99,38 +159,6 @@ def threshold_range(value: str) -> float:
     return fvalue
 
 
-def fuzzy_algo_validator(value: str) -> FuzzyAlgorithm:
-    """
-    Validate and normalize the fuzzy algorithm name (case-insensitive).
-
-    Args:
-        value (str): Input from CLI (e.g., 'Levenshtein').
-
-    Returns:
-        FuzzyAlgorithm: Valid internal algorithm name string.
-
-    Raises:
-        ValueError: If the name is invalid.
-    """
-    return validate_fuzzy_algo(value)
-
-
-def validate_fuzzy_algo(fuzzy_algo: str) -> FuzzyAlgorithm:
-    """
-    Validate and normalize a fuzzy algorithm name.
-
-    Args:
-        fuzzy_algo (str): The fuzzy algorithm name (e.g., 'levenshtein', 'simple').
-
-    Returns:
-        FuzzyAlgorithm: The validated and normalized fuzzy algorithm.
-    """
-    fuzzy_algo = fuzzy_algo.lower()
-    if not is_valid_fuzzy_algo(fuzzy_algo):
-        return DEFAULT_FUZZY_ALGO
-    return cast("FuzzyAlgorithm", FUZZY_ALGO_ALIASES[fuzzy_algo])
-
-
 def validate_threshold(threshold: float | None) -> float:
     """
     Validates and returns the threshold value. Ensures it's within the valid range [0.0, 1.0].
@@ -142,12 +170,51 @@ def validate_threshold(threshold: float | None) -> float:
         float: The validated threshold value.
     """
     if threshold is None:
-        return DEFAULT_THRESHOLD  # Use the default threshold from constants.py
+        return DEFAULT_THRESHOLD
 
     if threshold < 0.0 or threshold > 1.0:
         raise ValueError(ERROR_INVALID_THRESHOLD)
 
     return threshold
+
+
+def resolve_effective_threshold(cli_threshold: float | None, *, use_color: bool = True) -> float:
+    """
+    Resolve threshold from CLI arg, env var, or default.
+
+    Args:
+        cli_threshold (float | None): Threshold value from CLI argument, or None.
+        use_color (bool): Whether to apply ANSI formatting when logging warnings.
+
+    Returns:
+        float: The resolved threshold value.
+    """
+    if cli_threshold is not None:
+        return validate_threshold(cli_threshold)
+
+    env_value = os.getenv(ENV_MATCH_THRESHOLD)
+    if env_value is not None:
+        try:
+            return validate_threshold(float(env_value))
+        except ValueError:
+            message = f"Invalid {ENV_MATCH_THRESHOLD} env var: {env_value!r}. Using default."
+            echo(
+                message,
+                style=lambda m: format_warning(m, use_color=use_color),
+                show=True,
+                log=True,
+                log_method="warning",
+            )
+    return DEFAULT_THRESHOLD
+
+
+# ------------------------------------------------------------------------
+# Color Mode & Match Mode Validators
+# ------------------------------------------------------------------------
+
+
+def cast_color_mode(value: str) -> ColorMode:
+    return cast("ColorMode", value)
 
 
 def validate_color_mode(color_mode: str | None) -> ColorMode:
@@ -160,76 +227,9 @@ def validate_color_mode(color_mode: str | None) -> ColorMode:
     Returns:
         ColorMode: A valid color mode literal.
     """
-    from typing import cast
-
     if color_mode in VALID_COLOR_MODES:
-        return cast("ColorMode", color_mode)
+        return cast_color_mode(color_mode)
     return DEFAULT_COLOR_MODE
-
-
-def validate_fuzzy_match_mode(mode: str) -> FuzzyMatchMode:
-    """
-    Validates the fuzzy match mode. It must be either "single" or "hybrid".
-
-    Args:
-        mode (str): The fuzzy match mode to validate.
-
-    Returns:
-        str: A valid fuzzy match mode ("single" or "hybrid").
-    """
-    mode = mode.lower()
-    if mode not in VALID_FUZZY_MATCH_MODES:
-        message = f"Invalid fuzzy match mode: {mode}. Valid options are: {VALID_FUZZY_MATCH_MODES}"
-        raise ValueError(message)
-    return cast("FuzzyMatchMode", mode)
-
-
-def validate_exact_match_mode(exact_match_mode: str) -> ExactMatchMode:
-    """
-    Validates the exact match mode. It must be either "substring" or "word-subset".
-
-    Args:
-        exact_match_mode (str): The exact match mode to validate.
-
-    Returns:
-        ExactMatchMode: A valid exact match mode ("substring" or "word-subset").
-    """
-    if exact_match_mode not in VALID_EXACT_MATCH_MODES:
-        message = (
-            f"Invalid exact match mode: {exact_match_mode}. "
-            f"Valid options are: {VALID_EXACT_MATCH_MODES}"
-        )
-        raise ValueError(message)
-    return cast("ExactMatchMode", exact_match_mode)
-
-
-def resolve_effective_threshold(cli_threshold: float | None, *, use_color: bool = True) -> float:
-    """Resolve threshold from CLI arg, env var, or default.
-
-    Args:
-        cli_threshold (float | None): Threshold value from CLI argument, or None.
-        use_color (bool): Whether to apply ANSI formatting when logging warnings.
-
-    Returns:
-        float: The resolved threshold value.
-    """
-    if cli_threshold is not None:
-        return validate_threshold(cli_threshold)
-
-    env_value = os.getenv("CHARFINDER_MATCH_THRESHOLD")
-    if env_value is not None:
-        try:
-            return validate_threshold(float(env_value))
-        except ValueError:
-            message = f"Invalid CHARFINDER_MATCH_THRESHOLD env var: {env_value!r}. Using default."
-            echo(
-                message,
-                style=lambda m: format_warning(m, use_color=use_color),
-                show=True,
-                log=True,
-                log_method="warning",
-            )
-    return DEFAULT_THRESHOLD  # Use the default threshold from constants.py
 
 
 def resolve_effective_color_mode(cli_color_mode: str | None) -> ColorMode:
@@ -245,51 +245,51 @@ def resolve_effective_color_mode(cli_color_mode: str | None) -> ColorMode:
     if cli_color_mode is not None:
         return validate_color_mode(cli_color_mode)
 
-    env_value = os.getenv("CHARFINDER_COLOR_MODE")
+    env_value = os.getenv(ENV_COLOR_MODE)
     if env_value in VALID_COLOR_MODES:
-        from typing import cast
-
-        return cast("ColorMode", env_value)
+        return cast_color_mode(env_value)
 
     return DEFAULT_COLOR_MODE
 
 
-def apply_fuzzy_defaults(args: Namespace, config: FuzzyConfig) -> None:
-    """Apply default fuzzy match algorithm and mode if --fuzzy is set.
+def validate_fuzzy_match_mode(mode: str) -> FuzzyMatchMode:
+    """
+    Validates the fuzzy match mode. It must be either "single" or "hybrid".
 
     Args:
-        args (Namespace): Parsed CLI arguments.
-        config (FuzzyConfig): Configuration object for fuzzy settings.
+        mode (str): The fuzzy match mode to validate.
+
+    Returns:
+        FuzzyMatchMode: A valid fuzzy match mode ("single" or "hybrid").
     """
-    if args.fuzzy:
-        if not getattr(args, "fuzzy_algo", None):
-            args.fuzzy_algo = config.fuzzy_algo
-        if not getattr(args, "fuzzy_match_mode", None):
-            args.fuzzy_match_mode = config.fuzzy_match_mode
+    mode = mode.lower()
+    if mode not in VALID_FUZZY_MATCH_MODES:
+        message = f"Invalid fuzzy match mode: {mode}. alid options are: {VALID_FUZZY_MATCH_MODES}"
+        raise ValueError(message)
+    return cast("FuzzyMatchMode", mode)
 
 
-# ------------------------------------------------------------------------
-# Custom argparse Action for Fuzzy Algorithm Validation
-# ------------------------------------------------------------------------
+def validate_exact_match_mode(exact_match_mode: str) -> ExactMatchMode:
+    """
+    Validates the exact match mode. It must be either "substring" or "word-subset".
 
+    Args:
+        exact_match_mode (str): The exact match mode to validate.
 
-class ValidateFuzzyAlgoAction(Action):
-    def __call__(
-        self,
-        _: ArgumentParser,
-        namespace: Namespace,
-        values: str | Sequence[str] | None,
-        __: str | None = None,
-    ) -> None:
-        target = (
-            values[0] if isinstance(values, Sequence) and not isinstance(values, str) else values
+    Returns:
+        ExactMatchMode: A valid exact match mode.
+    """
+    if exact_match_mode not in VALID_EXACT_MATCH_MODES:
+        message = (
+            f"Invalid exact match mode: {exact_match_mode}. "
+            f"Valid options are: {VALID_EXACT_MATCH_MODES}"
         )
-        validated_value = validate_fuzzy_algo(cast("str", target))
-        setattr(namespace, self.dest, validated_value)
+        raise ValueError(message)
+    return cast("ExactMatchMode", exact_match_mode)
 
 
 # ------------------------------------------------------------------------
-# Caching Validators
+# Cache Validators
 # ------------------------------------------------------------------------
 
 
@@ -302,20 +302,16 @@ def validate_dict_str_keys(name_cache: dict[str, dict[str, str]]) -> dict[str, d
 
     Returns:
         dict: The validated dictionary.
-
-    Raises:
-        ValueError: If the dictionary contains invalid keys or values.
     """
     if not isinstance(name_cache, dict):
-        message = "Expected 'name_cache' to be a dictionary."
-        raise TypeError(message)
+        raise TypeError(ERROR_EXPECTED_DICT)
 
     for key, value in name_cache.items():
         if not isinstance(key, str):
-            message = f"Dictionary key must be a string. Found key of type {type(key)}."
+            message = f"{ERROR_EXPECTED_DICT_KEY}. Found key of type {type(key)}."
             raise TypeError(message)
         if not isinstance(value, dict):
-            message = f"Value for key '{key}' must be a dictionary."
+            message = f"{ERROR_EXPECTED_DICT_VAL} for key '{key}'."
             raise TypeError(message)
 
     return name_cache
@@ -330,12 +326,9 @@ def validate_cache_rebuild_flag(*, force_rebuild: bool) -> bool:
 
     Returns:
         bool: The validated flag value.
-
-    Raises:
-        ValueError: If the value is not a boolean.
     """
     if not isinstance(force_rebuild, bool):
-        message = f"Expected 'force_rebuild' to be a boolean, but got {type(force_rebuild)}."
+        message = f"{ERROR_EXPECTED_BOOL}, got {type(force_rebuild)}."
         raise TypeError(message)
     return force_rebuild
 
@@ -349,18 +342,15 @@ def validate_normalized_name(name: str) -> str:
 
     Returns:
         str: The validated normalized name.
-
-    Raises:
-        ValueError: If the name is empty or improperly normalized.
     """
     if not isinstance(name, str) or not name.strip():
-        message = f"Normalized name must be a non-empty string, but got '{name}'."
+        message = f"{ERROR_INVALID_NAME}, got {name!r}."
         raise ValueError(message)
     return name
 
 
 # ------------------------------------------------------------------------
-# Unicode Data Retrieval Validators
+# Unicode Data Validators
 # ------------------------------------------------------------------------
 
 
@@ -382,21 +372,16 @@ def validate_cache_file_path(cache_file_path: Path | None) -> Path:
 
     Returns:
         Path: The validated file path.
-
-    Raises:
-        ValueError: If the path is not a valid `Path` or does not exist.
     """
     if cache_file_path is None:
-        cache_file_path = get_cache_file()  # Default to standard cache file if None
+        cache_file_path = get_cache_file()
 
     if not isinstance(cache_file_path, Path):
-        message = (
-            f"Expected 'cache_file_path' to be a Path object, but got {type(cache_file_path)}."
-        )
+        message = f"{ERROR_EXPECTED_PATH}, got {type(cache_file_path)}"
         raise TypeError(message)
 
     if not cache_file_path.exists():
-        message = f"Cache file path does not exist: {cache_file_path}"
+        message = f"{ERROR_INVALID_CACHE_PATH}: {cache_file_path}"
         raise ValueError(message)
 
     return cache_file_path

@@ -1,21 +1,13 @@
 """Utilities for orchestrating the CharFinder CLI runner.
 
 This module contains reusable utility functions used by the CLI main entry point
-to organize logic such as:
-
-- Determining the final query string (from positional or optional args).
-- Managing environment variables and debug mode.
-- Validating and normalizing fuzzy algorithm input.
-- Displaying diagnostic banners and settings-related info.
-- Executing the main character matching handler.
-- Handling CLI completion, success, and exception exits.
-
-All functions are used by `cli_main.py` to modularize and streamline execution.
+for tasks like resolving the final query string, managing environment flags,
+and invoking the main search handler with diagnostics support.
 
 Functions:
     resolve_final_query(): Determine the query string from CLI args.
     auto_enable_debug(): Enable debug if CHARFINDER_DEBUG_ENV_LOAD is set.
-    handle_cli_workflow(): Execute main CLI logic and handler.
+    handle_cli_workflow(): Execute main CLI logic and diagnostics.
 """
 
 # ---------------------------------------------------------------------
@@ -27,6 +19,7 @@ import os
 import sys
 import traceback
 from argparse import Namespace
+from typing import TYPE_CHECKING
 
 from charfinder.cli.diagnostics import print_debug_diagnostics
 from charfinder.cli.handlers import (
@@ -36,8 +29,10 @@ from charfinder.cli.handlers import (
 from charfinder.constants import (
     EXIT_CANCELLED,
     EXIT_ERROR,
+    FuzzyConfig,
 )
 from charfinder.settings import get_environment, is_prod, load_settings
+from charfinder.types import MatchResult
 from charfinder.utils.formatter import echo, should_use_color
 from charfinder.utils.logger_setup import get_logger, setup_logging, teardown_logger
 from charfinder.utils.logger_styles import (
@@ -48,8 +43,13 @@ from charfinder.utils.logger_styles import (
 )
 from charfinder.validators import resolve_effective_color_mode
 
+if TYPE_CHECKING:
+    from charfinder.types import MatchResult
+
+
 __all__ = [
     "auto_enable_debug",
+    "build_fuzzy_config_from_args",
     "handle_cli_workflow",
     "resolve_final_query",
 ]
@@ -98,6 +98,13 @@ def auto_enable_debug(args: Namespace) -> None:
 # ---------------------------------------------------------------------
 
 
+def build_fuzzy_config_from_args(args: Namespace) -> FuzzyConfig:
+    return FuzzyConfig(
+        fuzzy_algo=args.fuzzy_algo,
+        fuzzy_match_mode=args.fuzzy_match_mode,
+    )
+
+
 def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> int:
     """
     Perform the main CLI workflow, including logging setup, environment loading,
@@ -117,7 +124,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
     # Load .env settings
     load_settings(verbose=args.verbose, debug=args.debug)
 
-    # Resolve settings and color mode (new)
+    # Resolve settings and color mode
     color_mode = resolve_effective_color_mode(args.color)
     use_color = should_use_color(color_mode)
 
@@ -133,7 +140,6 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
     logger = get_logger()
 
     try:
-        # Echo environment info
         echo(
             f"Using environment: {get_environment()}",
             style=lambda m: format_settings(m, use_color=use_color),
@@ -142,7 +148,6 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
             log_method="info",
         )
 
-        # Prod warning
         if is_prod():
             echo(
                 "You are running in PROD environment!",
@@ -153,7 +158,6 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
                 log_method="warning",
             )
 
-        # CharFinder CLI start
         echo(
             f"CharFinder {get_version()} CLI started",
             style=lambda m: format_info(m, use_color=use_color),
@@ -162,14 +166,12 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
             log_method="info",
         )
 
-        # Execute the main search handler
-        exit_code, match_info = handle_find_chars(args, query_str)
+        result: MatchResult = handle_find_chars(args, query_str)
 
-        # Print diagnostics if debug is enabled
         if args.debug:
             print_debug_diagnostics(
                 args=args,
-                match_info=match_info,
+                match_info=result.match_info,
                 use_color=use_color,
                 show=True,
             )
@@ -217,7 +219,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
         return EXIT_ERROR
 
     else:
-        return exit_code
+        return result.exit_code
 
     finally:
         teardown_logger(logger)

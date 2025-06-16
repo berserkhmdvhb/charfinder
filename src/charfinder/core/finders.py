@@ -18,12 +18,11 @@ Functions:
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import NamedTuple
 
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import BuildCacheOptions, build_name_cache
 from charfinder.fuzzymatchlib import resolve_algorithm_name
-from charfinder.types import CharMatch, FuzzyMatchContext, SearchConfig
+from charfinder.types import CharMatch, FuzzyMatchContext, SearchConfig, MatchTuple
 from charfinder.utils.formatter import echo, format_result_header, format_result_row
 from charfinder.utils.logger_styles import format_info
 from charfinder.utils.normalizer import normalize
@@ -49,11 +48,6 @@ MSG_EXACT_AND_FUZZY = "Exact match found — also running fuzzy match (prefer-fu
 # ---------------------------------------------------------------------
 
 
-class MatchTuple(NamedTuple):
-    code: int
-    char: str
-    name: str
-    score: float | None
 
 
 # ---------------------------------------------------------------------
