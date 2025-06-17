@@ -29,13 +29,26 @@ from typing import Literal
 FuzzyAlgorithm = Literal[
     "sequencematcher",
     "rapidfuzz",
-    "levenshtein",
+    "levenshtein_ratio",
     "simple_ratio",
     "normalized_ratio",
-    "levenshtein_ratio",
     "token_sort_ratio",
     "hybrid_score",
 ]
+
+FUZZY_ALGO_ALIASES: dict[str, FuzzyAlgorithm] = {
+    "lev": "levenshtein_ratio",
+    "levenshtein": "levenshtein_ratio",
+    "simple": "simple_ratio",
+    "normalized": "normalized_ratio",
+    "tsr": "token_sort_ratio",
+    "token_sort": "token_sort_ratio",
+    "token_sort_ratio": "token_sort_ratio",
+    "hybrid": "hybrid_score",
+    "sequencematcher": "sequencematcher",
+    "rapidfuzz": "rapidfuzz",
+}
+VALID_FUZZY_ALGO_NAMES: set[str] = set(FUZZY_ALGO_ALIASES.values())
 
 ExactMatchMode = Literal["substring", "word-subset"]
 FuzzyMatchMode = Literal["single", "hybrid"]
@@ -70,19 +83,6 @@ LOG_METHODS = SimpleNamespace(
     ERROR="error",
     EXCEPTION="exception",
 )
-
-FUZZY_ALGO_ALIASES: dict[str, str] = {
-    "token_sort_ratio": "token_sort_ratio",
-    "token_sort": "token_sort_ratio",
-    "tsr": "token_sort_ratio",
-    "levenshtein": "levenshtein_ratio",
-    "lev": "levenshtein_ratio",
-    "simple": "simple_ratio",
-    "normalized": "normalized_ratio",
-    "hybrid": "hybrid_score",
-    "sequencematcher": "sequencematcher",
-    "rapidfuzz": "rapidfuzz",
-}
 
 # ---------------------------------------------------------------------
 # Exit Codes
@@ -147,19 +147,6 @@ ENV_DEBUG_ENV_LOAD = "CHARFINDER_DEBUG_ENV_LOAD"
 ENV_MATCH_THRESHOLD = "CHARFINDER_MATCH_THRESHOLD"
 ENV_COLOR_MODE = "CHARFINDER_COLOR_MODE"
 
-# ---------------------------------------------------------------------
-# Supported Fuzzy Algorithms
-# ---------------------------------------------------------------------
-
-SUPPORTED_ALGORITHMS: dict[str, FuzzyAlgorithm] = {
-    "sequencematcher": "sequencematcher",
-    "rapidfuzz": "rapidfuzz",
-    "levenshtein": "levenshtein",
-    "simple_ratio": "simple_ratio",
-    "normalized_ratio": "normalized_ratio",
-    "token_sort_ratio": "token_sort_ratio",
-    "hybrid_score": "hybrid_score",
-}
 
 # ------------------------------------------------------------------------
 # Dataclasses for Fuzzy Configuration

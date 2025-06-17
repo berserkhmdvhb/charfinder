@@ -56,7 +56,6 @@ from charfinder.constants import (
     ENV_COLOR_MODE,
     ENV_MATCH_THRESHOLD,
     FUZZY_ALGO_ALIASES,
-    SUPPORTED_ALGORITHMS,
     VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
     VALID_FUZZY_MATCH_MODES,
@@ -95,7 +94,7 @@ ERROR_INVALID_AGG_FUNC = (
     "Expected one of: {', '.join(sorted(VALID_HYBRID_AGG_FUNCS))}."
 )
 
-
+ERROR_UNKNOWN_ALGO = "Unknown or unsupported fuzzy algorithm."
 # ------------------------------------------------------------------------
 # Fuzzy Algorithm Validators
 # ------------------------------------------------------------------------
@@ -118,9 +117,9 @@ def _normalize_and_validate_fuzzy_algo(fuzzy_algo: str) -> FuzzyAlgorithm:
     """
     Normalize and validate the given fuzzy algorithm name.
 
-    Converts dashes to underscores and lowercases the input. Accepts both
-    alias names and canonical values defined in FUZZY_ALGO_ALIASES and
-    SUPPORTED_ALGORITHMS.
+    Converts dashes to underscores and lowercases the input.
+    Resolves aliases defined in FUZZY_ALGO_ALIASES and ensures
+    the final result is registered in FUZZY_ALGORITHM_REGISTRY.
 
     Args:
         fuzzy_algo (str): The fuzzy algorithm name (alias or canonical).
@@ -131,19 +130,16 @@ def _normalize_and_validate_fuzzy_algo(fuzzy_algo: str) -> FuzzyAlgorithm:
     Raises:
         ValueError: If the algorithm is not supported.
     """
+    from charfinder.fuzzymatchlib import FUZZY_ALGORITHM_REGISTRY  # Lazy import
+
     normalized = fuzzy_algo.strip().lower().replace("-", "_")
+    resolved = FUZZY_ALGO_ALIASES.get(normalized, normalized)
 
-    # Resolve from alias if available
-    if normalized in FUZZY_ALGO_ALIASES:
-        return cast("FuzzyAlgorithm", FUZZY_ALGO_ALIASES[normalized])
+    if resolved in FUZZY_ALGORITHM_REGISTRY:
+        return resolved  # type: ignore[return-value]
 
-    # Accept canonical names directly
-    if normalized in SUPPORTED_ALGORITHMS:
-        return cast("FuzzyAlgorithm", normalized)
-
-    # Raise detailed error with all valid options
-    valid_inputs = sorted(set(FUZZY_ALGO_ALIASES) | set(SUPPORTED_ALGORITHMS))
-    message = f"Invalid fuzzy algorithm: {fuzzy_algo}. Supported values: {', '.join(valid_inputs)}"
+    valid_inputs = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
+    message = f"{ERROR_UNKNOWN_ALGO} Supported values: {', '.join(valid_inputs)}"
     raise ValueError(message)
 
 

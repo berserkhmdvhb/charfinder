@@ -12,7 +12,7 @@ Uses:
 
 Functions:
     compute_similarity(): Main function to compute similarity between two strings.
-    In addition to SUPPORTED_ALGORITHMS, it supports the following built-in algorithms:
+    In addition to FUZZY_ALGORITHM_REGISTRY, it supports the following built-in algorithms:
         - 'sequencematcher' (uses difflib.SequenceMatcher)
         - 'rapidfuzz' (uses rapidfuzz.fuzz.ratio)
         - 'levenshtein' (uses Levenshtein.ratio)
@@ -27,7 +27,7 @@ Internal algorithms:
         Combine multiple algorithm scores using an aggregation function or weighted mean.
 
 Constants:
-    SUPPORTED_ALGORITHMS: Dict of algorithm names to implementations.
+    FUZZY_ALGORITHM_REGISTRY: Dict of algorithm names to implementations.
     VALID_FUZZY_MATCH_MODES: Allowed match modes ("single", "hybrid").
     VALID_HYBRID_AGG_FUNCS: Allowed hybrid aggregation functions ("mean", "median", "max", "min").
 """
@@ -189,7 +189,7 @@ def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC
 # Supported Algorithms
 # ---------------------------------------------------------------------
 
-SUPPORTED_ALGORITHMS: dict[FuzzyAlgorithm, AlgorithmFn] = {
+FUZZY_ALGORITHM_REGISTRY: dict[FuzzyAlgorithm, AlgorithmFn] = {
     "simple_ratio": simple_ratio,
     "normalized_ratio": normalized_ratio,
     "levenshtein_ratio": levenshtein_ratio,
@@ -200,25 +200,26 @@ SUPPORTED_ALGORITHMS: dict[FuzzyAlgorithm, AlgorithmFn] = {
 
 def resolve_algorithm_name(name: str) -> FuzzyAlgorithm:
     """
-    Normalize user-specified algorithm name to internal name.
+    Normalize and resolve a user-specified fuzzy algorithm name to its internal canonical name.
 
     Args:
-        name: Algorithm name from user input.
+        name (str): Algorithm name from user input.
 
     Returns:
-        FuzzyAlgorithm: Validated internal algorithm name.
+        FuzzyAlgorithm: Validated canonical algorithm name.
 
     Raises:
-        ValueError: If the name is unknown.
+        ValueError: If the name is unknown or unsupported.
     """
-    folded = name.casefold()
+    normalized = name.strip().lower().replace("-", "_")
 
-    if folded in SUPPORTED_ALGORITHMS:
-        return cast("FuzzyAlgorithm", folded)
-    if folded in FUZZY_ALGO_ALIASES:
-        return cast("FuzzyAlgorithm", FUZZY_ALGO_ALIASES[folded])
+    if normalized in FUZZY_ALGO_ALIASES:
+        return FUZZY_ALGO_ALIASES[normalized]
+    if normalized in FUZZY_ALGORITHM_REGISTRY:
+        return cast("FuzzyAlgorithm", normalized)
 
-    message = f"{ERROR_UNKNOWN_ALGO} Got: '{name}'"
+    valid_inputs = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
+    message = f"{ERROR_UNKNOWN_ALGO} Supported values: {', '.join(valid_inputs)}. Got: '{name}'"
     raise ValueError(message)
 
 
@@ -227,14 +228,14 @@ def resolve_algorithm_name(name: str) -> FuzzyAlgorithm:
 # ---------------------------------------------------------------------
 
 
-def get_supported_algorithms() -> list[str]:
+def get_fuzzy_algorithm_registry() -> list[str]:
     """
     Return a list of supported algorithm names.
 
     Returns:
         list[str]: List of supported algorithm names.
     """
-    return list(SUPPORTED_ALGORITHMS.keys())
+    return list(FUZZY_ALGORITHM_REGISTRY.keys())
 
 
 def compute_similarity(
@@ -269,7 +270,7 @@ def compute_similarity(
     if mode == "hybrid":
         return hybrid_score(s1, s2, agg_fn)
 
-    resolved_algo = SUPPORTED_ALGORITHMS.get(algorithm)
+    resolved_algo = FUZZY_ALGORITHM_REGISTRY.get(algorithm)
     if not resolved_algo:
         message = f"{ERROR_UNKNOWN_ALGO} Got: {algorithm}"
         raise ValueError(message)
