@@ -59,7 +59,7 @@ from charfinder.constants import (
     FuzzyMatchMode,
 )
 from charfinder.settings import get_cache_file
-from charfinder.utils.formatter import echo
+from charfinder.utils.formatter import echo, should_use_color
 from charfinder.utils.logger_styles import format_warning
 
 # ------------------------------------------------------------------------
@@ -133,6 +133,22 @@ def apply_fuzzy_defaults(args: Namespace, config: FuzzyConfig) -> None:
 # ------------------------------------------------------------------------
 # Threshold Validators
 # ------------------------------------------------------------------------
+
+
+def resolve_cli_settings(args: Namespace) -> tuple[str, bool, float]:
+    """
+    Resolve runtime settings such as color mode and match threshold.
+
+    Args:
+        args (Namespace): Parsed command-line arguments.
+
+    Returns:
+        tuple[str, bool, float]: Effective (color_mode, use_color, threshold)
+    """
+    color_mode = resolve_effective_color_mode(args.color)
+    use_color = should_use_color(color_mode)
+    threshold = resolve_effective_threshold(args.threshold, use_color=use_color)
+    return color_mode, use_color, threshold
 
 
 def threshold_range(value: str) -> float:

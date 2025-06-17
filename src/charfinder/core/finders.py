@@ -1,18 +1,19 @@
 """Routing logic for Unicode character matching in CharFinder.
 
-This module defines the `find_chars_info_router()` function, which routes a
-user query to either exact matching or fuzzy matching logic, depending on
-the configured strategy and CLI arguments.
+This module defines the public API for searching Unicode characters
+by name using exact or fuzzy matching strategies.
 
 Responsibilities:
-- Decide whether to attempt fuzzy match first, or fallback to fuzzy after exact match.
-- Delegate to appropriate matching functions (`exact_match`, `fuzzy_match`).
-- Return matched character info along with a flag indicating whether fuzzy was used.
+- Validate the query and match configuration.
+- Decide whether to use fuzzy matching first or fallback to it.
+- Route to exact or fuzzy match logic via core.matching.
+- Build results for CLI or JSON output.
+- Return results and fuzzy-used flag when required.
 
 Functions:
-    find_chars(): Perform character search and format for CLI.
-    find_chars_raw(): Perform character search and return raw results.
-    find_chars_with_info(): Perform search and return matches with fuzzy-used flag.
+    - find_chars(): Perform character search and format output for CLI.
+    - find_chars_raw(): Perform character search and return raw structured data.
+    - find_chars_with_info(): Perform search and return data + fuzzy-used flag.
 """
 
 from __future__ import annotations
@@ -22,8 +23,13 @@ from collections.abc import Generator
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import BuildCacheOptions, build_name_cache
 from charfinder.fuzzymatchlib import resolve_algorithm_name
-from charfinder.types import CharMatch, FuzzyMatchContext, SearchConfig, MatchTuple
-from charfinder.utils.formatter import echo, format_result_header, format_result_row
+from charfinder.types import CharMatch, FuzzyMatchContext, MatchTuple, SearchConfig
+from charfinder.utils.formatter import (
+    echo,
+    format_result_header,
+    format_result_row,
+    matchtuple_to_charmatch,
+)
 from charfinder.utils.logger_styles import format_info
 from charfinder.utils.normalizer import normalize
 from charfinder.validators import validate_fuzzy_match_mode
@@ -43,19 +49,8 @@ MSG_MATCH_NOT_FOUND = "No matches found for query: '{query}'"
 MSG_EXACT_SKIP_FUZZY = "Exact match found — skipping fuzzy match."
 MSG_EXACT_AND_FUZZY = "Exact match found — also running fuzzy match (prefer-fuzzy mode)."
 
-# ---------------------------------------------------------------------
-# Internal Types
-# ---------------------------------------------------------------------
 
-
-
-
-# ---------------------------------------------------------------------
-# Internal Helpers
-# ---------------------------------------------------------------------
-
-
-def log_match_message(
+def _log_match_message(
     matches: list[MatchTuple],
     query: str,
     *,
@@ -63,19 +58,19 @@ def log_match_message(
     verbose: bool,
 ) -> None:
     """
-    Logs the match result message based on the matches found.
+    Logs the result summary for a given query.
 
     Args:
-        matches (list[MatchTuple]): List of match tuples.
-        query (str): Query string.
-        use_color (bool): Whether color formatting should be used.
-        verbose (bool): Whether verbose logging is enabled.
+        matches (list[MatchTuple]): Match results.
+        query (str): User's search string.
+        use_color (bool): Whether to use color formatting.
+        verbose (bool): Whether to show output in verbose mode.
     """
-    if matches:
-        message = MSG_MATCH_FOUND.format(n=len(matches), query=query)
-    else:
-        message = MSG_MATCH_NOT_FOUND.format(query=query)
-
+    message = (
+        MSG_MATCH_FOUND.format(n=len(matches), query=query)
+        if matches
+        else MSG_MATCH_NOT_FOUND.format(query=query)
+    )
     echo(
         message,
         style=lambda m: format_info(m, use_color=use_color),
@@ -87,7 +82,7 @@ def log_match_message(
 
 def _validate_query(query: str, config: SearchConfig) -> None:
     """
-    Validates the input query and fuzzy match mode.
+    Validates the input query and fuzzy mode.
 
     Args:
         query (str): Input search query.
@@ -95,7 +90,7 @@ def _validate_query(query: str, config: SearchConfig) -> None:
 
     Raises:
         TypeError: If query is not a string.
-        ValueError: If query is empty or fuzzy match mode is invalid.
+        ValueError: If query is empty or mode is invalid.
     """
     if not isinstance(query, str):
         raise TypeError(MSG_QUERY_TYPE_ERROR)
@@ -108,17 +103,17 @@ def _validate_query(query: str, config: SearchConfig) -> None:
 
 def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple], bool]:
     """
-    Resolve query against the cache using exact or fuzzy matching logic.
+    Resolve the query using exact and/or fuzzy matching.
 
     Args:
-        query (str): Input search string.
-        config (SearchConfig): Configuration for matching.
+        query (str): User search input.
+        config (SearchConfig): Matching configuration.
 
     Returns:
-        tuple[list[MatchTuple], bool]: A tuple of matched results and a flag indicating fuzzy usage.
+        tuple[list[MatchTuple], bool]: Match list and fuzzy-used flag.
 
     Raises:
-        ValueError: If fuzzy algorithm is invalid.
+        ValueError: If algorithm is invalid.
     """
     _validate_query(query, config)
 
@@ -138,20 +133,19 @@ def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple]
         )
     )
 
-    norm_query: str = normalize(query)
-    exact_matches: list[MatchTuple] = [
+    norm_query = normalize(query)
+    exact_matches = [
         MatchTuple(*tpl)
         for tpl in find_exact_matches(norm_query, name_cache, config.exact_match_mode)
     ]
 
     fuzzy_matches: list[MatchTuple] = []
-    fuzzy_executed: bool = False
+    used_fuzzy = False
+    should_fuzzy = config.fuzzy and (config.prefer_fuzzy or not exact_matches)
 
-    run_fuzzy: bool = config.fuzzy and (config.prefer_fuzzy or not exact_matches)
-
-    if run_fuzzy:
-        fuzzy_executed = True
-        context: FuzzyMatchContext = FuzzyMatchContext(
+    if should_fuzzy:
+        used_fuzzy = True
+        context = FuzzyMatchContext(
             threshold=config.threshold,
             fuzzy_algo=resolved_algo,
             match_mode=config.fuzzy_match_mode,
@@ -160,32 +154,25 @@ def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple]
             use_color=config.use_color,
             query=query,
         )
-        fuzzy_results = find_fuzzy_matches(norm_query, name_cache, context)
-        fuzzy_matches.extend(MatchTuple(*tpl) for tpl in fuzzy_results)
+        fuzzy_matches = [
+            MatchTuple(*tpl) for tpl in find_fuzzy_matches(norm_query, name_cache, context)
+        ]
 
-    log_match_message(
-        fuzzy_matches + exact_matches, query, use_color=config.use_color, verbose=config.verbose
-    )
-
-    all_matches: list[MatchTuple] = exact_matches + fuzzy_matches
-    return all_matches, fuzzy_executed
-
-
-# ---------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------
+    all_matches = exact_matches + fuzzy_matches
+    _log_match_message(all_matches, query, use_color=config.use_color, verbose=config.verbose)
+    return all_matches, used_fuzzy
 
 
 def find_chars(query: str, config: SearchConfig) -> Generator[str, None, None]:
     """
-    Search for Unicode characters by name using exact or fuzzy matching.
+    Perform character search and yield formatted output lines.
 
     Args:
         query (str): Input query string.
-        config (SearchConfig): Configuration options for matching.
+        config (SearchConfig): Search behavior.
 
-    Returns:
-        Generator[str, None, None]: Formatted lines for CLI output.
+    Yields:
+        str: CLI output lines with formatted results.
     """
     matches, _ = _resolve_matches(query, config)
     if not matches:
@@ -198,55 +185,29 @@ def find_chars(query: str, config: SearchConfig) -> Generator[str, None, None]:
 
 def find_chars_raw(query: str, config: SearchConfig) -> list[CharMatch]:
     """
-    Search for Unicode characters and return raw results for JSON output.
+    Perform character search and return raw results for JSON output.
 
     Args:
         query (str): Input query string.
-        config (SearchConfig): Configuration options for matching.
+        config (SearchConfig): Search behavior.
 
     Returns:
-        list[CharMatch]: List of Unicode character matches, formatted for JSON output.
+        list[CharMatch]: List of matches with metadata.
     """
     matches, _ = _resolve_matches(query, config)
-
-    results: list[CharMatch] = []
-    for match in matches:
-        item: CharMatch = {
-            "code": f"U+{match.code:04X}",
-            "char": match.char,
-            "name": f"{match.name}  (\\u{match.code:04x})",
-        }
-        if match.score is not None:
-            item["score"] = round(match.score, 3)
-        results.append(item)
-
-    return results
+    return [matchtuple_to_charmatch(m) for m in matches]
 
 
 def find_chars_with_info(query: str, config: SearchConfig) -> tuple[list[CharMatch], bool]:
     """
-    Search for Unicode characters and return raw results with fuzzy usage flag.
+    Perform character search and return results with fuzzy usage flag.
 
     Args:
         query (str): Input query string.
-        config (SearchConfig): Configuration options controlling matching behavior.
+        config (SearchConfig): Search behavior.
 
     Returns:
-        tuple[list[CharMatch], bool]: A tuple containing:
-            - List of match records (CharMatch) formatted for JSON output.
-            - A boolean indicating whether fuzzy matching was used.
+        tuple[list[CharMatch], bool]: Matches and whether fuzzy was used.
     """
     matches, used_fuzzy = _resolve_matches(query, config)
-
-    results: list[CharMatch] = []
-    for match in matches:
-        item: CharMatch = {
-            "code": f"U+{match.code:04X}",
-            "char": match.char,
-            "name": f"{match.name}  (\\u{match.code:04x})",
-        }
-        if match.score is not None:
-            item["score"] = round(match.score, 3)
-        results.append(item)
-
-    return results, used_fuzzy
+    return [matchtuple_to_charmatch(m) for m in matches], used_fuzzy

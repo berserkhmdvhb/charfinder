@@ -23,7 +23,6 @@ Functions:
 
 import sys
 
-from charfinder.cli.handlers import resolve_settings
 from charfinder.cli.parser import create_parser
 from charfinder.cli.utils_runner import (
     auto_enable_debug,
@@ -36,6 +35,7 @@ from charfinder.constants import (
 )
 from charfinder.validators import (
     apply_fuzzy_defaults,
+    resolve_cli_settings,
     validate_color_mode,
     validate_threshold,
 )
@@ -67,7 +67,7 @@ def main() -> None:
     config = build_fuzzy_config_from_args(args)
 
     # Resolve settings, including color mode, threshold, and debug flags
-    _, use_color, _ = resolve_settings(args)
+    _, use_color, _ = resolve_cli_settings(args)
 
     # Query handling: Resolve final query string
     query_str = resolve_final_query(args)

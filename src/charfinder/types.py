@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, Protocol
 
 from typing_extensions import NotRequired, TypedDict
 
@@ -162,6 +162,7 @@ class MatchResult:
 
     exit_code: int
     match_info: MatchDiagnosticsInfo | None = None
+
 
 class MatchTuple(NamedTuple):
     code: int

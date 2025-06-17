@@ -19,6 +19,7 @@ Functions:
     format_result_line(): Format a result line for CLI display.
     format_result_header(): Format the result table header and divider.
     format_result_row(): Format a single result row.
+    matchtuple_to_charmatch(): Converts a MatchTuple to a CharMatch dictionary
 
 Note:
     Color constants should be factored out to `logger_styles.py` in the future
@@ -33,9 +34,12 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from typing import TextIO
+from typing import TYPE_CHECKING, TextIO
 
 from colorama import Fore, Style, init
+
+if TYPE_CHECKING:
+    from charfinder.types import CharMatch, MatchTuple
 
 from charfinder.constants import FIELD_WIDTHS, VALID_LOG_METHODS
 from charfinder.utils.logger_helpers import suppress_console_logging
@@ -46,6 +50,7 @@ __all__ = [
     "format_result_line",
     "format_result_row",
     "log_optionally_echo",
+    "matchtuple_to_charmatch",
     "should_use_color",
 ]
 
@@ -250,3 +255,41 @@ def format_result_row(code: int, char: str, name: str, score: float | None) -> s
         f"{name_str:<{FIELD_WIDTHS['name']}} "
         f"{score_str}".rstrip()
     )
+
+
+def matchtuple_to_charmatch(mt: MatchTuple) -> CharMatch:
+    """
+    Converts a MatchTuple to a CharMatch dictionary for structured output.
+
+    Args:
+        mt (MatchTuple): A match record with optional fuzzy score.
+
+    Returns:
+        CharMatch: A dictionary formatted for JSON/text output.
+    """
+    result: CharMatch = {
+        "code": f"U+{mt.code:04X}",
+        "char": mt.char,
+        "name": f"{mt.name}  (\\u{mt.code:04x})",
+    }
+    if mt.score is not None:
+        result["score"] = round(mt.score, 3)
+    return result
+
+
+# ---------------------------------------------------------------------
+# Output Helpers
+# ---------------------------------------------------------------------
+
+
+def print_result_lines(lines: list[str], *, use_color: bool = False) -> None:
+    """
+    Print result lines to stdout, with consistent formatting.
+
+    Args:
+        lines (list[str]): The list of result lines to print.
+        use_color (bool, optional): Whether to apply color formatting. Defaults to False.
+    """
+    for line in lines:
+        output = format_result_line(line, use_color=use_color)
+        sys.stdout.write(output + "\n")

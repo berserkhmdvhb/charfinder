@@ -1,5 +1,4 @@
-"""
-Handlers for CLI output rendering and execution in CharFinder.
+"""Handlers for CLI output rendering and execution in CharFinder.
 
 Delegates color formatting to `cli/formatter.py` and avoids using print().
 
@@ -28,12 +27,11 @@ from charfinder.constants import (
 )
 from charfinder.core.core_main import find_chars_raw, find_chars_with_info
 from charfinder.types import MatchDiagnosticsInfo, MatchResult
-from charfinder.utils.formatter import echo, format_result_line, should_use_color
+from charfinder.utils.formatter import echo, print_result_lines
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error, format_warning
 from charfinder.validators import (
-    resolve_effective_color_mode,
-    resolve_effective_threshold,
+    resolve_cli_settings,
     validate_exact_match_mode,
     validate_fuzzy_algo,
     validate_fuzzy_match_mode,
@@ -59,7 +57,7 @@ class SearchParams:
     fuzzy_algo: str
     fuzzy_match_mode: str
     exact_match_mode: str
-    hybrid_agg_fn: str | None
+    agg_fn: str | None
     prefer_fuzzy: bool
     verbose: bool
     use_color: bool
@@ -86,24 +84,6 @@ def get_version() -> str:
 
 
 # ---------------------------------------------------------------------
-# Output Helpers
-# ---------------------------------------------------------------------
-
-
-def print_result_lines(lines: list[str], *, use_color: bool = False) -> None:
-    """
-    Print result lines to stdout, with consistent formatting.
-
-    Args:
-        lines (list[str]): The list of result lines to print.
-        use_color (bool, optional): Whether to apply color formatting. Defaults to False.
-    """
-    for line in lines:
-        output = format_result_line(line, use_color=use_color)
-        sys.stdout.write(output + "\n")
-
-
-# ---------------------------------------------------------------------
 # Main CLI Execution
 # ---------------------------------------------------------------------
 
@@ -123,7 +103,7 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
         MatchResult: Exit code and diagnostics for the CLI run.
     """
     try:
-        color_mode, use_color, threshold = resolve_settings(args)
+        color_mode, use_color, threshold = resolve_cli_settings(args)
 
         args.fuzzy_algo = validate_fuzzy_algo(args.fuzzy_algo)
         args.fuzzy_match_mode = validate_fuzzy_match_mode(args.fuzzy_match_mode)
@@ -138,7 +118,7 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
             fuzzy_algo=args.fuzzy_algo,
             fuzzy_match_mode=args.fuzzy_match_mode,
             exact_match_mode=args.exact_match_mode,
-            hybrid_agg_fn=args.hybrid_agg_fn,
+            agg_fn=args.hybrid_agg_fn,
             prefer_fuzzy=args.prefer_fuzzy,
             verbose=args.verbose,
             use_color=use_color,
@@ -179,22 +159,6 @@ def _run_query_and_return(
         return MatchResult(exit_code=EXIT_NO_RESULTS, match_info=None)
     print_result_lines(results, use_color=params.use_color)
     return build_match_result(args, fuzzy_used=fuzzy_used, exit_code=EXIT_SUCCESS)
-
-
-def resolve_settings(args: Namespace) -> tuple[str, bool, float]:
-    """
-    Resolve runtime settings such as color mode and match threshold.
-
-    Args:
-        args (Namespace): Parsed command-line arguments.
-
-    Returns:
-        tuple[str, bool, float]: Effective (color_mode, use_color, threshold)
-    """
-    color_mode = resolve_effective_color_mode(args.color)
-    use_color = should_use_color(color_mode)
-    threshold = resolve_effective_threshold(args.threshold, use_color=use_color)
-    return color_mode, use_color, threshold
 
 
 def handle_empty_query(*, use_color: bool) -> MatchResult:

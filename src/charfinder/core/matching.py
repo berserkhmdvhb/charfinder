@@ -14,7 +14,7 @@ Functions:
 # ---------------------------------------------------------------------
 
 from charfinder.fuzzymatchlib import compute_similarity
-from charfinder.types import CharMatch, FuzzyMatchContext, MatchTuple
+from charfinder.types import FuzzyMatchContext, MatchTuple
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_debug, format_info
@@ -22,42 +22,63 @@ from charfinder.validators import (
     validate_exact_match_mode,
     validate_fuzzy_algo,
     validate_fuzzy_match_mode,
+    validate_threshold,
 )
 
-__all__ = [
-    "find_exact_matches",
-    "find_fuzzy_matches",
-]
+__all__ = ["find_exact_matches", "find_fuzzy_matches"]
 
 logger = get_logger()
+
+# ---------------------------------------------------------------------
+# Internal Utilities
+# ---------------------------------------------------------------------
+
+
+def _validate_name_cache(name_cache: object) -> None:
+    """
+    Validate that the name_cache is a dictionary of expected structure.
+
+    Args:
+        name_cache (object): The character name cache.
+
+    Raises:
+        TypeError: If name_cache is not a dict.
+    """
+    if not isinstance(name_cache, dict):
+        message = "name_cache should be a dictionary of character names."
+        raise TypeError(message)
 
 
 # ---------------------------------------------------------------------
 # Exact Matching
 # ---------------------------------------------------------------------
+
+
 def find_exact_matches(
     norm_query: str,
     name_cache: dict[str, dict[str, str]],
     exact_match_mode: str,
-) -> list[tuple[int, str, str, float | None]]:
+) -> list[MatchTuple]:
     """
     Perform exact matching based on the chosen exact match mode,
     using both official and alternate normalized names.
+
+    Args:
+        norm_query (str): The normalized query string.
+        name_cache (dict): The name cache mapping characters to normalized names.
+        exact_match_mode (str): The exact match strategy ("substring" or "word-subset").
+
+    Returns:
+        list[MatchTuple]: List of matched entries with score=None.
     """
-    # Validate the exact match mode using validators
     validate_exact_match_mode(exact_match_mode)
+    _validate_name_cache(name_cache)
 
-    # Early exit for invalid name_cache
-    if not isinstance(name_cache, dict):
-        message = "name_cache should be a dictionary of character names."
-        raise TypeError(message)
+    matches: list[MatchTuple] = []
 
-    matches: list[tuple[int, str, str, float | None]] = []
-
-    # Matching Loop
     for char, names in name_cache.items():
         if not isinstance(names, dict) or "original" not in names or "normalized" not in names:
-            continue  # Skip invalid entries
+            continue
 
         code_point = ord(char)
         original_name = names["original"]
@@ -66,14 +87,14 @@ def find_exact_matches(
 
         if exact_match_mode == "substring":
             if norm_query in norm_name or (alt_norm and norm_query in alt_norm):
-                matches.append((code_point, char, original_name, None))
+                matches.append(MatchTuple(code_point, char, original_name, None))
         elif exact_match_mode == "word-subset":
             query_words = set(norm_query.split())
             name_words = set(norm_name.split())
             if alt_norm:
                 name_words |= set(alt_norm.split())
             if query_words <= name_words:
-                matches.append((code_point, char, original_name, None))
+                matches.append(MatchTuple(code_point, char, original_name, None))
         else:
             message = f"Unknown exact match mode: {exact_match_mode}"
             raise ValueError(message)
@@ -81,32 +102,42 @@ def find_exact_matches(
     return matches
 
 
+# ---------------------------------------------------------------------
+# Fuzzy Matching
+# ---------------------------------------------------------------------
+
+
 def find_fuzzy_matches(
     norm_query: str,
     name_cache: dict[str, dict[str, str]],
     context: FuzzyMatchContext,
-) -> list[tuple[int, str, str, float | None]]:
+) -> list[MatchTuple]:
     """
     Perform fuzzy matching using normalized and alternate normalized names.
+
+    Scores are computed for:
+        - norm_name (official name)
+        - alt_norm (alternate name), if available
+
+    The maximum score is retained. Matches that meet the threshold are returned.
+
+    Args:
+        norm_query (str): The normalized query string.
+        name_cache (dict): The name cache with normalized and alternate names.
+        context (FuzzyMatchContext): Context including threshold, algorithm, mode, etc.
+
+    Returns:
+        list[MatchTuple]: List of matches with computed scores.
     """
-    # Validate fuzzy algorithm and match mode using validators
     validate_fuzzy_algo(context.fuzzy_algo)
     validate_fuzzy_match_mode(context.match_mode)
+    validate_threshold(context.threshold)
+    _validate_name_cache(name_cache)
 
-    # Early exit for invalid threshold
-    if context.threshold is not None and not (0.0 <= context.threshold <= 1.0):
-        message = "Threshold must be between 0.0 and 1.0."
-        raise ValueError(message)
-
-    # Validate name_cache structure
-    if not isinstance(name_cache, dict):
-        message = "name_cache should be a dictionary of character names."
-        raise TypeError(message)
-
-    matches: list[tuple[int, str, str, float | None]] = []
+    matches: list[MatchTuple] = []
 
     if context.verbose:
-        message = f"No exact match found for '{context.query}', "
+        message = f"No exact match found for '{context.query}', trying fuzzy..."
         echo(
             message,
             style=lambda m: format_info(m, use_color=context.use_color),
@@ -114,10 +145,7 @@ def find_fuzzy_matches(
             log=True,
             log_method="info",
         )
-
-        message = (
-            f"Trying fuzzy matching (threshold={context.threshold}, agg_fn={context.agg_fn})..."
-        )
+        message = f"Fuzzy settings: threshold={context.threshold}, agg_fn={context.agg_fn}"
         echo(
             message,
             style=lambda m: format_info(m, use_color=context.use_color),
@@ -154,7 +182,7 @@ def find_fuzzy_matches(
 
         if score is None:
             if context.verbose:
-                message = f"Skipped char '{char}' (no valid score computed)."
+                message = f"Skipped char '{char}' (U+{ord(char):04X}) — no valid score computed."
                 echo(
                     message,
                     style=lambda m: format_debug(m, use_color=context.use_color),
@@ -165,26 +193,6 @@ def find_fuzzy_matches(
             continue
 
         if score >= context.threshold:
-            matches.append((ord(char), char, names["original"], score))
+            matches.append(MatchTuple(ord(char), char, names["original"], score))
 
     return matches
-
-
-def matchtuple_to_charmatch(mt: MatchTuple) -> CharMatch:
-    """
-    Converts a MatchTuple to a CharMatch dictionary for structured output.
-
-    Args:
-        mt (MatchTuple): A match record with optional fuzzy score.
-
-    Returns:
-        CharMatch: A dictionary formatted for JSON/text output.
-    """
-    result: CharMatch = {
-        "code": f"U+{mt.code:04X}",
-        "char": mt.char,
-        "name": f"{mt.name}  (\\u{mt.code:04x})",
-    }
-    if mt.score is not None:
-        result["score"] = round(mt.score, 3)
-    return result
