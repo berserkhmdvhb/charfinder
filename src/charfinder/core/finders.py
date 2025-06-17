@@ -19,6 +19,7 @@ Functions:
 from __future__ import annotations
 
 from collections.abc import Generator
+from typing import Literal
 
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import BuildCacheOptions, build_name_cache
@@ -101,7 +102,23 @@ def _validate_query(query: str, config: SearchConfig) -> None:
     validate_fuzzy_match_mode(config.fuzzy_match_mode)
 
 
-def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple], bool]:
+def _should_use_fuzzy(config: SearchConfig, exact_matches: list[MatchTuple]) -> bool:
+    """
+    Determines whether fuzzy matching should be used.
+
+    Args:
+        config (SearchConfig): Matching configuration.
+        exact_matches (list[MatchTuple]): Results from exact match.
+
+    Returns:
+        bool: Whether fuzzy matching should be performed.
+    """
+    return config.fuzzy and (config.prefer_fuzzy or not exact_matches)
+
+
+def _resolve_matches(
+    query: str, config: SearchConfig
+) -> tuple[list[MatchTuple], Literal[True, False]]:
     """
     Resolve the query using exact and/or fuzzy matching.
 
@@ -135,15 +152,14 @@ def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple]
 
     norm_query = normalize(query)
     exact_matches = [
-        MatchTuple(*tpl)
+        MatchTuple(code=tpl[0], char=tpl[1], name=tpl[2], score=tpl[3])
         for tpl in find_exact_matches(norm_query, name_cache, config.exact_match_mode)
     ]
 
     fuzzy_matches: list[MatchTuple] = []
     used_fuzzy = False
-    should_fuzzy = config.fuzzy and (config.prefer_fuzzy or not exact_matches)
 
-    if should_fuzzy:
+    if _should_use_fuzzy(config, exact_matches):
         used_fuzzy = True
         context = FuzzyMatchContext(
             threshold=config.threshold,
@@ -155,7 +171,8 @@ def _resolve_matches(query: str, config: SearchConfig) -> tuple[list[MatchTuple]
             query=query,
         )
         fuzzy_matches = [
-            MatchTuple(*tpl) for tpl in find_fuzzy_matches(norm_query, name_cache, context)
+            MatchTuple(code=tpl[0], char=tpl[1], name=tpl[2], score=tpl[3])
+            for tpl in find_fuzzy_matches(norm_query, name_cache, context)
         ]
 
     all_matches = exact_matches + fuzzy_matches

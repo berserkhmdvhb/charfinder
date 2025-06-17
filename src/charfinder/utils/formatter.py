@@ -113,7 +113,7 @@ def echo(
     *,
     stream: TextIO = sys.stdout,
     show: bool = True,
-    log: bool = True,
+    log: bool = False,
     log_method: str | None = None,
 ) -> None:
     """

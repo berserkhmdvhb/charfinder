@@ -22,6 +22,7 @@ from charfinder.validators import (
     validate_exact_match_mode,
     validate_fuzzy_algo,
     validate_fuzzy_match_mode,
+    validate_name_cache_structure,
     validate_threshold,
 )
 
@@ -30,23 +31,22 @@ __all__ = ["find_exact_matches", "find_fuzzy_matches"]
 logger = get_logger()
 
 # ---------------------------------------------------------------------
+# Message Constants
+# ---------------------------------------------------------------------
+
+MSG_UNKNOWN_EXACT_MODE = "Unknown exact match mode: {mode}"
+MSG_NO_SCORE_COMPUTED = "Skipped char '{char}' (U+{code:04X}) — no valid score computed."
+MSG_FUZZY_START = "No exact match found for '{query}', trying fuzzy..."
+MSG_FUZZY_SETTINGS = "Fuzzy settings: threshold={threshold}, agg_fn={agg_fn}"
+
+# ---------------------------------------------------------------------
 # Internal Utilities
 # ---------------------------------------------------------------------
 
 
-def _validate_name_cache(name_cache: object) -> None:
-    """
-    Validate that the name_cache is a dictionary of expected structure.
-
-    Args:
-        name_cache (object): The character name cache.
-
-    Raises:
-        TypeError: If name_cache is not a dict.
-    """
-    if not isinstance(name_cache, dict):
-        message = "name_cache should be a dictionary of character names."
-        raise TypeError(message)
+def _max_score(*scores: float | None) -> float | None:
+    """Return the max score ignoring None values."""
+    return max(filter(None, scores), default=None)
 
 
 # ---------------------------------------------------------------------
@@ -72,7 +72,7 @@ def find_exact_matches(
         list[MatchTuple]: List of matched entries with score=None.
     """
     validate_exact_match_mode(exact_match_mode)
-    _validate_name_cache(name_cache)
+    validate_name_cache_structure(name_cache)
 
     matches: list[MatchTuple] = []
 
@@ -96,8 +96,7 @@ def find_exact_matches(
             if query_words <= name_words:
                 matches.append(MatchTuple(code_point, char, original_name, None))
         else:
-            message = f"Unknown exact match mode: {exact_match_mode}"
-            raise ValueError(message)
+            raise ValueError(MSG_UNKNOWN_EXACT_MODE.format(mode=exact_match_mode))
 
     return matches
 
@@ -132,22 +131,20 @@ def find_fuzzy_matches(
     validate_fuzzy_algo(context.fuzzy_algo)
     validate_fuzzy_match_mode(context.match_mode)
     validate_threshold(context.threshold)
-    _validate_name_cache(name_cache)
+    validate_name_cache_structure(name_cache)
 
     matches: list[MatchTuple] = []
 
     if context.verbose:
-        message = f"No exact match found for '{context.query}', trying fuzzy..."
         echo(
-            message,
+            MSG_FUZZY_START.format(query=context.query),
             style=lambda m: format_info(m, use_color=context.use_color),
             show=True,
             log=True,
             log_method="info",
         )
-        message = f"Fuzzy settings: threshold={context.threshold}, agg_fn={context.agg_fn}"
         echo(
-            message,
+            MSG_FUZZY_SETTINGS.format(threshold=context.threshold, agg_fn=context.agg_fn),
             style=lambda m: format_info(m, use_color=context.use_color),
             show=True,
             log=True,
@@ -158,6 +155,7 @@ def find_fuzzy_matches(
         norm_name = names["normalized"]
         alt_norm = names.get("alternate_normalized")
 
+        # Score against official name
         score1 = compute_similarity(
             norm_query,
             norm_name,
@@ -166,6 +164,7 @@ def find_fuzzy_matches(
             agg_fn=context.agg_fn,
         )
 
+        # Score against alternate name if present
         score2 = (
             compute_similarity(
                 norm_query,
@@ -178,13 +177,12 @@ def find_fuzzy_matches(
             else None
         )
 
-        score = max(filter(None, [score1, score2]), default=None)
+        score = _max_score(score1, score2)
 
         if score is None:
             if context.verbose:
-                message = f"Skipped char '{char}' (U+{ord(char):04X}) — no valid score computed."
                 echo(
-                    message,
+                    MSG_NO_SCORE_COMPUTED.format(char=char, code=ord(char)),
                     style=lambda m: format_debug(m, use_color=context.use_color),
                     show=True,
                     log=True,

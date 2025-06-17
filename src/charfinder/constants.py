@@ -72,10 +72,13 @@ LOG_METHODS = SimpleNamespace(
 )
 
 FUZZY_ALGO_ALIASES: dict[str, str] = {
+    "token_sort_ratio": "token_sort_ratio",
+    "token_sort": "token_sort_ratio",
+    "tsr": "token_sort_ratio",
     "levenshtein": "levenshtein_ratio",
+    "lev": "levenshtein_ratio",
     "simple": "simple_ratio",
     "normalized": "normalized_ratio",
-    "token_sort": "token_sort_ratio",
     "hybrid": "hybrid_score",
     "sequencematcher": "sequencematcher",
     "rapidfuzz": "rapidfuzz",
@@ -169,11 +172,19 @@ class FuzzyConfig:
     fuzzy_match_mode: FuzzyMatchMode
 
 
+# ------------------------------------------------------------------------
+# UnicodeData
+# ------------------------------------------------------------------------
+
+ALT_NAME_INDEX = 10  # index of alternate name in UnicodeData.txt fields
+EXPECTED_MIN_FIELDS = 11  # fields expected per line in UnicodeData.txt
+
 # ---------------------------------------------------------------------
 # __all__
 # ---------------------------------------------------------------------
 
 __all__ = [
+    "ALT_NAME_INDEX",
     "DEFAULT_COLOR_MODE",
     "DEFAULT_ENCODING",
     "DEFAULT_EXACT_MATCH_MODE",
@@ -195,6 +206,7 @@ __all__ = [
     "EXIT_INVALID_USAGE",
     "EXIT_NO_RESULTS",
     "EXIT_SUCCESS",
+    "EXPECTED_MIN_FIELDS",
     "FIELD_WIDTHS",
     "LOG_FILE_NAME",
     "LOG_FORMAT",

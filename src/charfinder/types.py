@@ -18,18 +18,35 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, NamedTuple, Protocol
+from typing import Any, NamedTuple, Protocol
 
 from typing_extensions import NotRequired, TypedDict
 
-if TYPE_CHECKING:
-    from charfinder.constants import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
+from charfinder.constants import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
 
+__all__ = [
+    "AlgorithmFn",
+    "CLIResult",
+    "CharMatch",
+    "DiagnosticFormatter",
+    "EchoFunc",
+    "FormatterFunc",
+    "FuzzyMatchContext",
+    "HybridAggFunc",
+    "MatchDiagnosticsInfo",
+    "MatchFunc",
+    "MatchResult",
+    "MatchTuple",
+    "NameCache",
+    "SearchConfig",
+    "UnicodeDataLoader",
+]
 # ---------------------------------------------------------------------
 # Callable type aliases
 # ---------------------------------------------------------------------
 
 AlgorithmFn = Callable[[str, str], float]
+NameCache = dict[str, dict[str, str]]
 
 # ---------------------------------------------------------------------
 # Dataclass-based type definitions
@@ -51,7 +68,7 @@ class FuzzyMatchContext:
 class SearchConfig:
     fuzzy: bool
     threshold: float
-    name_cache: dict[str, dict[str, str]] | None
+    name_cache: NameCache | None
     verbose: bool
     use_color: bool
     fuzzy_algo: FuzzyAlgorithm
@@ -151,7 +168,7 @@ class UnicodeDataLoader(Protocol):
     Protocol for functions that load Unicode data from disk or cache.
     """
 
-    def __call__(self, file_path: Path) -> dict[str, dict[str, str]]: ...
+    def __call__(self, file_path: Path) -> NameCache: ...
 
 
 @dataclass

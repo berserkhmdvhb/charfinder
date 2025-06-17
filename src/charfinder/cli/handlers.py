@@ -33,8 +33,8 @@ from charfinder.utils.logger_styles import format_error, format_warning
 from charfinder.validators import (
     resolve_cli_settings,
     validate_exact_match_mode,
-    validate_fuzzy_algo,
     validate_fuzzy_match_mode,
+    validate_output_format,
 )
 
 __all__ = [
@@ -90,24 +90,25 @@ def get_version() -> str:
 
 def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
     """
-    Main CLI execution handler.
+    Main CLI execution handler for CharFinder.
 
-    Runs find_chars_with_info() or find_chars_raw() with the given args and query string,
-    prints results, and returns an appropriate exit code and match diagnostics.
+    This function validates and resolves the necessary parameters, including fuzzy and exact match
+    modes, color settings, and threshold, then dispatches the query to the appropriate core search
+    function based on the selected output format.
 
     Args:
-        args (Namespace): Parsed CLI arguments.
-        query_str (str): Query string to search for.
+        args (Namespace): Parsed CLI arguments from argparse.
+        query_str (str): The normalized query string to search for.
 
     Returns:
-        MatchResult: Exit code and diagnostics for the CLI run.
+        MatchResult: An object containing the CLI exit code and optional match diagnostics.
     """
     try:
         color_mode, use_color, threshold = resolve_cli_settings(args)
 
-        args.fuzzy_algo = validate_fuzzy_algo(args.fuzzy_algo)
-        args.fuzzy_match_mode = validate_fuzzy_match_mode(args.fuzzy_match_mode)
-        args.exact_match_mode = validate_exact_match_mode(args.exact_match_mode)
+        # Validate match modes (explicitly CLI-sourced)
+        fuzzy_mode = validate_fuzzy_match_mode(args.fuzzy_match_mode)
+        exact_mode = validate_exact_match_mode(args.exact_match_mode)
 
         if not query_str:
             return handle_empty_query(use_color=use_color)
@@ -116,8 +117,8 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
             query=query_str,
             fuzzy=args.fuzzy,
             fuzzy_algo=args.fuzzy_algo,
-            fuzzy_match_mode=args.fuzzy_match_mode,
-            exact_match_mode=args.exact_match_mode,
+            fuzzy_match_mode=fuzzy_mode,
+            exact_match_mode=exact_mode,
             agg_fn=args.hybrid_agg_fn,
             prefer_fuzzy=args.prefer_fuzzy,
             verbose=args.verbose,
@@ -138,17 +139,24 @@ def _run_query_and_return(
     args: Namespace,
 ) -> MatchResult:
     """
-    Internal helper to run the appropriate query and return structured output.
+    Run the character search query and dispatch the results using the appropriate output format.
+
+    This function validates the output format and runs either `find_chars_raw()` for JSON output
+    or `find_chars_with_info()` for styled terminal output. It also assembles the final
+    `MatchResult` with exit code and diagnostics.
 
     Args:
-        params (SearchParams): All resolved parameters for search execution.
-        output_format (str): Either "json" or "text".
-        args (Namespace): CLI args for additional context (e.g., for diagnostics).
+        params (SearchParams): Structured parameters for running the query.
+        output_format (str): The desired output format ("json" or "text").
+        args (Namespace): CLI arguments, used to construct diagnostic information.
 
     Returns:
-        MatchResult: Exit code and diagnostics info.
+        MatchResult: Structured CLI result with exit code and optional diagnostics.
     """
-    if output_format == "json":
+
+    validated_format = validate_output_format(output_format)
+
+    if validated_format == "json":
         rows = find_chars_raw(**params.__dict__)
         sys.stdout.write(json.dumps(rows, ensure_ascii=False, indent=2) + "\n")
         sys.stdout.flush()

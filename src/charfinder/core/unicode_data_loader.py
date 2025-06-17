@@ -36,6 +36,7 @@ from urllib.error import URLError
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
+from charfinder.constants import ALT_NAME_INDEX, EXPECTED_MIN_FIELDS
 from charfinder.settings import get_unicode_data_file, get_unicode_data_url
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
@@ -48,9 +49,6 @@ from charfinder.validators import (
 logger = get_logger()
 
 __all__ = ["load_alternate_names"]
-
-ALT_NAME_INDEX = 10
-EXPECTED_MIN_FIELDS = 11
 
 
 def validate_files_and_url(
@@ -196,6 +194,15 @@ def parse_unicode_data(text: str, *, show: bool = True) -> dict[str, str]:
             continue
         fields = stripped_line.split(";")
         if len(fields) < EXPECTED_MIN_FIELDS:
+            message = f"Skipping malformed line (too few fields): {stripped_line}"
+            echo(
+                message,
+                style=lambda m: format_warning(m),
+                stream=sys.stderr,
+                show=show,
+                log=True,
+                log_method="warning",
+            )
             continue
         code_hex = fields[0]
         alt_name = fields[ALT_NAME_INDEX].strip()
@@ -225,6 +232,7 @@ def load_alternate_names(*, show: bool = True, use_color: bool = True) -> dict[s
 
     Args:
         show (bool): If True, show progress messages to stderr.
+        use_color (bool): If True, colorize output.
 
     Returns:
         dict[str, str]: Dictionary mapping characters to their alternate names.
@@ -238,11 +246,11 @@ def load_alternate_names(*, show: bool = True, use_color: bool = True) -> dict[s
     unicode_data_file = get_unicode_data_file()
 
     validation_message = validate_files_and_url(unicode_data_url, unicode_data_file, show=show)
-    if validation_message:
-        return {}
-
-    if not unicode_data_file.is_file() and not download_and_cache_unicode_data(
-        unicode_data_url, unicode_data_file, show=show, use_color=use_color
+    if validation_message and not download_and_cache_unicode_data(
+        unicode_data_url,
+        unicode_data_file,
+        show=show,
+        use_color=use_color,
     ):
         return {}
 

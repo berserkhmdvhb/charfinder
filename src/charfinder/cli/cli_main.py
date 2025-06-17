@@ -30,14 +30,10 @@ from charfinder.cli.utils_runner import (
     handle_cli_workflow,
     resolve_final_query,
 )
-from charfinder.constants import (
-    EXIT_SUCCESS,
-)
+from charfinder.constants import EXIT_SUCCESS
 from charfinder.validators import (
     apply_fuzzy_defaults,
     resolve_cli_settings,
-    validate_color_mode,
-    validate_threshold,
 )
 
 __all__ = ["main"]
@@ -59,17 +55,10 @@ def main() -> None:
     parser = create_parser()
     args = parser.parse_args()
 
-    # Threshold and color mode validation
-    args.threshold = validate_threshold(args.threshold)
-    args.color = validate_color_mode(args.color)
+    # Resolve settings: color mode, use_color flag, and threshold (validated inside)
+    args.color, use_color, args.threshold = resolve_cli_settings(args)
 
-    # Build fuzzy configuration
-    config = build_fuzzy_config_from_args(args)
-
-    # Resolve settings, including color mode, threshold, and debug flags
-    _, use_color, _ = resolve_cli_settings(args)
-
-    # Query handling: Resolve final query string
+    # Query handling: resolve final query string
     query_str = resolve_final_query(args)
     if not query_str:
         parser.print_help()
@@ -78,14 +67,14 @@ def main() -> None:
     # Enable debug mode if required by CHARFINDER_DEBUG_ENV_LOAD
     auto_enable_debug(args)
 
-    # Apply default fuzzy match settings (if --fuzzy is enabled)
+    # Apply fuzzy algorithm/mode defaults (if --fuzzy was enabled)
+    config = build_fuzzy_config_from_args(args)
     apply_fuzzy_defaults(args, config)
 
-    # Execute the full search and output pipeline
+    # Execute full CLI pipeline
     exit_code = handle_cli_workflow(
         args=args,
         query_str=query_str,
         use_color=use_color,
     )
-
     sys.exit(exit_code)

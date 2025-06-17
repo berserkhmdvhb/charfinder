@@ -53,16 +53,23 @@ from charfinder.constants import (
     DEFAULT_NORMALIZATION_FORM,
     FUZZY_ALGO_ALIASES,
     FUZZY_HYBRID_WEIGHTS,
-    VALID_HYBRID_AGG_FUNCS,
     FuzzyAlgorithm,
     FuzzyMatchMode,
     HybridAggFunc,
     NormalizationForm,
 )
-from charfinder.validators import validate_fuzzy_algo, validate_fuzzy_match_mode
+from charfinder.validators import (
+    validate_fuzzy_algo,
+    validate_fuzzy_match_mode,
+    validate_hybrid_agg_fn,
+)
 
 if TYPE_CHECKING:
     from charfinder.types import AlgorithmFn
+
+ERROR_UNKNOWN_ALGO = (
+    "Invalid fuzzy algorithm. Expected one of the supported algorithms or their aliases."
+)
 
 __all__ = ["compute_similarity"]
 
@@ -150,16 +157,14 @@ def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC
     Raises:
         ValueError: If agg_fn is not supported.
     """
+    agg_fn = validate_hybrid_agg_fn(agg_fn)
+
     components = {
         "simple_ratio": simple_ratio(a, b),
         "normalized_ratio": normalized_ratio(a, b),
         "levenshtein_ratio": levenshtein_ratio(a, b),
         "token_sort_ratio": token_sort_ratio_score(a, b),
     }
-
-    if agg_fn not in VALID_HYBRID_AGG_FUNCS:
-        message = f"Unsupported aggregation function: {agg_fn}."
-        raise ValueError(message)
 
     if agg_fn == "mean":
         return sum(
@@ -175,8 +180,9 @@ def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC
     if agg_fn == "min":
         return min(scores)
 
-    message = f"Unsupported aggregation function: {agg_fn}."
-    raise ValueError(message)
+    # This should be unreachable due to validation
+    message = f"Unexpected aggregation function: {agg_fn!r}"
+    raise RuntimeError(message)
 
 
 # ---------------------------------------------------------------------
@@ -212,10 +218,7 @@ def resolve_algorithm_name(name: str) -> FuzzyAlgorithm:
     if folded in FUZZY_ALGO_ALIASES:
         return cast("FuzzyAlgorithm", FUZZY_ALGO_ALIASES[folded])
 
-    message = (
-        f"Unknown fuzzy algorithm: '{name}'. "
-        f"Expected one of: {', '.join(sorted(FUZZY_ALGO_ALIASES.keys()))}."
-    )
+    message = f"{ERROR_UNKNOWN_ALGO} Got: '{name}'"
     raise ValueError(message)
 
 
@@ -260,15 +263,15 @@ def compute_similarity(
         ValueError: If match mode is invalid.
         RuntimeError: If an unexpected algorithm is passed.
     """
-    algorithm = validate_fuzzy_algo(algorithm)  # Validate fuzzy algorithm
-    mode = validate_fuzzy_match_mode(mode)  # Validate fuzzy match mode
+    algorithm = validate_fuzzy_algo(algorithm)
+    mode = validate_fuzzy_match_mode(mode)
 
     if mode == "hybrid":
         return hybrid_score(s1, s2, agg_fn)
 
     resolved_algo = SUPPORTED_ALGORITHMS.get(algorithm)
     if not resolved_algo:
-        message = f"Unsupported algorithm: {algorithm}."
+        message = f"{ERROR_UNKNOWN_ALGO} Got: {algorithm}"
         raise ValueError(message)
 
     return resolved_algo(s1, s2)
