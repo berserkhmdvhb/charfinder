@@ -19,39 +19,53 @@ The core package is responsible for:
 
 ```mermaid
 flowchart TD
+    %% ===========================
+    %% Input Layer
+    %% ===========================
+    subgraph Inputs
+        Q[query string]
+        CFG[SearchConfig dataclass]
+        CACHE[NameCache dict]
+    end
 
-    %% Node declarations
+    %% ===========================
+    %% Matching Logic Layer
+    %% ===========================
+    subgraph Matching
+        MATCHTYPE{Fuzzy match?}
+        EXACT[find_exact_matches]
+        FUZZY[find_fuzzy_matches]
+    end
+
     Q --> MATCHTYPE
     CFG --> MATCHTYPE
     CACHE --> MATCHTYPE
 
-    MATCHTYPE -- "No" --> EXACT
-    MATCHTYPE -- "Yes" --> FUZZY
+    MATCHTYPE -- No --> EXACT
+    MATCHTYPE -- Yes --> FUZZY
 
-    EXACT --> MR
+    EXACT --> MR[MatchResult with exit_code and diagnostics]
     FUZZY --> MR
 
+    %% ===========================
+    %% Handler Logic
+    %% ===========================
+    subgraph CoreHandler
+        RUN[_run_query_and_return]
+    end
+
     MR --> RUN
+
+    %% ===========================
+    %% Output Layer
+    %% ===========================
+    subgraph Output
+        TEXT[Text output]
+        JSON[JSON output]
+    end
+
     RUN --> TEXT
     RUN --> JSON
-
-    %% Input Layer
-    Q[query (str)]
-    CFG[SearchConfig]
-    CACHE[NameCache]
-
-    %% Matching Logic Layer
-    MATCHTYPE{Fuzzy?}
-    EXACT[find_exact_matches()]
-    FUZZY[find_fuzzy_matches()]
-    MR[MatchResult]
-
-    %% Handler Layer
-    RUN[_run_query_and_return()]
-
-    %% Output Layer
-    TEXT[Text Output]
-    JSON[JSON Output]
 ```
 
 ---
