@@ -22,19 +22,27 @@ flowchart TD
     %% ===========================
     %% Input Layer
     %% ===========================
+    Q[query (str)]
+    CFG[SearchConfig (dataclass)]
+    CACHE[NameCache (dict)]
+
     subgraph Inputs
-        Q[query (str)]
-        CFG[SearchConfig (dataclass)]
-        CACHE[NameCache (dict)]
+        Q
+        CFG
+        CACHE
     end
 
     %% ===========================
     %% Matching Logic Layer
     %% ===========================
+    MATCHTYPE{Fuzzy?}
+    EXACT[find_exact_matches()]
+    FUZZY[find_fuzzy_matches()]
+
     subgraph Matching
-        MATCHTYPE{Fuzzy?}
-        EXACT[find_exact_matches()]
-        FUZZY[find_fuzzy_matches()]
+        MATCHTYPE
+        EXACT
+        FUZZY
     end
 
     Q --> MATCHTYPE
@@ -50,8 +58,10 @@ flowchart TD
     %% ===========================
     %% Handler Logic
     %% ===========================
+    RUN[_run_query_and_return()]
+
     subgraph CoreHandler
-        RUN[_run_query_and_return()]
+        RUN
     end
 
     MR --> RUN
@@ -59,13 +69,17 @@ flowchart TD
     %% ===========================
     %% Output Layer
     %% ===========================
+    TEXT[Text Output]
+    JSON[JSON Output]
+
     subgraph Output
-        TEXT[Text Output]
-        JSON[JSON Output]
+        TEXT
+        JSON
     end
 
     RUN --> TEXT
     RUN --> JSON
+
 ```
 
 ---
