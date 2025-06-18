@@ -341,6 +341,7 @@ By default, CharFinder applies the following logic:
    * `normalized_ratio`
    * `levenshtein_ratio`
    * `token_sort_ratio`
+  
 5. Aggregation is performed using the function defined by `--hybrid-agg-fn` (default: `mean`).
 
 ### Available Fuzzy Algorithms
@@ -689,8 +690,9 @@ CharFinder has a comprehensive test suite covering core logic, CLI integration, 
 * Unit tests (core, CLI, utils)
 * Integration tests (via CLI subprocess)
 * Logging behavior tests
-* All tests isolated and environment-aware.
-* High test coverage using `pytest`.
+* All tests isolated and environment-aware
+* High test coverage using `pytest`
+* Test isolation enforced via Pytest fixtures and `.env` cleanup
 
 ### Running Tests
 
@@ -724,8 +726,8 @@ make coverage-html
 make lint-all
 ```
 
-applys ruff formatting, ruff checking, and mypy statis type check.
-It runs all of following commands:
+Applies Ruff formatting, Ruff checking, and MyPy static type checks.
+This runs all of the following commands:
 
 #### Linting and Formatting
 
@@ -742,8 +744,6 @@ make fmt
 ```bash
 make type-check
 ```
-
-
 
 CharFinder uses **pre-commit** to enforce code quality automatically on each commit.
 
@@ -768,21 +768,20 @@ Hooks include:
 
 ### Coverage Policy
 
-* Target: **100% coverage** on all Python files under `src/`.
-* CLI integration tests cover all major CLI scenarios via `subprocess.run`.
-* Logging behaviors, `.env` loading, and edge cases are all tested.
+* Target: **100% coverage** on all Python files under `src/`
+* CLI integration tests cover all major CLI scenarios via `subprocess.run`
+* Logging behaviors, `.env` loading, and edge cases are all tested
 
 ### Test Layers
 
-* **Unit tests:** test core logic in isolation (core, caching, normalization, settings, utils).
-* **CLI integration tests:** test full CLI entrypoint via subprocess.
-* **Logging tests:** test rotating logging, suppression, environment filtering.
-* **Settings tests:** test different `.env` and environment variable scenarios.
+* **Unit tests:** test core logic in isolation (core, caching, normalization, settings, utils)
+* **CLI integration tests:** test full CLI entrypoint via subprocess
+* **Logging tests:** test rotating logging, suppression, environment filtering
+* **Settings tests:** test different `.env` and environment variable scenarios
 
-See [docs/unit\_test\_design.md](docs/unit_test_design.md)
+See [docs/unit_test_design.md](docs/unit_test_design.md)
 
 ---
-
 ### 👨‍💻 9. Developer Guide
 
 #### 🔨 Cloning & Installation
@@ -857,10 +856,11 @@ make develop
 #### 📝 Onboarding Tips
 
 * Always use `make develop` to install full dev dependencies.
-* Run `make check-all`  before pushing changes, or equivalently, run `make lint-all-check` and `make test-coverage`.
+* Run `make check-all` before pushing changes, or equivalently, run `make lint-all-check` and `make test-coverage`.
 * Validate `.env` loading with `make dotenv-debug`.
 
 ---
+
 
 ### ⚡ 10. Performance
 
@@ -931,103 +931,82 @@ While **CharFinder** is a robust and flexible tool, it is important to be aware 
 
 ### 🔹 Fuzzy Algorithms Scope
 
-* Currently, **only three fuzzy matching algorithms are supported**:
+CharFinder currently supports five fuzzy matching algorithms:
 
-  * `sequencematcher` (difflib)
-  * `rapidfuzz`
-  * `levenshtein`
+* `simple_ratio` — based on `difflib.SequenceMatcher`
+* `normalized_ratio` — normalized variant of `simple_ratio`
+* `levenshtein_ratio` — based on `python-Levenshtein`
+* `token_sort_ratio` — word-order invariant, from `rapidfuzz`
+* `hybrid_score` — aggregates multiple algorithms using predefined weights
 
-* These are selected for **performance and compatibility** reasons.
+These algorithms are selected for performance, robustness, and compatibility across systems.
 
-* Extending the system to support **custom or additional fuzzy algorithms** (such as Jaro-Winkler, Damerau-Levenshtein, etc.) would require modifying the internal `fuzzymatchlib.py` module and registering the algorithm accordingly.
+The `hybrid_score` mode combines results from multiple algorithms to improve match accuracy. However, the internal weights used for aggregation are **not user-configurable**.
 
-* For advanced needs, contributions and PRs to add more algorithms are welcome (see [Contributing](#contributing)).
+To extend support for additional fuzzy algorithms (e.g., Jaro-Winkler, Damerau-Levenshtein), or to enable weight customization, the internal `fuzzymatchlib.py` module would need to be updated. PRs are welcome (see [Contributing](#contributing)).
 
 ### 🔹 Limitations for Embedding in APIs or External Applications
 
-* While **CharFinder** is designed as a library and CLI, embedding it directly in real-time, high-throughput applications (e.g. messaging apps, chatbots, servers with strict latency constraints) requires careful consideration:
+While **CharFinder** is designed as both a library and CLI, embedding it into high-throughput applications (e.g., servers, chatbots) requires extra care:
 
-  * The Unicode name cache (`name_cache`) is built at runtime and stored in a JSON file by default:
+* The Unicode name cache (`name_cache`) is built at runtime and saved as a local JSON file.
+* Without pre-building and injecting the cache, each process may rebuild it unnecessarily, introducing latency.
+* For real-time or distributed usage:
 
-    * Disk I/O during first run may introduce latency.
-    * Caching in-memory for each process is recommended.
-
-  * To optimize embedding scenarios, **you should pre-build the cache once and inject it** into your application process:
-
-    * You can call `build_name_cache()` and persist the result.
-    * Later you can pass this cache as the `name_cache` argument to `find_chars()` or `find_chars_raw()`.
-
-  * Without injecting the cache, embedding **may trigger redundant cache building per process**, which is inefficient.
-
-  * The internal cache is not optimized for **distributed or multi-process sharing** out of the box.
-
-    * For large-scale distributed use, consider pre-building the cache and distributing it to your workers.
-
-* The `print_dotenv_debug()` and CLI-based diagnostics output are primarily designed for **terminal users and developers**.
-
-  * If embedding in an app, you may want to adjust or silence these outputs.
+  * Pre-build the cache with `build_name_cache()` and inject it as an argument.
+  * Avoid using CLI-level diagnostics or console outputs.
+  * Cache sharing between processes is not optimized out-of-the-box.
 
 ### 🔹 UnicodeData.txt Updates
 
-* The project fetches Unicode names from **UnicodeData.txt**.
-
-  * The URL is configurable, but this file should be kept reasonably up-to-date with the Unicode standard.
-  * If Unicode evolves (new characters added, names change), ensure you re-run cache building.
-
-* There is no automatic background refresh of the UnicodeData.txt or cache. Manual rebuild is required.
+* CharFinder fetches character names from the Unicode Consortium's **UnicodeData.txt**.
+* This file should be updated manually when Unicode standards evolve.
+* No automatic refresh mechanism is included. You must manually rebuild the cache.
 
 ### 🔹 Limitations of Matching Model
 
-* **Exact matching** is limited to:
+* **Exact matching**:
 
-  * `substring`
-  * `word-subset` (word bag subset match)
-
+  * Limited to substring and bag-of-words (word-subset) matches.
 * **Fuzzy matching**:
 
-  * Currently supports single-algorithm or hybrid scoring with predefined aggregation functions (`mean`, `median`, `max`, `min`).
-
+  * Only supports the predefined algorithms listed above.
+  * Hybrid scores use predefined aggregation strategies (e.g., mean, median, max) and fixed internal weights.
 * **Alternate names**:
 
-  * The alternate names used are limited to what is provided in **UnicodeData.txt field 10** (as parsed by `unicode_data_loader.py`).
-  * Other aliases (e.g. from CLDR or additional datasets) are not yet supported.
+  * Only field 10 of UnicodeData.txt is used.
+  * No CLDR or extended alias datasets are currently integrated.
 
 ### 🔹 Known Issues
 
-* On certain platforms, first-time runs may take several seconds while the cache is built.
+* First runs may take several seconds to build the Unicode name cache (logged visibly).
+* Unicode normalization can result in differences between visual and textual similarity.
+* No support yet for:
 
-  * This is expected and logged.
-
-* Unicode normalization is applied uniformly, but in rare cases **visual vs. textual similarity may differ**, especially for symbols.
-
-* There is no support yet for **interactive fuzzy tuning** or learning-based matching (future idea).
-
-* Matching performance scales linearly with the size of the Unicode range:
-
-  * On typical machines, full search takes < 1s.
-  * On constrained environments, this may vary.
+  * Learning-based match improvements
+  * Interactive fuzzy tuning
+* Matching scales linearly with dataset size. While usually <1s, constrained environments may vary.
 
 ### 🔹 Embedding Checklist
 
-If you intend to embed CharFinder in a chatbot, server, or app:
+If embedding CharFinder in a chatbot, server, or interactive app:
 
 * ✅ Pre-build and inject the name cache.
-* ✅ Avoid using CLI components or direct terminal output.
-* ✅ Optionally silence verbose logs.
-* ✅ Test for performance in your target environment.
-* ✅ Monitor UnicodeData.txt changes periodically.
-
----
+* ✅ Avoid CLI components and stdout printing.
+* ✅ Silence or override logging as needed.
+* ✅ Benchmark in your production environment.
+* ✅ Periodically check and update UnicodeData.txt.
 
 **Summary:**
 
-CharFinder works well as a CLI and library tool, but for embedding in latency-sensitive or distributed apps, extra precautions are required. The matching pipeline is currently static and not model-based; this is a trade-off between **explainability, reproducibility, and simplicity**.
+CharFinder is well-suited for use as both a CLI tool and a Python library. However, when embedding into latency-sensitive or distributed systems, additional considerations are necessary to ensure performance and correctness.
 
-Advanced embedding features (pre-built cache injection, multi-process sharing, additional algorithm hooks) are planned in future versions.
+The current matching pipeline is deliberately designed to be static and deterministic—prioritizing **simplicity, reproducibility, and explainability** over dynamic or learning-based behavior.
+
+Support for advanced embedding scenarios (such as pre-injected caches, multi-process sharing, and plugin-based algorithm extension) is planned for future versions.
 
 
 ---
-
 ## 📖 12. Documentation
 
 This project includes detailed internal documentation to help both developers and advanced users understand its design, architecture, and internals.
@@ -1049,6 +1028,7 @@ The following documents are located in the [`docs/`](docs/) directory:
 | [`roadmap.md`](docs/roadmap.md)                             | Future plans and enhancements.                                                                                      |
 
 > These documents are designed to serve both as **developer onboarding** material and **technical audit** documentation.
+
 
 ---
 
