@@ -221,7 +221,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Enable argcomplete
     try:
-        import argcomplete  # noqa: PLC0415
+        import argcomplete
 
         argcomplete.autocomplete(parser)
     except ImportError:

@@ -131,7 +131,7 @@ def _normalize_and_validate_fuzzy_algo(fuzzy_algo: str) -> FuzzyAlgorithm:
         ValueError: If the algorithm is not supported.
     """
     # Lazy import
-    from charfinder.fuzzymatchlib import FUZZY_ALGORITHM_REGISTRY  # noqa: PLC0415
+    from charfinder.fuzzymatchlib import FUZZY_ALGORITHM_REGISTRY
 
     normalized = fuzzy_algo.strip().lower().replace("-", "_")
     resolved = FUZZY_ALGO_ALIASES.get(normalized, normalized)
