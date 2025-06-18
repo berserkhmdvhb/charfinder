@@ -19,20 +19,57 @@ The core package is responsible for:
 
 ```mermaid
 flowchart TD
+    %% ===========================
+    %% Input Layer
+    %% ===========================
     subgraph Inputs
-        A1[query]
-        A2[SearchConfig (dataclass)]
-        A3[NameCache (dict)]
+        Q[query (str)]
+        CFG[SearchConfig (dataclass)]
+        CACHE[NameCache (dict)]
     end
 
-    A1 --> B1[find_exact_matches / find_fuzzy_matches]
-    A2 --> B1
-    A3 --> B1
+    %% ===========================
+    %% Matching Logic Layer
+    %% ===========================
+    subgraph Matching
+        style Matching fill:#f9f9f9,stroke:#ccc
+        MATCHTYPE{Fuzzy?}
+        EXACT[find_exact_matches()]
+        FUZZY[find_fuzzy_matches()]
+    end
 
-    B1 --> C1[MatchResult (exit_code, diagnostics)]
+    Q --> MATCHTYPE
+    CFG --> MATCHTYPE
+    CACHE --> MATCHTYPE
 
-    C1 --> D1[core.handlers._run_query_and_return]
-    D1 --> E1[Text/JSON Output]
+    MATCHTYPE -- No --> EXACT
+    MATCHTYPE -- Yes --> FUZZY
+
+    EXACT --> MR[MatchResult (exit_code, diagnostics)]
+    FUZZY --> MR
+
+    %% ===========================
+    %% Handler Logic
+    %% ===========================
+    subgraph CoreHandler
+        style CoreHandler fill:#f0f8ff,stroke:#bbb
+        RUN[_run_query_and_return()]
+    end
+
+    MR --> RUN
+
+    %% ===========================
+    %% Output Layer
+    %% ===========================
+    subgraph Output
+        style Output fill:#fdf6e3,stroke:#aaa
+        TEXT[Text Output]
+        JSON[JSON Output]
+    end
+
+    RUN --> TEXT
+    RUN --> JSON
+
 ```
 
 ---
