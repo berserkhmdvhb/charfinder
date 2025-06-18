@@ -20,54 +20,38 @@ The core package is responsible for:
 ```mermaid
 flowchart TD
 
-    %% Nodes must be declared outside of subgraphs in GitHub-flavored Mermaid
-    Q[query (str)]
-    CFG[SearchConfig (dataclass)]
-    CACHE[NameCache (dict)]
-
-    MATCHTYPE{Fuzzy?}
-    EXACT[find_exact_matches()]
-    FUZZY[find_fuzzy_matches()]
-    MR[MatchResult (exit_code, diagnostics)]
-    RUN[_run_query_and_return()]
-    TEXT[Text Output]
-    JSON[JSON Output]
-
-    %% Grouping (optional: only cosmetic)
-    subgraph Inputs
-        Q
-        CFG
-        CACHE
-    end
-
-    subgraph Matching
-        MATCHTYPE
-        EXACT
-        FUZZY
-    end
-
-    subgraph CoreHandler
-        RUN
-    end
-
-    subgraph Output
-        TEXT
-        JSON
-    end
-
-    %% Connections
+    %% Node declarations
     Q --> MATCHTYPE
     CFG --> MATCHTYPE
     CACHE --> MATCHTYPE
 
-    MATCHTYPE -- No --> EXACT
-    MATCHTYPE -- Yes --> FUZZY
+    MATCHTYPE -- "No" --> EXACT
+    MATCHTYPE -- "Yes" --> FUZZY
 
     EXACT --> MR
     FUZZY --> MR
+
     MR --> RUN
     RUN --> TEXT
     RUN --> JSON
+
+    %% Input Layer
+    Q[query (str)]
+    CFG[SearchConfig]
+    CACHE[NameCache]
+
+    %% Matching Logic Layer
+    MATCHTYPE{Fuzzy?}
+    EXACT[find_exact_matches()]
+    FUZZY[find_fuzzy_matches()]
+    MR[MatchResult]
+
+    %% Handler Layer
+    RUN[_run_query_and_return()]
+
+    %% Output Layer
+    TEXT[Text Output]
+    JSON[JSON Output]
 ```
 
 ---
