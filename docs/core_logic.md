@@ -79,7 +79,6 @@ flowchart TD
 
     RUN --> TEXT
     RUN --> JSON
-
 ```
 
 ---
