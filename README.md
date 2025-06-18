@@ -50,9 +50,9 @@ Designed for both technical and non-technical users, CharFinder enables reliable
    * [Test Layers](#test-layers)
 9. [👨‍💼 Developer Guide](#-9-developer-guide)
 
-   * [🔨 Cloning & Installation](#--cloning--installation)
-   * [🔧 Makefile Commands](#--makefile-commands)
-   * [🗒️ Onboarding Tips](#--onboarding-tips)
+   * [🔨 Cloning & Installation](#-cloning--installation)
+   * [🔧 Makefile Commands](#-makefile-commands)
+   * [🗒️ Onboarding Tips](#-onboarding-tips)
 10. [⚡ Performance](#-10-performance)
 
     * [Key Optimizations](#key-optimizations)
