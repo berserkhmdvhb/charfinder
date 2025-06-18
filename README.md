@@ -1016,20 +1016,21 @@ The following documents are located in the [`docs/`](docs/) directory:
 
 | Document                                                    | Description                                                                                                         |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| [`caching.md`](docs/caching.md)                             | Explanation of cache layers: Unicode name cache, `cached_normalize()`, performance considerations.                  |
 | [`cli_architecture.md`](docs/cli_architecture.md)           | Overview of CLI modules, their flow, entry points, and command routing logic.                                       |
 | [`core_logic.md`](docs/core_logic.md)                       | Core logic and library API (`find_chars`, `find_chars_raw`): processing rules, transformations, architecture.       |
 | [`debug_diagnostics.md`](docs/debug_diagnostics.md)         | Debug and diagnostic output systems: `--debug`, `CHARFINDER_DEBUG_ENV_LOAD`, dotenv introspection.                  |
 | [`env-logging-scenarios.md`](docs/env-logging-scenarios.md) | End-to-end `.env` and logging scenarios, edge cases, fallback resolution.                                           |
 | [`environment_config.md`](docs/environment_config.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities.                             |
 | [`logging_system.md`](docs/logging_system.md)               | Logging architecture: setup, structured logging, rotating files, and environment-based folders.                     |
-| [`unit_test_design.md`](docs/unit_test_design.md)           | Testing layers: unit tests, CLI integration tests, coverage strategy.                                               |
-| [`normalization.md`](docs/normalization.md)                 | Unicode normalization explained: what is used (`NFC`), why, and implications for search.                            |
 | [`matching.md`](docs/matching.md)                           | Detailed explanation of exact and fuzzy matching algorithms and options. Includes mode combinations and flowcharts. |
-| [`validators.md`](docs/validators.md)                       | Centralized validation logic shared across CLI and core. Type safety, fallbacks, source-aware behavior.             |
-| [`types_protocols.md`](docs/types_protocols.md)             | Project-wide types, `Protocol` interfaces, and their role in extensibility and static typing.                       |
-| [`caching.md`](docs/caching.md)                             | Explanation of cache layers: Unicode name cache, `cached_normalize()`, performance considerations.                  |
-| [`roadmap.md`](docs/roadmap.md)                             | Future plans and enhancements.                                                                                      |
+| [`normalization.md`](docs/normalization.md)                 | Unicode normalization explained: what is used (`NFC`), why, and implications for search.                            |
 | [`packaging.md`](docs/packaging.md)                         | Packaging and publishing: `pyproject.toml`, build tools, versioning strategy, and PyPI release process.             |
+| [`roadmap.md`](docs/roadmap.md)                             | Future plans and enhancements.                                                                                      |
+| [`types_protocols.md`](docs/types_protocols.md)             | Project-wide types, `Protocol` interfaces, and their role in extensibility and static typing.                       |
+| [`unit_test_design.md`](docs/unit_test_design.md)           | Testing layers: unit tests, CLI integration tests, coverage strategy.                                               |
+| [`validators.md`](docs/validators.md)                       | Centralized validation logic shared across CLI and core. Type safety, fallbacks, source-aware behavior.             |
+
 
 
 > These documents are designed to serve both as **developer onboarding** material and **technical audit** documentation.
