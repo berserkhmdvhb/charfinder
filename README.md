@@ -9,7 +9,7 @@
 
 **charfinder** is a modern terminal and Python-based tool for searching and exploring Unicode characters by name — supporting both exact and advanced fuzzy matching — with Unicode normalization, efficient caching, structured logging.
 
-Designed for both technical and non-technical users, charfinder enables reliable Unicode search in terminals, scripts, and applications. It can power developer workflows, automation scripts, data pipelines, and user-facing interfaces such as chatbots and messaging apps, while providing transparency and precise control over matching behavior.
+Designed for both technical and non-technical users, CharFinder enables reliable Unicode search in terminals, scripts, automation workflows, and applications. It offers transparency and precise control over matching behavior, making it suitable for developer tooling, data pipelines, chatbots, and messaging interfaces.
 
 ---
 
@@ -78,117 +78,110 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 ### 🔍 Unicode Character Search
 
 * Search Unicode characters by name:
-
-  * **Exact match** (substring or word-subset).
-  * **Fuzzy match** with configurable threshold and algorithms.
+  * **Exact match** (`substring` or `word_subset`)
+  * **Fuzzy match** with configurable thresholds and algorithms
 
 * Supported fuzzy algorithms:
-
-  * `sequencematcher` (difflib standard library).
-  * `rapidfuzz`.
-  * `python-Levenshtein`.
+  * `simple_ratio` — SequenceMatcher-based (from `difflib`)
+  * `normalized_ratio` — Normalized variant of `simple_ratio`
+  * `levenshtein_ratio` — Based on `python-Levenshtein`
+  * `token_sort_ratio` — Word-order invariant (from `rapidfuzz`)
+  * `hybrid_score` — Aggregates multiple algorithms
 
 * Hybrid fuzzy matching:
-
-  * Combine multiple algorithms with `mean`, `median`, `max`, or `min` aggregation.
+  * Combines multiple algorithms using an aggregation function: `mean`, `median`, `max`, or `min`
 
 ### 📉 Unicode Normalization
 
-* All matching is performed after Unicode **NFC normalization**.
-* Matching is **case-insensitive** and **accent-insensitive**.
-* Alternate names (from `UnicodeData.txt`) are supported.
+* All matching is performed after Unicode **NFC normalization**
+* Matching is **case-insensitive** and **accent-insensitive**
+* Alternate names (from `UnicodeData.txt`) are supported
 
 ### 🔄 Caching
 
 * Unicode name cache:
-
-  * Built on first run.
-  * Cached locally to JSON file for fast subsequent runs.
+  * Built on first run
+  * Stored as a local JSON file for fast reuse
 
 * LRU cache:
-
-  * Normalization operations are cached via LRU caching for performance.
+  * Internal normalization results are LRU-cached for performance
 
 ### 📊 Logging
 
-* Rotating file logging under `logs/{ENV}/`.
-
+* Rotating file logs under `logs/{ENV}/`
 * Console logging:
-
-  * `INFO` level by default.
-  * `DEBUG` level with `--debug` flag.
-
-* Each log record includes the current **environment** (DEV, UAT, PROD).
-
-* Logging architecture is clean and test-friendly.
+  * `INFO` level by default
+  * `DEBUG` level with `--debug`
+* Each log record includes the current **environment** (`DEV`, `UAT`, `PROD`)
+* Logging is modular and test-friendly
 
 ### 🔧 Environment-aware Behavior
 
-* `.env` files are supported with robust resolution:
+* `.env` support with layered resolution logic
 * Environment-specific behavior:
-  * Log directory changes by environment.
-  * Test mode activates `.env.test`.
+  * Log directory changes by environment
+  * Test mode activates `.env.test`
 
-* Cross-ref: [docs/environment\_config.md](docs/environment_config.md).
+See [docs/environment_config.md](docs/environment_config.md)
 
 ### 💻 CLI Features
 
-* Rich CLI with **argcomplete** tab completion.
+* Rich CLI with **argcomplete** tab completion
 
 * Color output:
-
-  * Modes: `auto`, `always`, `never`.
-  * Colors used for result rows, headers, log messages.
+  * Modes: `auto`, `always`, `never`
+  * Colors used for result rows, headers, and logs
 
 * Advanced CLI options:
 
-  * `--fuzzy`, `--threshold`, `--fuzzy-algo`, `--fuzzy-match-mode`, `--hybrid-agg-fn`.
-  * `--exact-match-mode`.
-  * `--color`, `--verbose`, `--debug`.
+  * Matching behavior:
+    * `--fuzzy` — Enable fuzzy matching
+    * `--threshold` — Set similarity threshold (0.0–1.0)
+    * `--fuzzy-algo` — Select fuzzy algorithm (e.g., `token_sort_ratio`)
+    * `--fuzzy-match-mode` — Choose fuzzy match mode: `first`, `all`, or `hybrid`
+    * `--hybrid-agg-fn` — Set aggregation function: `mean`, `median`, `min`, or `max`
+    * `--exact-match-mode` — Specify exact match logic: `word_subset` or `substring`
 
-* Detailed CLI help with examples.
+  * Output control:
+    * `--color` — Control color output: `auto`, `always`, or `never`
+    * `--verbose` — Display formatted results in the console
+    * `--debug` — Enable full diagnostics: dotenv resolution, config state, match algorithms and scores
 
-* Cross-ref: [docs/cli\_architecture.md](docs/cli_architecture.md).
+* Detailed CLI help with examples
+
+See [docs/cli_architecture.md](docs/cli_architecture.md)
 
 ### 🐍 Python Library Usage
 
-* Import and use core API:
+* Import and use the core API:
+  * `find_chars()` — Yields formatted result rows
+  * `find_chars_raw()` — Returns structured data (for scripting / JSON)
 
-  * `find_chars()` - yields formatted result rows.
-  * `find_chars_raw()` - returns structured data (for scripting / JSON output).
+* Fully type-annotated
+* CLI dependencies are not required for library usage
 
-* Fully type-annotated.
-
-* No CLI dependencies required in library usage.
-
-* Cross-ref: [docs/core\_logic.md](docs/core_logic.md).
+See [docs/core_logic.md](docs/core_logic.md)
 
 ### 🧪 Testability & Quality
 
-* Code quality and enforcement:
-  * `ruff` (format/lint), `mypy` (type-check)
-   
-* High test coverage.
+* Code quality enforcement:
+  * `ruff` (lint & format), `mypy` (type-check)
 
-* CLI tested via **subprocess integration tests**.
+* High test coverage
+* CLI tested via **subprocess integration tests**
+* Modular `conftest.py` with reusable fixtures
+* Clean `pytest` + `coverage` + `pre-commit` workflow
 
-* Modular `conftest.py` with reusable fixtures.
-
-* Clean `pytest` + `coverage` + `pre-commit` workflow.
-
-* Cross-ref: [docs/unit\_test\_design.md](docs/unit_test_design.md).
+See [docs/unit_test_design.md](docs/unit_test_design.md)
 
 ### 📑 Modern Packaging & Tooling
 
-* `pyproject.toml` based (PEP 621).
-
+* `pyproject.toml`-based (PEP 621)
 * GitHub Actions CI pipeline:
+  * Python 3.10 to 3.13
+  * Lint (Ruff), type-check (MyPy), test, coverage
+* Easy publishing to PyPI
 
-  * Python 3.10 to 3.13.
-  * Lint (Ruff), type-check (MyPy), test, coverage.
-
-* Easy publishing to PyPI.
-  
 ---
 
 ## 3. 📦 Project Structure
@@ -221,11 +214,11 @@ charfinder/
 ├── src/charfinder/                  # Main package code
 │   ├── __init__.py                  # Package version marker
 │   ├── __main__.py                  # Enables `python -m charfinder`
-│   ├── cache.py                     # Caching utilities
 │   ├── constants.py                 # Constants and default values
 │   ├── fuzzymatchlib.py             # Fuzzy matching algorithms
 │   ├── settings.py                  # Environment/config management
 │   ├── types.py                     # Shared type definitions
+│   ├── validators.py                # Input validation logic
 │   ├── py.typed                     # Marker for type-checking consumers
 │   │
 │   ├── cli/                         # CLI logic (modularized)
@@ -235,13 +228,14 @@ charfinder/
 │   │   ├── diagnostics.py           # CLI diagnostics output
 │   │   ├── diagnostics_match.py     # Debug output for match strategy
 │   │   ├── handlers.py              # CLI command handlers
-│   │   └── parser.py                # CLI parser and argument preprocessing
+│   │   ├── parser.py                # CLI parser and preprocessing
+│   │   └── utils_runner.py          # CLI execution helpers
 │   │
 │   ├── core/                        # Core Unicode search logic
 │   │   ├── __init__.py
-│   │   ├── core_main.py             # Public API functions (find_chars, etc.)
+│   │   ├── core_main.py             # Public API functions
 │   │   ├── finders.py               # Match mode and algorithm routing
-│   │   ├── matching.py              # Exact and fuzzy matching helpers
+│   │   ├── matching.py              # Exact and fuzzy matching logic
 │   │   ├── name_cache.py            # Unicode name cache builder
 │   │   └── unicode_data_loader.py   # UnicodeData.txt loader and parser
 │   │
@@ -251,15 +245,16 @@ charfinder/
 │       ├── logger_helpers.py        # Custom logging helpers
 │       ├── logger_setup.py          # Logging setup and teardown
 │       ├── logger_styles.py         # Styling for log output
-│       └── normalizer.py            # Unicode normalization utility
+│       └── normalizer.py            # Unicode normalization logic
 └── tests/
     ├── cli/                         # CLI test modules
     ├── core/                        # Core logic tests
-    ├── test_log.py                  # Logging tests
+    ├── logger/                      # Logging-related tests
     ├── test_settings.py             # Settings/config tests
-    ├── conftest.py                  # Shared test fixtures
-    └── manual/demo.ipynb            # Interactive notebook for manual testing
+    ├── conftest.py                  # Shared test fixtures and utilities
+    └── manual/demo.ipynb            # Manual usage notebook
 ```
+
 
 
 ### 3.2 🧱 Architecture
@@ -307,16 +302,16 @@ For example:
 | café        | café (U+00E9)         | Matches correctly         |
 | café       | café (U+00E9)         | Matches correctly         |
 
-
 See following:
+
 * [Unicode® Standard Annex #15 — Unicode Normalization Forms](https://unicode.org/reports/tr15/)
 * CharFinder documentation: [docs/normalization.md](docs/normalization.md)
 
 ---
 
-## 🎯 5. Exact and Fuzzy Match
+## 5. 🎯 Exact and Fuzzy Match
 
-CharFinder provides a powerful and customizable matching engine to search Unicode characters by name. The system combines exact and fuzzy strategies, supporting multiple algorithms and modes.
+CharFinder offers a robust and transparent matching engine for searching Unicode character names. It supports both **exact** and **fuzzy** strategies, with configurable modes and algorithms.
 
 ### Matching Modes Overview
 
@@ -324,84 +319,114 @@ CharFinder provides a powerful and customizable matching engine to search Unicod
 | ------------- | --------------------- | -------------------------------- | ----------------------------------------------------------------------- |
 | Exact         | Substring             | `--exact-match-mode substring`   | Query must appear as a substring in the Unicode name.                   |
 | Exact         | Word Subset (default) | `--exact-match-mode word-subset` | All words in the query must be present in the name (order-independent). |
-| Fuzzy         | Single (default)      | `--fuzzy-match-mode single`      | Use one algorithm to compute similarity scores.                         |
-| Fuzzy         | Hybrid                | `--fuzzy-match-mode hybrid`      | Combine multiple algorithm scores via aggregation.                      |
+| Fuzzy         | First (default)       | `--fuzzy-match-mode first`       | Return the top-scoring match based on the selected algorithm.           |
+| Fuzzy         | All                   | `--fuzzy-match-mode all`         | Return all matches above the threshold, sorted by score.                |
+| Fuzzy         | Hybrid                | `--fuzzy-match-mode hybrid`      | Aggregate multiple fuzzy algorithm scores using a specified function.   |
 
-### Default Behavior
+### Default Matching Behavior
 
 By default, CharFinder applies the following logic:
 
 1. **Exact match** is attempted first using **word-subset** mode.
-2. We can two cases here:
-   - **Exact match found**: **Fuzzy match** won't be triggered even if `--fuzzy` is enabled, unless one also adds arguement `--prefer-fuzzy` is used), in which case both exact match and fuzzy match results are shown
-    - **Exact match not found**: In this case, if `--fuzzy` is enabled, **fuzzy match** it is automatically triggered.
-4. Fuzzy matching defaults to **single** mode using the `token_sort_ratio` algorithm.
-5. In **hybrid mode**, a weighted combination of algorithms is used:
+2. Two outcomes are possible:
 
-   * `simple_ratio`, `normalized_ratio`, `levenshtein_ratio`, and `token_sort_ratio`
-   * Aggregated using the function from `--agg-fn` (default: `mean`)
+   * **Exact match found**: The results are returned immediately.
+
+     * If `--prefer-fuzzy` is specified, fuzzy results are shown **in addition**.
+   * **Exact match not found**: If `--fuzzy` is enabled, fuzzy matching is triggered.
+3. Fuzzy matching defaults to `first` mode using the `token_sort_ratio` algorithm.
+4. If `--fuzzy-match-mode hybrid` is selected, a weighted score is computed from:
+
+   * `simple_ratio`
+   * `normalized_ratio`
+   * `levenshtein_ratio`
+   * `token_sort_ratio`
+5. Aggregation is performed using the function defined by `--hybrid-agg-fn` (default: `mean`).
 
 ### Available Fuzzy Algorithms
 
 Specify via `--fuzzy-algo`:
 
-* `sequencematcher` (difflib standard lib)
-* `rapidfuzz` (Fast fuzzy matching)
-* `levenshtein` (Levenshtein distance)
-* `simple_ratio` (basic char overlap)
-* `normalized_ratio` (normalized similarity)
-* `levenshtein_ratio` (ratio form)
-* `token_sort_ratio` (**default**, handles reordered/partial words)
-* `hybrid_score` (weighted combo; internally used in hybrid mode)
+| Algorithm           | Description                                                 |
+| ------------------- | ----------------------------------------------------------- |
+| `simple_ratio`      | Basic character overlap similarity.                         |
+| `normalized_ratio`  | Normalized character similarity with length adjustments.    |
+| `levenshtein_ratio` | Edit distance similarity ratio.                             |
+| `token_sort_ratio`  | Sorts and compares tokens; handles reordered/partial input. |
+| `hybrid_score`      | Internally used for hybrid mode aggregation.                |
+
+> Note: Only valid algorithm names can be passed via CLI. Use `--fuzzy-match-mode hybrid` to enable automatic combination.
 
 ### Aggregation Functions (Hybrid Mode)
 
-Choose how scores are aggregated using `--agg-fn`:
+Used via `--hybrid-agg-fn`:
 
 * `mean` (default)
 * `median`
 * `max`
 * `min`
 
-### Combination Matrix
-
-| Match Path             | Exact Match Mode        | Fuzzy Match Mode | Fuzzy Algorithms                                | Aggregation Function   |
-| ---------------------- | ----------------------- | ---------------- | ----------------------------------------------- | ---------------------- |
-| Exact only             | substring / word-subset | -                | -                                               | -                      |
-| Exact → Fuzzy fallback | substring / word-subset | single           | token\_sort\_ratio (default), or user-specified | -                      |
-| Exact → Fuzzy fallback | substring / word-subset | hybrid           | token\_sort\_ratio + others (weighted combo)    | mean, median, max, min |
-
-**Notes**
-
-* Exact match is always attempted first.
-* Fuzzy matching only runs if enabled and exact match fails (unless `--prefer-fuzzy` is set).
-* Use `--debug` to view strategy details and weight breakdowns in hybrid mode.
-* The `--fuzzy-match-mode` and `--fuzzy-algo` flags control fuzzy routing.
-* The hybrid strategy uses predefined weights:
-
-  * 55% token\_sort\_ratio, 15% each for simple, normalized, levenshtein ratios.
+These functions aggregate the scores of the contributing fuzzy algorithms.
 
 ### Matching Flow
 
-1. **Exact Phase**:
+1. **Normalization**:
 
-   * Run substring or word-subset match based on `--exact-match-mode`.
-2. **Fuzzy Phase** (if triggered):
+   * All queries and Unicode names are converted to **NFC form** and **uppercased**.
 
-   * If `--fuzzy-match-mode` is `single`, use specified `--fuzzy-algo`.
-   * If `hybrid`, run all supported algorithms and combine with `--agg-fn`.
+2. **Exact Phase**:
 
-### Normalization
+   * Matching is performed using either `substring` or `word-subset` mode.
 
-All names and queries are normalized to **NFC form** and **uppercased** before matching.
+3. **Fuzzy Phase** (only if triggered):
+
+   * If `--fuzzy-match-mode first` or `all`: the specified `--fuzzy-algo` is used.
+   * If `hybrid`: scores from all core algorithms are combined using `--hybrid-agg-fn`.
+
+### Combination Matrix
+
+| Match Path             | Exact Match Mode        | Fuzzy Match Mode | Fuzzy Algorithms                              | Aggregation Function   |
+| ---------------------- | ----------------------- | ---------------- | --------------------------------------------- | ---------------------- |
+| Exact only             | substring / word-subset | -                | -                                             | -                      |
+| Exact → Fuzzy fallback | substring / word-subset | first / all      | token\_sort\_ratio (default) or user-selected | -                      |
+| Exact → Fuzzy fallback | substring / word-subset | hybrid           | token\_sort\_ratio + others (weighted)        | mean, median, max, min |
+
+### Hybrid Weights (Internal)
+
+In hybrid mode, the following weights are used by default:
+
+| Algorithm           | Weight |
+| ------------------- | ------ |
+| `token_sort_ratio`  | 0.55   |
+| `simple_ratio`      | 0.15   |
+| `normalized_ratio`  | 0.15   |
+| `levenshtein_ratio` | 0.15   |
+
+These weights are not currently user-configurable.
+
+### Diagnostics and Debugging
+
+* Use `--debug` to view full diagnostics, including:
+
+  * Normalized query
+  * Exact vs fuzzy match decision
+  * Selected algorithms and scores
+  * Hybrid weight breakdown
+
+### Summary
+
+* Exact match is always attempted first.
+* Fuzzy match is conditional on `--fuzzy` and exact match outcome.
+* `--prefer-fuzzy` allows both results even if exact match succeeds.
+* Matching is normalized (NFC + uppercase).
+* Hybrid mode aggregates multiple algorithms via weighted scoring.
 
 ---
 
-For implementation details, see:
+**See also:**
 
-* [`docs/matching.md`](docs/matching.md)
-* [`docs/core_logic.md`](docs/core_logic.md)
-
+* [docs/matching.md](docs/matching.md)
+* [docs/core\_logic.md](docs/core_logic.md)
 
 ---
 
@@ -425,7 +450,7 @@ pip install charfinder
 pip install git+https://github.com/berserkhmdvhb/charfinder.git
 ```
 
-#### 👨‍💻 For Developers
+#### 👨‍💼 For Developers
 
 ##### Clone and Install in Editable Mode
 
@@ -470,7 +495,7 @@ charfinder --help
 #### Common CLI Options
 
 | Option               | Description                                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------------------|
+| -------------------- | --------------------------------------------------------------------------------------------------- |
 | `--fuzzy`            | Enable fuzzy search if no exact matches                                                             |
 | `--prefer-fuzzy`     | Force fuzzy search even if exact matches are found                                                  |
 | `--threshold`        | Fuzzy match threshold (0.0 to 1.0); applies to all fuzzy algorithms                                 |
@@ -543,97 +568,118 @@ See [docs/core\_logic.md](docs/core_logic.md).
 
 CharFinder is built with a **layered, modular architecture** that emphasizes clean separation of concerns, testability, and extensibility. It supports both robust CLI interaction and Python library usage.
 
-### 7.1. Architecture Overview
+### 7.1 Architecture Overview
 
-The system is divided into well-defined layers:
+The system is organized into clearly defined layers:
 
-1. **Core Logic Layer** (`src/charfinder/core/`)
+#### 1. **Core Logic Layer** (`core/`)
 
-   * Implements the core Unicode search logic.
-   * Supports both exact and fuzzy matching.
-   * Manages normalization and cache integration.
-   * Fully decoupled from CLI and I/O code.
+* Implements the core Unicode search logic: exact and fuzzy matching, normalization, and scoring.
+* Fully decoupled from CLI and output formatting.
+* Key modules:
 
-2. **Finder API Layer** (`src/charfinder/core/finders.py`)
+  * `finders.py` — orchestrates matching workflows
+  * `matching.py` — defines fuzzy scoring methods
+  * `name_cache.py` — handles persistent cache
+  * `unicode_data_loader.py` — parses and downloads Unicode data
 
-   * Provides unified public APIs: `find_chars()`, `find_chars_raw()`, `find_chars_with_info()`.
-   * Orchestrates exact and fuzzy match flow.
-   * Determines when fuzzy fallback or hybrid mode applies.
-   * Used by both CLI and any programmatic consumers.
+#### 2. **Finder API Layer** (`core/core_main.py`)
 
-3. **CLI Layer** (`src/charfinder/cli/`)
+* Provides unified public APIs:
 
-   * Parses arguments and flags (`args.py`, `parser.py`).
-   * Executes logic and outputs results (`cli_main.py`, `handlers.py`).
-   * Renders formatted or JSON output (`diagnostics.py`, `formatter.py`).
+  * `find_chars()`, `find_chars_raw()`, `find_chars_with_info()`
+* Orchestrates input validation, normalization, and config construction
+* Shared by both CLI and library consumers
 
-4. **Diagnostics Layer** (`cli/diagnostics_match.py`, `cli/diagnostics.py`)
+#### 3. **CLI Layer** (`cli/`)
 
-   * Outputs enriched match diagnostics.
-   * Explains which matching strategy was used and why.
-   * Reports fuzzy algorithm scores, aggregation, and fallback logic.
+* Parses arguments and flags (`args.py`, `parser.py`)
+* Executes logic and outputs results (`cli_main.py`, `handlers.py`)
+* Formats text and JSON output (`formatter.py`, `utils_runner.py`)
+* Fully testable and decoupled from core logic
 
-5. **Utilities Layer** (`src/charfinder/utils/`)
+#### 4. **Diagnostics Layer** (`cli/diagnostics.py`, `cli/diagnostics_match.py`)
 
-   * Provides cross-cutting functionality:
+* Provides structured debug output:
 
-     * Logging setup and filtering
-     * Unicode normalization
-     * Styled output formatting
-   * Shared across CLI and core layers.
+  * Matching strategy decisions, fallback logic, scoring insights
+* Activated by `--debug` or `CHARFINDER_DEBUG_ENV_LOAD=1`
 
-6. **Configuration Layer** (`src/charfinder/settings.py`)
+#### 5. **Utilities Layer** (`utils/`)
 
-   * Loads and validates environment variables and `.env` files.
-   * Supports per-environment behavior (DEV, UAT, PROD, TEST).
-   * Ensures safe `.env` resolution with optional debug diagnostics.
+* Cross-cutting utilities shared across layers:
 
+  * Normalization helpers (`normalizer.py`)
+  * Logging setup (`logger_helpers.py`, `logger_setup.py`)
+  * Output styling (`formatter.py`, `logger_styles.py`)
 
+#### 6. **Configuration Layer** (`settings.py`)
 
-### 7.2. Key Components
+* Handles all environment and `.env` logic
 
-#### Caching
+  * Resolves runtime mode (DEV, UAT, PROD, TEST)
+  * Supports debug tracing of dotenv loading
+* Centralized logger, root path, and environment behavior
 
-CharFinder minimizes redundant computation using both in-memory and persistent caching:
+#### 7. **Validation Layer** (`validators.py`)
+
+* Shared by both CLI and core layers
+* Centralizes all validation logic:
+
+  * Thresholds, algorithm names, match modes, color modes
+  * Argument resolution and normalization logic
+* Ensures consistent behavior and error handling across the project
+
+---
+
+### 7.2 Key Components
+
+#### 🔁 Caching
+
+CharFinder uses layered caching for performance:
 
 * **In-Memory:**
 
-  * `cached_normalize()` memoizes normalization results.
+  * `cached_normalize()` memoizes normalization results
 
-* **Persistent Cache:**
+* **Persistent:**
 
-  * Prebuilt Unicode name cache (`unicode_name_cache.json`).
-  * Loaded from disk or rebuilt from `UnicodeData.txt`.
+  * `unicode_name_cache.json` is loaded or rebuilt from `UnicodeData.txt`
+  * Avoids repeated downloads and accelerates startup
 
-See: [docs/caching.md](docs/caching.md)
+→ See: [`docs/caching.md`](docs/caching.md)
 
-#### Environment Management
+---
 
-Supports layered environment configuration:
+#### ⚙️ Environment Management
 
-* Runtime environments: `DEV`, `UAT`, `PROD`, `TEST`
-* Config resolution order:
+Supports predictable environment resolution:
 
-  1. `DOTENV_PATH` override
-  2. `.env` file in root
+* Runtime modes: `DEV`, `UAT`, `PROD`, `TEST`
+* Load order:
+
+  1. `DOTENV_PATH` (if set)
+  2. `.env` in project root (if found)
   3. System environment
 
-Enable verbose debug with `CHARFINDER_DEBUG_ENV_LOAD=1`.
+→ Use `CHARFINDER_DEBUG_ENV_LOAD=1` for config trace output
 
-See: [docs/environment\_config.md](docs/environment_config.md)
+→ See: [`docs/environment_config.md`](docs/environment_config.md)
 
-#### Logging
+---
 
-Unified logging system with environment-aware routing:
+#### 📋 Logging
 
-* **Rotating file logs** in `logs/{ENV}/charfinder.log`
-* **Console logging** controlled by `--verbose` and `--debug`
-* **Colorized output** using dynamic terminal styling
-* **Shared logger setup** used across CLI and internal modules
+CharFinder uses a flexible and color-aware logging setup:
 
-See: [docs/logging\_system.md](docs/logging_system.md)
+* **Rotating file logs** stored in `logs/{ENV}/charfinder.log`
+* **Console logs** based on `--verbose` and `--debug`
+* **Color output** auto-detected for terminals vs. scripts
+* Logging initialized via `setup_logging()` and shared globally
 
+→ See: [`docs/logging_system.md`](docs/logging_system.md)
 
+---
 
 ## 🧪 8. Testing
 
