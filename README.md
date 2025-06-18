@@ -39,9 +39,9 @@ Designed for both technical and non-technical users, CharFinder enables reliable
    * [7.1 Architecture Overview](#71-architecture-overview)
    * [7.2 Key Components](#72-key-components)
 
-     * [Caching](#caching)
-     * [Environment Management](#environment-management)
-     * [Logging](#logging)
+     * [Caching](#-caching-1)
+     * [Environment Management](#%EF%B8%8F-environment-management)
+     * [Logging](#-logging-1)
 8. [🧪 Testing](#-8-testing)
 
    * [Running Tests](#running-tests)
