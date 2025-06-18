@@ -1007,12 +1007,12 @@ Support for advanced embedding scenarios (such as pre-injected caches, multi-pro
 
 
 ---
+
 ## 📖 12. Documentation
 
 This project includes detailed internal documentation to help both developers and advanced users understand its design, architecture, and internals.
 
 The following documents are located in the [`docs/`](docs/) directory:
-
 
 | Document                                                    | Description                                                                                                         |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -1031,10 +1031,7 @@ The following documents are located in the [`docs/`](docs/) directory:
 | [`unit_test_design.md`](docs/unit_test_design.md)           | Testing layers: unit tests, CLI integration tests, coverage strategy.                                               |
 | [`validators.md`](docs/validators.md)                       | Centralized validation logic shared across CLI and core. Type safety, fallbacks, source-aware behavior.             |
 
-
-
-> These documents are designed to serve both as **developer onboarding** material and **technical audit** documentation.
-
+> These documents serve both as **developer onboarding** materials and **technical audit** references.
 
 ---
 
