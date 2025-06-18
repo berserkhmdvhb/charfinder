@@ -1,4 +1,4 @@
-# 📦 CLI Architecture
+# 📦 CLI Architecture (`charfinder.cli`)
 
 This document describes the internal architecture of the `myproject` CLI, designed to be modular, testable, and robust. It also highlights key components and how they interact.
 
