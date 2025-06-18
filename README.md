@@ -59,7 +59,7 @@ Designed for both technical and non-technical users, CharFinder enables reliable
     * [Benchmarks (Informal)](#benchmarks-informal)
     * [Profiling Tips](#profiling-tips)
     * [Future Improvements](#future-improvements)
-11. [🚧 Limitations / Known Issues](#-11-limitations--known-issues)
+11. [🚧 Limitations and Known Issues](#-11-limitations--known-issues)
 12. [📖 Documentation](#12--documentation)
 13. [🧾 License](#13--license)
 
@@ -321,7 +321,7 @@ CharFinder offers a robust and transparent matching engine for searching Unicode
 | Exact         | Word Subset (default) | `--exact-match-mode word-subset` | All words in the query must be present in the name (order-independent). |
 | Fuzzy         | First (default)       | `--fuzzy-match-mode first`       | Return the top-scoring match based on the selected algorithm.           |
 | Fuzzy         | All                   | `--fuzzy-match-mode all`         | Return all matches above the threshold, sorted by score.                |
-| Fuzzy         | Hybrid                | `--fuzzy-match-mode hybrid`      | Aggregate multiple fuzzy algorithm scores using a specified function.   |
+| Fuzzy         | Hybrid                | `--fuzzy-match-mode hybrid`      | A fused algorithm combining multiple similarity metrics into one score. Not the same as `--fuzzy-match-mode hybrid`.  |
 
 ### Default Matching Behavior
 
@@ -925,7 +925,7 @@ make develop
 
 ---
 
-## 🚧 11. Limitations / Known Issues
+## 🚧 11. Limitations and Known Issues
 
 While **CharFinder** is a robust and flexible tool, it is important to be aware of the following current limitations and known constraints:
 
