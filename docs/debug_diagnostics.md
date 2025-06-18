@@ -121,13 +121,13 @@ This is handled by `print_dotenv_debug()` if `MYPROJECT_DEBUG_ENV_LOAD=1` or exp
 
 ```mermaid
 graph TD
-    A[Start: print_match_diagnostics()] --> B{match_info.fuzzy?}
-    B -- False --> C[print_exact_match_diagnostics()]
-    B -- True --> D{match_info.fuzzy_was_used?}
-    D -- True --> E[print_fuzzy_match_diagnostics()]
-    D -- False --> F{match_info.prefer_fuzzy?}
-    F -- True --> G["Fuzzy was preferred but exact used"]
-    F -- False --> H["Fuzzy skipped due to exact match"]
+    A[Start: print_match_diagnostics] --> B{Is fuzzy matching requested?}
+    B -- No --> C[Call print_exact_match_diagnostics]
+    B -- Yes --> D{Was fuzzy matching used?}
+    D -- Yes --> E[Call print_fuzzy_match_diagnostics]
+    D -- No --> F{Was fuzzy matching preferred?}
+    F -- Yes --> G[Fuzzy preferred but exact used]
+    F -- No --> H[Fuzzy skipped due to exact match]
     G --> C
     H --> C
 ```
