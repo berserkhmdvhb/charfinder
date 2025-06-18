@@ -51,24 +51,56 @@ src/myproject/
 
 ```mermaid
 flowchart TD
-    A["__main__.py<br/><small style='color:#eee;'>Module entry point</small>"] --> B["main.py<br/><small style='color:#eee;'>Delegates to cli_main</small>"]
-    B --> C["cli_main.py<br/><small style='color:#eee;'>Coordinates parsing, settings, logging</small>"]
+    %% ENTRY POINTS
+    A["__main__.py<br/><small>Module entry point</small>"] --> B["cli_main.py<br/><small>Top-level CLI logic</small>"]
 
-    C --> D["parser.py<br/><small style='color:#eee;'>Argument parsing</small>"]
-    C --> E["logger_utils.py<br/><small style='color:#eee;'>Set up logging</small>"]
-    C --> F["handlers.py<br/><small style='color:#eee;'>Route to core logic</small>"]
-    C --> G["color_utils.py<br/><small style='color:#eee;'>Styled CLI output</small>"]
+    %% CORE CLI FLOW
+    B --> C1["parser.py<br/><small>Argument parsing</small>"]
+    B --> C2["args.py<br/><small>Argument name constants</small>"]
+    B --> C3["utils_runner.py<br/><small>Workflow helpers (query/fuzzy)</small>"]
+    B --> C4["handlers.py<br/><small>Routing CLI args → core</small>"]
+    B --> C5["diagnostics.py<br/><small>Generic CLI diagnostics</small>"]
+    B --> C6["diagnostics_match.py<br/><small>Fuzzy match diagnostics</small>"]
 
-    F --> H["core.py<br/><small style='color:#eee;'>Business logic</small>"]
+    %% VALIDATION / SETTINGS
+    B --> D1["validators.py<br/><small>Input validation & normalization</small>"]
+    B --> D2["settings.py<br/><small>Env + dotenv config loader</small>"]
+    D2 -->|dotenv| D3["constants.py<br/><small>Default values, valid sets</small>"]
 
-    style A fill:#1e293b,stroke:#64748b,stroke-width:1px,color:#fff
-    style B fill:#1e293b,stroke:#64748b,stroke-width:1px,color:#fff
-    style C fill:#334155,stroke:#93c5fd,stroke-width:2px,color:#fff
-    style D fill:#0f172a,color:#fff
-    style E fill:#0f172a,color:#fff
-    style F fill:#0f172a,color:#fff
-    style G fill:#0f172a,color:#fff
-    style H fill:#064e3b,color:#fff
+    %% OUTPUT & LOGGING
+    B --> E1["formatter.py<br/><small>Text formatting (colors, highlights)</small>"]
+    B --> E2["logger_setup.py<br/><small>Logger creation</small>"]
+    B --> E3["logger_helpers.py<br/><small>Filters, rotation, teardown</small>"]
+    B --> E4["logger_styles.py<br/><small>Log colorization styles</small>"]
+
+    %% CORE LOGIC
+    C4 --> F1["core_main.py<br/><small>Public API for core search</small>"]
+    F1 --> F2["finders.py<br/><small>Exact/Fuzzy dispatcher</small>"]
+    F2 --> F3["matching.py<br/><small>Match logic & scoring</small>"]
+    F2 --> F4["name_cache.py<br/><small>Normalized name cache</small>"]
+    F4 --> F5["unicode_data_loader.py<br/><small>Unicode & alias loader</small>"]
+
+    %% UTILITIES
+    subgraph utils ["utils/ (shared)"]
+      E1
+      E2
+      E3
+      E4
+      G1["normalizer.py<br/><small>Unicode normalization</small>"]
+    end
+
+    %% STYLES
+    classDef entry fill:#1e293b,stroke:#64748b,color:#fff;
+    classDef cli fill:#334155,stroke:#93c5fd,color:#fff;
+    classDef shared fill:#0f172a,stroke:#64748b,color:#fff;
+    classDef core fill:#064e3b,stroke:#10b981,color:#fff;
+    classDef utils fill:#3f3f46,stroke:#facc15,color:#fff;
+
+    class A entry;
+    class B,C1,C2,C3,C4,C5,C6 cli;
+    class D1,D2,D3 shared;
+    class E1,E2,E3,E4,G1 utils;
+    class F1,F2,F3,F4,F5 core;
 ```
 
 ---
