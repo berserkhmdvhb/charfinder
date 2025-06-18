@@ -1013,6 +1013,7 @@ This project includes detailed internal documentation to help both developers an
 
 The following documents are located in the [`docs/`](docs/) directory:
 
+
 | Document                                                    | Description                                                                                                         |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | [`cli_architecture.md`](docs/cli_architecture.md)           | Overview of CLI modules, their flow, entry points, and command routing logic.                                       |
@@ -1024,8 +1025,12 @@ The following documents are located in the [`docs/`](docs/) directory:
 | [`unit_test_design.md`](docs/unit_test_design.md)           | Testing layers: unit tests, CLI integration tests, coverage strategy.                                               |
 | [`normalization.md`](docs/normalization.md)                 | Unicode normalization explained: what is used (`NFC`), why, and implications for search.                            |
 | [`matching.md`](docs/matching.md)                           | Detailed explanation of exact and fuzzy matching algorithms and options. Includes mode combinations and flowcharts. |
+| [`validators.md`](docs/validators.md)                       | Centralized validation logic shared across CLI and core. Type safety, fallbacks, source-aware behavior.             |
+| [`types_protocols.md`](docs/types_protocols.md)             | Project-wide types, `Protocol` interfaces, and their role in extensibility and static typing.                       |
 | [`caching.md`](docs/caching.md)                             | Explanation of cache layers: Unicode name cache, `cached_normalize()`, performance considerations.                  |
 | [`roadmap.md`](docs/roadmap.md)                             | Future plans and enhancements.                                                                                      |
+| [`packaging.md`](docs/packaging.md)                         | Packaging and publishing: `pyproject.toml`, build tools, versioning strategy, and PyPI release process.             |
+
 
 > These documents are designed to serve both as **developer onboarding** material and **technical audit** documentation.
 
