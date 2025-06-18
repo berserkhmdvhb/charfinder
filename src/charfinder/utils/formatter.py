@@ -130,7 +130,8 @@ def echo(
     Raises:
         ValueError: If log=True but log_method is not provided, or if log_method is invalid.
     """
-    from charfinder.utils.logger_setup import get_logger
+    # Lazy import
+    from charfinder.utils.logger_setup import get_logger  # noqa: PLC0415
 
     logger = get_logger()
     styled = style(msg)
@@ -172,7 +173,8 @@ def log_optionally_echo(
         style: Optional style function for terminal output.
         stream: Output stream for terminal (default sys.stdout).
     """
-    from charfinder.utils.logger_setup import get_logger
+    # Lazy Import
+    from charfinder.utils.logger_setup import get_logger  # noqa: PLC0415
 
     logger = get_logger()
     log_func = getattr(logger, level, None)

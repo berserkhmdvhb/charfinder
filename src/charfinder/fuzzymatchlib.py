@@ -44,7 +44,7 @@ import unicodedata
 from typing import TYPE_CHECKING, cast
 
 import Levenshtein
-from rapidfuzz.fuzz import token_sort_ratio
+from rapidfuzz import fuzz
 
 from charfinder.constants import (
     DEFAULT_FUZZY_ALGO,
@@ -139,7 +139,7 @@ def token_sort_ratio_score(a: str, b: str) -> float:
     Returns:
         float: Similarity score in the range [0.0, 1.0].
     """
-    return token_sort_ratio(a, b) / 100.0
+    return float(fuzz.token_sort_ratio(a, b)) / 100.0
 
 
 def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC) -> float:
