@@ -309,125 +309,18 @@ See following:
 
 ---
 
-## 5. 🎯 Exact and Fuzzy Match
+## 5. 🎯 Matching Engine (Exact + Fuzzy)
 
-CharFinder offers a robust and transparent matching engine for searching Unicode character names. It supports both **exact** and **fuzzy** strategies, with configurable modes and algorithms.
+CharFinder uses a layered matching strategy to identify Unicode characters by name. By default, it performs an **exact match** first—this ensures fast and accurate results when the query is correct. If no exact match is found, and fuzzy matching is enabled, it falls back to **fuzzy match** mode, which helps recover from typos or partial/inexact queries.
 
-### Matching Modes Overview
+Fuzzy matching can use a **single algorithm** (like `token_sort_ratio`) or a **hybrid strategy** that combines multiple similarity metrics (e.g., Levenshtein, normalized ratio) with configurable aggregation functions.
 
-| Matching Type | Mode                  | CLI Argument                     | Description                                                             |
-| ------------- | --------------------- | -------------------------------- | ----------------------------------------------------------------------- |
-| Exact         | Substring             | `--exact-match-mode substring`   | Query must appear as a substring in the Unicode name.                   |
-| Exact         | Word Subset (default) | `--exact-match-mode word-subset` | All words in the query must be present in the name (order-independent). |
-| Fuzzy         | First (default)       | `--fuzzy-match-mode first`       | Return the top-scoring match based on the selected algorithm.           |
-| Fuzzy         | All                   | `--fuzzy-match-mode all`         | Return all matches above the threshold, sorted by score.                |
-| Fuzzy         | Hybrid                | `--fuzzy-match-mode hybrid`      | A fused algorithm combining multiple similarity metrics into one score. Not the same as `--fuzzy-match-mode hybrid`.  |
+- Exact modes: `substring`, `word-subset` (default).
+- Fuzzy modes: `first`, `all`, `hybrid` with multiple algorithms and aggregation.
+- Normalization is always applied (NFC + uppercase).
+- Matching logic is configurable via CLI flags like `--fuzzy`, `--prefer-fuzzy`, `--fuzzy-algo`, etc.
 
-### Default Matching Behavior
-
-By default, CharFinder applies the following logic:
-
-1. **Exact match** is attempted first using **word-subset** mode.
-2. Two outcomes are possible:
-
-   * **Exact match found**: The results are returned immediately.
-
-     * If `--prefer-fuzzy` is specified, fuzzy results are shown **in addition**.
-   * **Exact match not found**: If `--fuzzy` is enabled, fuzzy matching is triggered.
-3. Fuzzy matching defaults to `first` mode using the `token_sort_ratio` algorithm.
-4. If `--fuzzy-match-mode hybrid` is selected, a weighted score is computed from:
-
-   * `simple_ratio`
-   * `normalized_ratio`
-   * `levenshtein_ratio`
-   * `token_sort_ratio`
-  
-5. Aggregation is performed using the function defined by `--hybrid-agg-fn` (default: `mean`).
-
-### Available Fuzzy Algorithms
-
-Specify via `--fuzzy-algo`:
-
-| Algorithm           | Description                                                 |
-| ------------------- | ----------------------------------------------------------- |
-| `simple_ratio`      | Basic character overlap similarity.                         |
-| `normalized_ratio`  | Normalized character similarity with length adjustments.    |
-| `levenshtein_ratio` | Edit distance similarity ratio.                             |
-| `token_sort_ratio`  | Sorts and compares tokens; handles reordered/partial input. |
-| `hybrid_score`      | Internally used for hybrid mode aggregation.                |
-
-> Note: Only valid algorithm names can be passed via CLI. Use `--fuzzy-match-mode hybrid` to enable automatic combination.
-
-### Aggregation Functions (Hybrid Mode)
-
-Used via `--hybrid-agg-fn`:
-
-* `mean` (default)
-* `median`
-* `max`
-* `min`
-
-These functions aggregate the scores of the contributing fuzzy algorithms.
-
-### Matching Flow
-
-1. **Normalization**:
-
-   * All queries and Unicode names are converted to **NFC form** and **uppercased**.
-
-2. **Exact Phase**:
-
-   * Matching is performed using either `substring` or `word-subset` mode.
-
-3. **Fuzzy Phase** (only if triggered):
-
-   * If `--fuzzy-match-mode first` or `all`: the specified `--fuzzy-algo` is used.
-   * If `hybrid`: scores from all core algorithms are combined using `--hybrid-agg-fn`.
-
-### Combination Matrix
-
-| Match Path             | Exact Match Mode        | Fuzzy Match Mode | Fuzzy Algorithms                              | Aggregation Function   |
-| ---------------------- | ----------------------- | ---------------- | --------------------------------------------- | ---------------------- |
-| Exact only             | substring / word-subset | -                | -                                             | -                      |
-| Exact → Fuzzy fallback | substring / word-subset | first / all      | token\_sort\_ratio (default) or user-selected | -                      |
-| Exact → Fuzzy fallback | substring / word-subset | hybrid           | token\_sort\_ratio + others (weighted)        | mean, median, max, min |
-
-### Hybrid Weights (Internal)
-
-In hybrid mode, the following weights are used by default:
-
-| Algorithm           | Weight |
-| ------------------- | ------ |
-| `token_sort_ratio`  | 0.55   |
-| `simple_ratio`      | 0.15   |
-| `normalized_ratio`  | 0.15   |
-| `levenshtein_ratio` | 0.15   |
-
-These weights are not currently user-configurable.
-
-### Diagnostics and Debugging
-
-* Use `--debug` to view full diagnostics, including:
-
-  * Normalized query
-  * Exact vs fuzzy match decision
-  * Selected algorithms and scores
-  * Hybrid weight breakdown
-
-### Summary
-
-* Exact match is always attempted first.
-* Fuzzy match is conditional on `--fuzzy` and exact match outcome.
-* `--prefer-fuzzy` allows both results even if exact match succeeds.
-* Matching is normalized (NFC + uppercase).
-* Hybrid mode aggregates multiple algorithms via weighted scoring.
-
----
-
-**See also:**
-
-* [docs/matching.md](docs/matching.md)
-* [docs/core\_logic.md](docs/core_logic.md)
+See [docs/matching.md](docs/matching.md) for full details on algorithms, thresholds, fallback flow, hybrid weights, and diagnostics.
 
 ---
 
