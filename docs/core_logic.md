@@ -32,7 +32,6 @@ flowchart TD
     %% Matching Logic Layer
     %% ===========================
     subgraph Matching
-        style Matching fill:#f9f9f9,stroke:#ccc
         MATCHTYPE{Fuzzy?}
         EXACT[find_exact_matches()]
         FUZZY[find_fuzzy_matches()]
@@ -52,7 +51,6 @@ flowchart TD
     %% Handler Logic
     %% ===========================
     subgraph CoreHandler
-        style CoreHandler fill:#f0f8ff,stroke:#bbb
         RUN[_run_query_and_return()]
     end
 
@@ -62,14 +60,12 @@ flowchart TD
     %% Output Layer
     %% ===========================
     subgraph Output
-        style Output fill:#fdf6e3,stroke:#aaa
         TEXT[Text Output]
         JSON[JSON Output]
     end
 
     RUN --> TEXT
     RUN --> JSON
-
 ```
 
 ---
