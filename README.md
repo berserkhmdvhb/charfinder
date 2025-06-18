@@ -60,7 +60,7 @@ Designed for both technical and non-technical users, CharFinder enables reliable
     * [Profiling Tips](#profiling-tips)
     * [Future Improvements](#future-improvements)
 11. [🚧 Limitations and Known Issues](#-11-limitations--known-issues)
-12. [📖 Documentation](#12--documentation)
+12. [📖 Documentation](#-12-documentation)
 13. [🧾 License](#13--license)
 
 ---
