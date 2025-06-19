@@ -351,7 +351,7 @@ Fuzzy matching can use a **single algorithm** (like `token_sort_ratio`) or a **h
 
 - Exact modes: `substring`, `word-subset` (default).
 - Fuzzy modes: `first`, `all`, `hybrid` with multiple algorithms and aggregation.
-- Normalization is always applied (NFC + uppercase).
+- Normalization is by default applied, but the intensity and level can be tweaked by `--normalization-profile`.
 - Matching logic is configurable via CLI flags like `--fuzzy`, `--prefer-fuzzy`, `--fuzzy-algo`, etc.
 
 📚 See [docs/matching.md](docs/matching.md).
