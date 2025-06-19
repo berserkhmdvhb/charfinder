@@ -159,8 +159,8 @@ Normalization behavior is internally configurable:
 - Default form: via `DEFAULT_NORMALIZATION_FORM` constant.
 - Future roadmap: expose normalization form as CLI flag (e.g., `--norm-form`).
 
-
-## 10. Enhancing Discoverability with Alternate Names (Field 10)
+---
+## Enhancing Discoverability with Alternate Names (Field 10)
 
 ### Problem: What Users Type ≠ Official Unicode Names
 
