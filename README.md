@@ -846,6 +846,7 @@ The following documents are located in the [`docs/`](docs/) directory:
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | [`caching.md`](docs/caching.md)                             | Explanation of cache layers: Unicode name cache, `cached_normalize()`, performance considerations.                  |
 | [`cli_architecture.md`](docs/cli_architecture.md)           | Overview of CLI modules, their flow, entry points, and command routing logic.                                       |
+| [`config_constants.md`](docs/config_constants.md)       |Centralized constants used across the project: default values, valid input sets, exit codes, environment variable names, normalization profiles, hybrid scoring weights, and logging defaults.                         |
 | [`config_environment.md`](docs/config_environment.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities.                             |
 | [`config_types_protocols.md`](docs/config_types_protocols.md) | Project-wide types, `Protocol` interfaces, and their role in extensibility and static typing.                     |
 | [`core_logic.md`](docs/core_logic.md)                       | Core logic and library API (`find_chars`, `find_chars_raw`): processing rules, transformations, architecture.       |
