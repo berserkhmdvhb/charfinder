@@ -69,6 +69,8 @@ Designed for both technical and non-technical users, CharFinder enables reliable
 
 https://github.com/user-attachments/assets/e19b0bbd-d99b-401b-aa29-0092627f376b
 
+To see more examples, see subsection ?
+
 ---
 
 ## ✨ 2. Features
@@ -428,7 +430,7 @@ charfinder --help
 * Enable diagnostics with `--debug` or by setting `CHARFINDER_DEBUG_ENV_LOAD=1`.
 
 
-#### More CLI Examples
+#### Demo
 
 **Basic Example**
 ![ex1](https://github.com/user-attachments/assets/53e7770f-cb14-4ba7-8157-bc0eeacc19f6)
@@ -443,6 +445,14 @@ charfinder --help
 ![ex3](https://github.com/user-attachments/assets/bd4b9bd5-1d48-468a-8002-b05dc4b04277)
 
 
+**Fuzzy Match Example**
+
+![ex4](https://github.com/user-attachments/assets/a74ff5c3-0442-4309-bf52-8ef3824ae1bc)
+
+
+**Usage `--format` to export JSON Output**
+
+![ex5](https://github.com/user-attachments/assets/2db50733-3e13-4e4e-bc67-6b35884a625b)
 
 
 
