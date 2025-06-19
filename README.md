@@ -122,7 +122,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
   * Log directory changes by environment
   * Test mode activates `.env.test`
 
-See [docs/environment_config.md](docs/environment_config.md)
+📚 See [docs/environment_config.md](docs/environment_config.md)
 
 ### 💻 CLI Features
 
@@ -149,7 +149,7 @@ See [docs/environment_config.md](docs/environment_config.md)
 
 * Detailed CLI help with examples
 
-See [docs/cli_architecture.md](docs/cli_architecture.md)
+📚 See [docs/cli_architecture.md](docs/cli_architecture.md)
 
 ### 🐍 Python Library Usage
 
@@ -160,7 +160,7 @@ See [docs/cli_architecture.md](docs/cli_architecture.md)
 * Fully type-annotated
 * CLI dependencies are not required for library usage
 
-See [docs/core_logic.md](docs/core_logic.md)
+📚 See [docs/core_logic.md](docs/core_logic.md)
 
 ### 🧪 Testability & Quality
 
@@ -172,7 +172,7 @@ See [docs/core_logic.md](docs/core_logic.md)
 * Modular `conftest.py` with reusable fixtures
 * Clean `pytest` + `coverage` + `pre-commit` workflow
 
-See [docs/unit_test_design.md](docs/unit_test_design.md)
+📚 See [docs/unit_test_design.md](docs/unit_test_design.md)
 
 ### 📑 Modern Packaging & Tooling
 
@@ -418,7 +418,7 @@ charfinder --help
 * Use `--format json` for scripting and automation.
 * Enable diagnostics with `--debug` or by setting `CHARFINDER_DEBUG_ENV_LOAD=1`.
 
-See [docs/cli\_architecture.md](docs/cli_architecture.md).
+📚 See [docs/cli\_architecture.md](docs/cli_architecture.md).
 
 ---
 
