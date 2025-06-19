@@ -440,7 +440,8 @@ charfinder --help
 
 **Usage of `--debug` for diagnostics**
 
-![ex3](https://github.com/user-attachments/assets/92b4d9c4-f679-4e00-add3-7d3f6a77eb05)
+![ex3](https://github.com/user-attachments/assets/bd4b9bd5-1d48-468a-8002-b05dc4b04277)
+
 
 
 
