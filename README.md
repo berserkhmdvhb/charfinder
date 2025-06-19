@@ -311,22 +311,17 @@ CharFinder applies **Unicode NFC normalization + uppercasing** to:
 
 Even though the second input uses a decomposed form (`e` + combining acute), CharFinder normalizes it before matching.
 
----
 
-### 📦 Terminal Example with Emoji
+### Terminal Example with Emoji
 
 CharFinder correctly matches Unicode emoji and symbols. For example:
 
 ![example](https://github.com/user-attachments/assets/5e1b9aba-43f1-418a-a4f2-8e3b5746ffd0)
 
 
-
 > Note: Composite emoji like `👩‍💻` (woman technologist) are grapheme clusters, not individual Unicode code points, and are not listed in `UnicodeData.txt`. CharFinder focuses on official single-codepoint characters.
 
 📚 See [docs/unicode\_and\_normalization.md](docs/unicode_and_normalization.md).
-
-
-
 
 ---
 
