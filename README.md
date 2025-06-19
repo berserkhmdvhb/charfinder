@@ -282,7 +282,7 @@ CharFinder implements a **layered architecture** with clear boundaries:
 
 ---
 
-### 🔄 Unicode Normalization
+### 🔄 Unicode and Normalization
 
 Characters can be visually identical but encoded differently. For example:
 
@@ -296,21 +296,7 @@ CharFinder applies **Unicode NFC normalization + uppercasing** to:
 | Input Query | Normalized | Matches? |
 |-------------|------------|----------|
 | café        | CAFÉ       | ✅       |
-| café       | CAFÉ       | ✅       |
-
----
-
-### 🔍 Alternate Names from UnicodeData.txt
-
-Many characters (e.g. `_`, `.`, `/`) have common aliases not reflected in their official names. CharFinder solves this by indexing **alternate names (Field 10)** from [`UnicodeData.txt`](https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt), enhancing discoverability:
-
-| Character | Codepoint | Official Name | Alt Name |
-|----------|-----------|----------------|----------|
-| `_`      | U+005F    | LOW LINE       | SPACING UNDERSCORE |
-| `.`      | U+002E    | FULL STOP      | PERIOD             |
-| `/`      | U+002F    | SOLIDUS        | SLASH              |
-
-Alternate names are merged into the cache and normalized for full search support.
+| café        | CAFÉ       | ✅       |
 
 
 📚 See [docs/unicode_and_normalization.md](docs/unicode_and_normalization.md),
