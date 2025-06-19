@@ -427,6 +427,24 @@ charfinder --help
 * Use `--format json` for scripting and automation.
 * Enable diagnostics with `--debug` or by setting `CHARFINDER_DEBUG_ENV_LOAD=1`.
 
+
+#### More CLI Examples
+
+**Basic Example**
+![ex1](https://github.com/user-attachments/assets/53e7770f-cb14-4ba7-8157-bc0eeacc19f6)
+
+**Usage of `--verbose` or `-v` flag**
+
+![ex2](https://github.com/user-attachments/assets/ce9914d5-a75a-4fa1-8a84-4eda2c5c6988)
+
+
+**Usage of `--debug` for diagnostics**
+
+![ex3](https://github.com/user-attachments/assets/92b4d9c4-f679-4e00-add3-7d3f6a77eb05)
+
+
+
+
 📚 See [docs/cli\_architecture.md](docs/cli_architecture.md).
 
 ---
