@@ -219,7 +219,7 @@ clean-coverage:
 
 clean-build:
 	@echo "Removing build artifacts..."
-	$(PYTHON) -c "import shutil, glob; [shutil.rmtree(p, ignore_errors=True) for p in ['dist', 'build'] + glob.glob('*.egg-info')]"
+	$(PYTHON) -c "import shutil, pathlib; [shutil.rmtree(p, ignore_errors=True) for p in map(pathlib.Path, ['dist', 'build']) if p.exists()]; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('*.egg-info')]"
 
 clean-pyc:
 	@echo "Removing .pyc and __pycache__ files..."
