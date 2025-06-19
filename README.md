@@ -316,7 +316,8 @@ Even though the second input uses a decomposed form (`e` + combining acute), Cha
 
 CharFinder correctly matches Unicode emoji and symbols. For example:
 
-![example](https://github.com/user-attachments/assets/5e1b9aba-43f1-418a-a4f2-8e3b5746ffd0)
+![ex6](https://github.com/user-attachments/assets/e7c781cf-48b1-4e93-b1d6-58e0d5c29d20)
+
 
 
 > Note: Composite emoji like `👩‍💻` (woman technologist) are grapheme clusters, not individual Unicode code points, and are not listed in `UnicodeData.txt`. CharFinder focuses on official single-codepoint characters.
