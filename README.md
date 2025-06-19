@@ -273,7 +273,7 @@ charfinder/
 
 CharFinder implements a **layered architecture** with clear boundaries:
 
-📚 See section [Internals and Architecture](#9-internals-and-architecture), and following documentatoins:
+📚 See section [Internals and Architecture](#7--internals-and-architecture), and following documentatoins:
 
 * [docs/cli\_architecture.md](docs/cli_architecture.md)
 * [docs/core\_logic.md](docs/core_logic.md)
