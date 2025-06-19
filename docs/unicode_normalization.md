@@ -2,7 +2,6 @@
 
 CharFinder ensures **reliable and consistent search behavior** through deep integration with the Unicode standard and careful normalization of input and data. This page explains what Unicode is, why it matters, and how CharFinder handles normalization to guarantee robust and accurate matching.
 
----
 
 ## 1. What Is Unicode?
 
