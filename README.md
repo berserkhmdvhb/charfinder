@@ -293,7 +293,7 @@ Characters can be visually identical but encoded differently. For example:
 
 * `é` (U+00E9) and `é` (`e` + U+0301) look the same, but are different code points.
 
-CharFinder applies **Unicode NFC normalization + uppercasing** to:
+CharFinder applies **Unicode NFKD normalization + uppercasing** to:
 
 * Normalize all inputs and cached names
 * Ensure matching is **stable**, **reliable**, and **encoding-independent**
