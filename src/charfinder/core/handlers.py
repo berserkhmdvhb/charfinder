@@ -40,7 +40,7 @@ from charfinder.validators import (
 )
 
 if TYPE_CHECKING:
-    from charfinder.config.constants import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
+    from charfinder.config.aliases import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
 
 
 # ---------------------------------------------------------------------

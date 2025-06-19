@@ -29,10 +29,12 @@ from charfinder.cli.handlers import (
 from charfinder.config.constants import (
     EXIT_CANCELLED,
     EXIT_ERROR,
-    FuzzyConfig,
 )
 from charfinder.config.settings import get_environment, is_prod, load_settings
-from charfinder.config.types import MatchResult
+from charfinder.config.types import (
+    FuzzyConfig,
+    MatchResult,
+)
 from charfinder.utils.formatter import echo, should_use_color
 from charfinder.utils.logger_setup import get_logger, setup_logging, teardown_logger
 from charfinder.utils.logger_styles import (

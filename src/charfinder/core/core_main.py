@@ -31,9 +31,6 @@ from charfinder.config.constants import (
     DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_HYBRID_AGG_FUNC,
     DEFAULT_THRESHOLD,
-    FuzzyAlgorithm,
-    FuzzyMatchMode,
-    HybridAggFunc,
 )
 from charfinder.core.finders import (
     find_chars as _find_chars_impl,
@@ -49,6 +46,7 @@ from charfinder.utils.formatter import format_result_header, format_result_row
 from charfinder.utils.normalizer import normalize
 
 if TYPE_CHECKING:
+    from charfinder.config.aliases import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
     from charfinder.config.types import CharMatch, SearchConfig
 
 ExactMatchMode = Literal["substring", "word-subset"]

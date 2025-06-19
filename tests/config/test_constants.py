@@ -11,7 +11,9 @@ Covers:
 from pathlib import Path
 from typing import get_args
 
-
+from charfinder.config.aliases import (
+    ColorMode,
+)
 import charfinder.config.constants as C
 
 
@@ -33,7 +35,7 @@ def test_default_constants() -> None:
     assert C.DEFAULT_HYBRID_AGG_FUNC in get_args(C.VALID_HYBRID_AGG_FUNCS)
 
     assert isinstance(C.DEFAULT_COLOR_MODE, str)
-    assert C.DEFAULT_COLOR_MODE in get_args(C.ColorMode)
+    assert C.DEFAULT_COLOR_MODE in get_args(ColorMode)
 
 
 def test_logging_constants() -> None:

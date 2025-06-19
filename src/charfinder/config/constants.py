@@ -17,24 +17,69 @@ Defines:
 # Imports
 # ---------------------------------------------------------------------
 
-from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Literal
+
+from charfinder.config.aliases import (
+    ColorMode,
+    ExactMatchMode,
+    FuzzyAlgorithm,
+    FuzzyMatchMode,
+    HybridAggFunc,
+    NormalizationForm,
+    OutputFormat,
+)
+from charfinder.config.types import NormalizationProfile
+
+__all__ = [
+    "ALT_NAME_INDEX",
+    "DEFAULT_COLOR_MODE",
+    "DEFAULT_ENCODING",
+    "DEFAULT_EXACT_MATCH_MODE",
+    "DEFAULT_FUZZY_ALGO",
+    "DEFAULT_FUZZY_MATCH_MODE",
+    "DEFAULT_LOG_ROOT",
+    "DEFAULT_NORMALIZATION_FORM",
+    "DEFAULT_OUTPUT_FORMAT",
+    "DEFAULT_THRESHOLD",
+    "ENV_COLOR_MODE",
+    "ENV_DEBUG_ENV_LOAD",
+    "ENV_ENVIRONMENT",
+    "ENV_LOG_BACKUP_COUNT",
+    "ENV_LOG_LEVEL",
+    "ENV_LOG_MAX_BYTES",
+    "ENV_MATCH_THRESHOLD",
+    "EXIT_CANCELLED",
+    "EXIT_ERROR",
+    "EXIT_INVALID_USAGE",
+    "EXIT_NO_RESULTS",
+    "EXIT_SUCCESS",
+    "EXPECTED_MIN_FIELDS",
+    "FIELD_WIDTHS",
+    "FUZZY_ALGO_ALIASES",
+    "LOG_FILE_NAME",
+    "LOG_FORMAT",
+    "LOG_METHODS",
+    "NORMALIZATION_PROFILES",
+    "PACKAGE_NAME",
+    "VALID_EXACT_MATCH_MODES",
+    "VALID_FUZZY_MATCH_MODES",
+    "VALID_HYBRID_AGG_FUNCS",
+    "VALID_LOG_METHODS",
+    "VALID_OUTPUT_FORMATS",
+]
+
+# ---------------------------------------------------------------------
+# Package Info
+# ---------------------------------------------------------------------
+
+PACKAGE_NAME = "charfinder"
+DEFAULT_ENCODING = "utf-8"
+
 
 # ---------------------------------------------------------------------
 # Typing Aliases
 # ---------------------------------------------------------------------
-
-FuzzyAlgorithm = Literal[
-    "sequencematcher",
-    "rapidfuzz",
-    "levenshtein_ratio",
-    "simple_ratio",
-    "normalized_ratio",
-    "token_sort_ratio",
-    "hybrid_score",
-]
 
 FUZZY_ALGO_ALIASES: dict[str, FuzzyAlgorithm] = {
     "lev": "levenshtein_ratio",
@@ -48,21 +93,7 @@ FUZZY_ALGO_ALIASES: dict[str, FuzzyAlgorithm] = {
     "sequencematcher": "sequencematcher",
     "rapidfuzz": "rapidfuzz",
 }
-VALID_FUZZY_ALGO_NAMES: set[str] = set(FUZZY_ALGO_ALIASES.values())
 
-ExactMatchMode = Literal["substring", "word-subset"]
-FuzzyMatchMode = Literal["single", "hybrid"]
-ColorMode = Literal["auto", "always", "never"]
-HybridAggFunc = Literal["mean", "median", "max", "min"]
-OutputFormat = Literal["text", "json"]
-NormalizationForm = Literal["NFC", "NFD", "NFKC", "NFKD"]
-
-# ---------------------------------------------------------------------
-# Package Info
-# ---------------------------------------------------------------------
-
-PACKAGE_NAME = "charfinder"
-DEFAULT_ENCODING = "utf-8"
 
 # ---------------------------------------------------------------------
 # Valid Inputs
@@ -75,6 +106,7 @@ VALID_LOG_METHODS = {"debug", "info", "warning", "error", "exception"}
 VALID_HYBRID_AGG_FUNCS = {"mean", "median", "max", "min"}
 VALID_OUTPUT_FORMATS = {"text", "json"}
 VALID_NORMALIZATION_FORMS = {"NFC", "NFD", "NFKC", "NFKD"}
+VALID_FUZZY_ALGO_NAMES: set[str] = set(FUZZY_ALGO_ALIASES.values())
 
 LOG_METHODS = SimpleNamespace(
     DEBUG="debug",
@@ -116,6 +148,7 @@ DEFAULT_HYBRID_AGG_FUNC: HybridAggFunc = "mean"
 DEFAULT_COLOR_MODE: ColorMode = "auto"
 DEFAULT_OUTPUT_FORMAT: OutputFormat = "text"
 DEFAULT_NORMALIZATION_FORM: NormalizationForm = "NFKD"
+
 # ---------------------------------------------------------------------
 # Hybrid scoring weights for fuzzy match components
 # ---------------------------------------------------------------------
@@ -125,6 +158,30 @@ FUZZY_HYBRID_WEIGHTS: dict[str, float] = {
     "normalized_ratio": 0.15,
     "levenshtein_ratio": 0.15,
     "token_sort_ratio": 0.55,
+}
+# ---------------------------------------------------------------------
+# Normalization Profiles
+# ---------------------------------------------------------------------
+
+NORMALIZATION_PROFILES: dict[str, NormalizationProfile] = {
+    "raw": {
+        "form": "NFC",
+        "strip_accents": False,
+        "strip_whitespace": False,
+    },
+    "light": {
+        "form": "NFC",
+        "strip_accents": False,
+    },
+    "medium": {
+        "form": "NFKD",
+        "strip_accents": False,
+    },
+    "aggressive": {
+        "form": "NFKD",
+        "strip_accents": True,
+    },
+    # Optionally later: "max": {...}
 }
 
 # ---------------------------------------------------------------------
@@ -149,66 +206,8 @@ ENV_COLOR_MODE = "CHARFINDER_COLOR_MODE"
 
 
 # ------------------------------------------------------------------------
-# Dataclasses for Fuzzy Configuration
-# ------------------------------------------------------------------------
-
-
-@dataclass
-class FuzzyConfig:
-    fuzzy_algo: FuzzyAlgorithm
-    fuzzy_match_mode: FuzzyMatchMode
-
-
-# ------------------------------------------------------------------------
 # UnicodeData
 # ------------------------------------------------------------------------
 
 ALT_NAME_INDEX = 10  # index of alternate name in UnicodeData.txt fields
 EXPECTED_MIN_FIELDS = 11  # fields expected per line in UnicodeData.txt
-
-# ---------------------------------------------------------------------
-# __all__
-# ---------------------------------------------------------------------
-
-__all__ = [
-    "ALT_NAME_INDEX",
-    "DEFAULT_COLOR_MODE",
-    "DEFAULT_ENCODING",
-    "DEFAULT_EXACT_MATCH_MODE",
-    "DEFAULT_FUZZY_ALGO",
-    "DEFAULT_FUZZY_MATCH_MODE",
-    "DEFAULT_LOG_ROOT",
-    "DEFAULT_NORMALIZATION_FORM",
-    "DEFAULT_OUTPUT_FORMAT",
-    "DEFAULT_THRESHOLD",
-    "ENV_COLOR_MODE",
-    "ENV_DEBUG_ENV_LOAD",
-    "ENV_ENVIRONMENT",
-    "ENV_LOG_BACKUP_COUNT",
-    "ENV_LOG_LEVEL",
-    "ENV_LOG_MAX_BYTES",
-    "ENV_MATCH_THRESHOLD",
-    "EXIT_CANCELLED",
-    "EXIT_ERROR",
-    "EXIT_INVALID_USAGE",
-    "EXIT_NO_RESULTS",
-    "EXIT_SUCCESS",
-    "EXPECTED_MIN_FIELDS",
-    "FIELD_WIDTHS",
-    "LOG_FILE_NAME",
-    "LOG_FORMAT",
-    "LOG_METHODS",
-    "PACKAGE_NAME",
-    "VALID_EXACT_MATCH_MODES",
-    "VALID_FUZZY_MATCH_MODES",
-    "VALID_HYBRID_AGG_FUNCS",
-    "VALID_LOG_METHODS",
-    "VALID_OUTPUT_FORMATS",
-    "ColorMode",
-    "ExactMatchMode",
-    "FuzzyAlgorithm",
-    "FuzzyMatchMode",
-    "HybridAggFunc",
-    "NormalizationForm",
-    "OutputFormat",
-]

@@ -53,10 +53,6 @@ from charfinder.config.constants import (
     DEFAULT_NORMALIZATION_FORM,
     FUZZY_ALGO_ALIASES,
     FUZZY_HYBRID_WEIGHTS,
-    FuzzyAlgorithm,
-    FuzzyMatchMode,
-    HybridAggFunc,
-    NormalizationForm,
 )
 from charfinder.validators import (
     validate_fuzzy_algo,
@@ -65,6 +61,12 @@ from charfinder.validators import (
 )
 
 if TYPE_CHECKING:
+    from charfinder.config.aliases import (
+        FuzzyAlgorithm,
+        FuzzyMatchMode,
+        HybridAggFunc,
+        NormalizationForm,
+    )
     from charfinder.config.types import AlgorithmFn
 
 ERROR_UNKNOWN_ALGO = (

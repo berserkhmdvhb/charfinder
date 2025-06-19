@@ -50,6 +50,12 @@ from pathlib import Path
 from typing import Literal, cast
 from urllib.parse import urlparse
 
+from charfinder.config.aliases import (
+    ColorMode,
+    ExactMatchMode,
+    FuzzyAlgorithm,
+    FuzzyMatchMode,
+)
 from charfinder.config.constants import (
     DEFAULT_COLOR_MODE,
     DEFAULT_THRESHOLD,
@@ -61,14 +67,13 @@ from charfinder.config.constants import (
     VALID_FUZZY_MATCH_MODES,
     VALID_HYBRID_AGG_FUNCS,
     VALID_OUTPUT_FORMATS,
-    ColorMode,
-    ExactMatchMode,
-    FuzzyAlgorithm,
-    FuzzyConfig,
-    FuzzyMatchMode,
 )
 from charfinder.config.settings import get_cache_file
-from charfinder.config.types import HybridAggFunc, NameCache
+from charfinder.config.types import (
+    FuzzyConfig,
+    HybridAggFunc,
+    NameCache,
+)
 from charfinder.utils.formatter import echo, should_use_color
 from charfinder.utils.logger_styles import format_warning
 

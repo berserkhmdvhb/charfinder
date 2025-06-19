@@ -22,7 +22,12 @@ from typing import Any, NamedTuple, Protocol
 
 from typing_extensions import NotRequired, TypedDict
 
-from charfinder.config.constants import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
+from charfinder.config.aliases import (
+    FuzzyAlgorithm,
+    FuzzyMatchMode,
+    HybridAggFunc,
+    NormalizationForm,
+)
 
 __all__ = [
     "AlgorithmFn",
@@ -38,6 +43,7 @@ __all__ = [
     "MatchResult",
     "MatchTuple",
     "NameCache",
+    "NormalizationProfile",
     "SearchConfig",
     "UnicodeDataLoader",
 ]
@@ -186,3 +192,20 @@ class MatchTuple(NamedTuple):
     char: str
     name: str
     score: float | None
+
+
+class NormalizationProfile(TypedDict, total=False):
+    form: NormalizationForm
+    strip_accents: bool
+    strip_whitespace: bool
+
+
+# ------------------------------------------------------------------------
+# Dataclasses for Fuzzy Configuration
+# ------------------------------------------------------------------------
+
+
+@dataclass
+class FuzzyConfig:
+    fuzzy_algo: FuzzyAlgorithm
+    fuzzy_match_mode: FuzzyMatchMode
