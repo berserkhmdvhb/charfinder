@@ -420,22 +420,25 @@ U+2764      ❤     HEAVY BLACK HEART  (\u2764)
 charfinder --help
 ```
 
-#### Common CLI Options
+#### CLI Options
 
-| Option               | Description                                                                                         |
-| -------------------- | --------------------------------------------------------------------------------------------------- |
-| `--fuzzy`            | Enable fuzzy search if no exact matches                                                             |
-| `--prefer-fuzzy`     | Force fuzzy search even if exact matches are found                                                  |
-| `--threshold`        | Fuzzy match threshold (0.0 to 1.0); applies to all fuzzy algorithms                                 |
-| `--fuzzy-algo`       | Choose fuzzy algorithm: `token_sort_ratio` (default), `sequencematcher`, `rapidfuzz`, `levenshtein` |
-| `--fuzzy-match-mode` | Fuzzy match mode: `single` (default), `hybrid`                                                      |
-| `--hybrid-agg-fn`    | Aggregation function for hybrid mode: `mean` (default), `median`, `max`, `min`                      |
-| `--exact-match-mode` | Exact match mode: `word-subset` (default), `substring`                                              |
-| `--format`           | Choose output format: `text` (default) or `json`                                                    |
-| `--color`            | Output color mode: `auto` (default), `always`, `never`                                              |
-| `--verbose`, `-v`    | Enable verbose console output (enabled by default in CLI; suppressed in tests)                      |
-| `--debug`            | Enable diagnostic output with detailed strategy, config, and environment info                       |
-| `--version`          | Show installed version of CharFinder                                                                |
+| Option                   | Description                                                                                           |
+|--------------------------|-------------------------------------------------------------------------------------------------------|
+| `-q`, `--query`          | Provide search query as an option (alternative to positional query)                                   |
+| `--fuzzy`                | Enable fuzzy search if no exact matches are found                                                     |
+| `--prefer-fuzzy`         | Include fuzzy results even if exact matches are found (hybrid mode)                                   |
+| `--threshold`            | Set fuzzy match threshold (0.0 to 1.0); applies to all algorithms                                     |
+| `--fuzzy-algo`           | Select fuzzy algorithm: `token_sort_ratio` (default), `sequencematcher`, `rapidfuzz`, `levenshtein`   |
+| `--fuzzy-match-mode`     | Fuzzy match mode: `single` (default), `hybrid`                                                        |
+| `--hybrid-agg-fn`        | Aggregation function for hybrid mode: `mean` (default), `median`, `max`, `min`                        |
+| `--exact-match-mode`     | Exact match strategy: `word-subset` (default), `substring`                                            |
+| `--normalization-profile`| Normalization level: `aggressive` (default), `medium`, `light`, `raw`                                 |
+| `--format`               | Output format: `text` (default) or `json`                                                             |
+| `--color`                | Color output mode: `auto` (default), `always`, `never`                                                |
+| `-v`, `--verbose`        | Enable terminal output (stdout/stderr); defaults to enabled in CLI, disabled in tests                 |
+| `--debug`                | Show detailed diagnostics, including config, strategy, and environment                                |
+| `--version`              | Show installed version of CharFinder                                                                  |
+
 
 #### Advanced CLI Tips
 
