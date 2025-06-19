@@ -585,6 +585,8 @@ The system is structured into clearly defined layers:
   * `types.py` — shared types and protocols for core and CLI usage
   * `aliases.py` — fuzzy algorithm aliases and canonical name resolution
 
+  📚 See [`docs/config_constants.md`](docs/config_constants.md), [`docs/config_environment.md`](docs/config_environment.md),  [`docs/config_types_protocols.md`](docs/config_types_protocols.md)
+
 #### 7. **Validation Layer** (`validators.py`)
 
 * Core + CLI shared validation
