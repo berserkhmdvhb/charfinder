@@ -270,36 +270,59 @@ CharFinder implements a **layered architecture** with clear boundaries:
 * [docs/logging\_system.md](docs/logging_system.md)
 * [docs/caching.md](docs/caching.md)
 
----## 4. 🌐 Unicode & Normalization
+---
+
+## 4. 🌐 Unicode & Normalization
 
 **Unicode** is the global standard for encoding text, defining unique code points for every letter, symbol, emoji, and script. It enables CharFinder to search across more than 140,000 characters—covering everything from Latin letters to CJK ideograms and emojis.
 
 ### Why It Matters for CharFinder
 
-- ✅ **Multilingual coverage**: Supports scripts from all major languages and symbol sets.
-- ✅ **Emoji and symbol support**: All emoji and symbols are part of Unicode and fully searchable.
-- ✅ **Alternate name discovery**: CharFinder indexes official names *and* alternate names (from field 10 of `UnicodeData.txt`) to support queries like `"underscore"`, `"slash"`, or `"period"`.
+* ✅ **Multilingual coverage**: Supports scripts from all major languages and symbol sets.
+* ✅ **Emoji and symbol support**: All emoji and symbols are part of Unicode and fully searchable.
+* ✅ **Alternate name discovery**: CharFinder indexes official names *and* alternate names (from field 10 of `UnicodeData.txt`) to support queries like `"underscore"`, `"slash"`, or `"period"`.
 
 ---
 
-### 🔄 Unicode and Normalization
+### 🔄 Normalization
 
 Characters can be visually identical but encoded differently. For example:
 
-- `é` (U+00E9) and `é` (`e` + U+0301) look the same, but are different code points.
+* `é` (U+00E9) and `é` (`e` + U+0301) look the same, but are different code points.
 
 CharFinder applies **Unicode NFC normalization + uppercasing** to:
 
-- Normalize all inputs and cached names
-- Ensure matching is **stable**, **reliable**, and **encoding-independent**
+* Normalize all inputs and cached names
+* Ensure matching is **stable**, **reliable**, and **encoding-independent**
 
-| Input Query | Normalized | Matches? |
-|-------------|------------|----------|
-| café        | CAFÉ       | ✅       |
-| café        | CAFÉ       | ✅       |
+#### 🔍 Normalization in Action
+
+| Input                   | Codepoints                           | Normalized | Matches?     |
+| ----------------------- | ------------------------------------ | ---------- | ------------ |
+| `café`                  | `U+0063 U+0061 U+0066 U+00E9`        | `CAFÉ`     | ✅            |
+| `café`                 | `U+0063 U+0061 U+0066 U+0065 U+0301` | `CAFÉ`     | ✅            |
+| `CAFÉ`                  | `U+0043 U+0041 U+0046 U+00C9`        | `CAFÉ`     | ✅            |
+| `CAFÉ`                 | `U+0043 U+0041 U+0046 U+0045 U+0301` | `CAFÉ`     | ✅            |
+| `𝒸𝒶𝓻é` (italic math) | `U+1D4B8 U+1D4B6 U+1D4FB U+00E9`     | `CAFÉ`     | ✅ (fallback) |
+| `ｃａｆｅ́` (fullwidth)     | `U+FF43 U+FF41 U+FF46 U+FF45 U+0301` | `CAFÉ`     | ✅ (folded)   |
+
+Even though the second input uses a decomposed form (`e` + combining acute), CharFinder normalizes it before matching.
+
+---
+
+### 📦 Terminal Example with Emoji
+
+CharFinder correctly matches Unicode emoji and symbols. For example:
+
+![example](https://github.com/user-attachments/assets/5e1b9aba-43f1-418a-a4f2-8e3b5746ffd0)
 
 
-📚 See [docs/unicode_and_normalization.md](docs/unicode_and_normalization.md),
+
+> Note: Composite emoji like `👩‍💻` (woman technologist) are grapheme clusters, not individual Unicode code points, and are not listed in `UnicodeData.txt`. CharFinder focuses on official single-codepoint characters.
+
+📚 See [docs/unicode\_and\_normalization.md](docs/unicode_and_normalization.md) for technical details.
+
+
 
 
 ---
@@ -623,8 +646,20 @@ This runs all of the following commands:
 make lint-ruff
 ```
 
+which is equivalent to 
+
+```bash
+ruff check src/ tests/
+```
+
 ```bash
 make fmt
+```
+
+which is equivalent to
+
+```bash
+ruff format src/ tests/
 ```
 
 #### Static Type Checks
@@ -633,26 +668,11 @@ make fmt
 make type-check
 ```
 
-CharFinder uses **pre-commit** to enforce code quality automatically on each commit.
-
-Set up hooks:
+which is equivalent to
 
 ```bash
-make precommit
+mypy src/ tests/
 ```
-
-Manually run all hooks:
-
-```bash
-make precommit-run
-```
-
-Hooks include:
-
-* Ruff linting
-* MyPy type checking
-* Black formatting check
-* Check for common errors
 
 ### Coverage Policy
 
