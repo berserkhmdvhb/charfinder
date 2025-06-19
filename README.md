@@ -96,8 +96,9 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 
 ### 📉 Unicode Normalization
 
-* All matching is performed after Unicode **NFC normalization**
-* Matching is **case-insensitive** and **accent-insensitive**
+* All matching is performed after Unicode normalization.
+* Matching is case-insensitive, accent-insensitive, and format-insensitive
+* Input and character names are normalized using configurable Unicode profiles (`--normalization-profile`)
 * Alternate names (from `UnicodeData.txt`) are supported
 
 ### 🔄 Caching
@@ -211,52 +212,59 @@ charfinder/
 ├── LICENSE.txt
 ├── Makefile                         # Automation tasks
 ├── MANIFEST.in                      # Files to include in sdist
-├── pyproject.toml                   # PEP 621 build + deps
+├── pyproject.toml                   # PEP 621 build + dependencies
 ├── README.md                        # Project documentation (this file)
 ├── docs/                            # Detailed documentation (.md files)
+├── data/                            # Downloaded UnicodeData and cache
+│   ├── UnicodeData.txt              # Standard Unicode name definitions
+│   └── cache/                       # Local character name cache
 ├── src/charfinder/                  # Main package code
 │   ├── __init__.py                  # Package version marker
 │   ├── __main__.py                  # Enables `python -m charfinder`
-│   ├── constants.py                 # Constants and default values
-│   ├── fuzzymatchlib.py             # Fuzzy matching algorithms
-│   ├── settings.py                  # Environment/config management
-│   ├── types.py                     # Shared type definitions
+│   ├── fuzzymatchlib.py             # Fuzzy matching algorithm registry
 │   ├── validators.py                # Input validation logic
-│   ├── py.typed                     # Marker for type-checking consumers
 │   │
 │   ├── cli/                         # CLI logic (modularized)
 │   │   ├── __init__.py
 │   │   ├── args.py                  # CLI argument definitions
-│   │   ├── cli_main.py              # CLI main controller
-│   │   ├── diagnostics.py           # CLI diagnostics output
-│   │   ├── diagnostics_match.py     # Debug output for match strategy
+│   │   ├── cli_main.py              # CLI main entry point
+│   │   ├── diagnostics.py           # Diagnostics and debugging info
+│   │   ├── diagnostics_match.py     # Match strategy explanation
 │   │   ├── handlers.py              # CLI command handlers
-│   │   ├── parser.py                # CLI parser and preprocessing
-│   │   └── utils_runner.py          # CLI execution helpers
+│   │   ├── parser.py                # CLI parser and argument preprocessing
+│   │   └── utils_runner.py          # CLI runner and echo utilities
+│   │
+│   ├── config/                      # Configuration and constants
+│   │   ├── __init__.py
+│   │   ├── aliases.py               # Alias mappings for fuzzy algorithms
+│   │   ├── constants.py             # Default values and valid options
+│   │   ├── settings.py              # Environment/config management
+│   │   └── types.py                 # Shared type definitions
 │   │
 │   ├── core/                        # Core Unicode search logic
 │   │   ├── __init__.py
-│   │   ├── core_main.py             # Thin public API wrapper for core search logic
-│   │   ├── finders.py               # Output routing and formatting logic
-│   │   ├── handlers.py              # Matching coordinator and config builder
+│   │   ├── core_main.py             # Public API entry point for core logic
+│   │   ├── finders.py               # Output routing and formatting
+│   │   ├── handlers.py              # Search coordination and config builder
 │   │   ├── matching.py              # Exact and fuzzy matching logic
 │   │   ├── name_cache.py            # Unicode name cache builder
 │   │   └── unicode_data_loader.py   # UnicodeData.txt loader and parser
 │   │
 │   ├── utils/                       # Shared utilities
-│       ├── __init__.py
-│       ├── formatter.py             # Terminal and log message formatting
-│       ├── logger_helpers.py        # Custom logging helpers
-│       ├── logger_setup.py          # Logging setup and teardown
-│       ├── logger_styles.py         # Styling for log output
-│       └── normalizer.py            # Unicode normalization logic
-└── tests/
+│   │   ├── __init__.py
+│   │   ├── formatter.py             # Terminal and log formatting
+│   │   ├── logger_helpers.py        # Custom logging helpers
+│   │   ├── logger_setup.py          # Logger setup/teardown
+│   │   ├── logger_styles.py         # Logging color/style definitions
+│   │   └── normalizer.py            # Unicode normalization logic
+│
+└── tests/                           # Unit and integration tests
     ├── cli/                         # CLI test modules
     ├── core/                        # Core logic tests
     ├── logger/                      # Logging-related tests
-    ├── test_settings.py             # Settings/config tests
+    ├── test_settings.py             # Config/settings tests
     ├── conftest.py                  # Shared test fixtures and utilities
-    └── manual/demo.ipynb            # Manual usage notebook
+    └── manual/demo.ipynb            # Manual usage and demo notebook
 ```
 
 
@@ -274,7 +282,6 @@ CharFinder implements a **layered architecture** with clear boundaries:
 * [docs/caching.md](docs/caching.md)
 
 ---
-
 ## 4. 🌐 Unicode & Normalization
 
 **Unicode** is the global standard for encoding text, defining unique code points for every letter, symbol, emoji, and script. It enables CharFinder to search across more than 140,000 characters—covering everything from Latin letters to CJK ideograms and emojis.
@@ -289,40 +296,50 @@ CharFinder implements a **layered architecture** with clear boundaries:
 
 ### 🔄 Normalization
 
-Characters can be visually identical but encoded differently. For example:
+Characters that look the same can be encoded in multiple ways. For example:
 
-* `é` (U+00E9) and `é` (`e` + U+0301) look the same, but are different code points.
+* `é` (U+00E9) vs. `é` (`e` + U+0301) are visually identical but distinct Unicode sequences.
 
-CharFinder applies **Unicode NFKD normalization + uppercasing** to:
+To ensure matching is consistent, CharFinder applies **Unicode normalization, case folding, and optional accent stripping** to both your input and the name cache.
 
-* Normalize all inputs and cached names
-* Ensure matching is **stable**, **reliable**, and **encoding-independent**
+You can customize this behavior using the `--normalization-profile` CLI argument:
+
+| Profile      | Unicode Form | Strip Accents | Strip Whitespace      | Transformation Summary             |
+| ------------ | ------------ | ------------- | --------------------- | ---------------------------------- |
+| `raw`        | NFC          | False         | False                 | NFC + `.upper()` (no stripping)    |
+| `light`      | NFC          | False         | False                 | NFC + `.upper()`                   |
+| `medium`     | NFKD         | False         | False                 | NFKD + `.upper()`                  |
+| `aggressive` | NFKD         | True          | False                 | NFKD + remove accents + `.upper()` |
+
+The default profile is **`aggressive`**, which provides robust matching across visually similar characters.
+
+---
 
 #### 🔍 Normalization in Action
 
 | Input                   | Codepoints                           | Normalized | Matches?     |
 | ----------------------- | ------------------------------------ | ---------- | ------------ |
-| `café`                  | `U+0063 U+0061 U+0066 U+00E9`        | `CAFÉ`     | ✅            |
-| `café`                 | `U+0063 U+0061 U+0066 U+0065 U+0301` | `CAFÉ`     | ✅            |
-| `CAFÉ`                  | `U+0043 U+0041 U+0046 U+00C9`        | `CAFÉ`     | ✅            |
-| `CAFÉ`                 | `U+0043 U+0041 U+0046 U+0045 U+0301` | `CAFÉ`     | ✅            |
-| `𝒸𝒶𝓻é` (italic math) | `U+1D4B8 U+1D4B6 U+1D4FB U+00E9`     | `CAFÉ`     | ✅ (fallback) |
-| `ｃａｆｅ́` (fullwidth)     | `U+FF43 U+FF41 U+FF46 U+FF45 U+0301` | `CAFÉ`     | ✅ (folded)   |
+| `café`                  | `U+0063 U+0061 U+0066 U+00E9`        | `CAFE`     | ✅            |
+| `café`                 | `U+0063 U+0061 U+0066 U+0065 U+0301` | `CAFE`     | ✅            |
+| `CAFÉ`                  | `U+0043 U+0041 U+0046 U+00C9`        | `CAFE`     | ✅            |
+| `CAFÉ`                 | `U+0043 U+0041 U+0046 U+0045 U+0301` | `CAFE`     | ✅            |
+| `𝒸𝒶𝓇é` (italic math) | `U+1D4B8 U+1D4B6 U+1D4FB U+00E9`     | `CAFE`     | ✅ (fallback) |
+| `ｃａｆｅ́` (fullwidth)     | `U+FF43 U+FF41 U+FF46 U+FF45 U+0301` | `CAFE`     | ✅ (folded)   |
 
-Even though the second input uses a decomposed form (`e` + combining acute), CharFinder normalizes it before matching.
+Even though the second input uses a decomposed form (`e` + combining acute), CharFinder normalizes and folds it to ensure a stable match.
 
+---
 
-### Terminal Example with Emoji
+### 🧪 Terminal Example with Emoji
 
 CharFinder correctly matches Unicode emoji and symbols. For example:
 
 ![ex6](https://github.com/user-attachments/assets/e7c781cf-48b1-4e93-b1d6-58e0d5c29d20)
 
-
-
 > Note: Composite emoji like `👩‍💻` (woman technologist) are grapheme clusters, not individual Unicode code points, and are not listed in `UnicodeData.txt`. CharFinder focuses on official single-codepoint characters.
 
-📚 See [docs/unicode\_and\_normalization.md](docs/unicode_and_normalization.md).
+📚 See [docs/unicode_normalization.md](docs/unicode_normalization.md) for deeper technical details and usage tips.
+
 
 ---
 
