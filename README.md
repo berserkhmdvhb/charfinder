@@ -126,7 +126,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
   * Log directory changes by environment
   * Test mode activates `.env.test`
 
-📚 See [docs/config_environment.md](docs/config_environment.md)
+📚 See [`config_environment.md`](docs/config_environment.md)
 
 ### 💻 CLI Features
 
@@ -153,7 +153,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 
 * Detailed CLI help with examples
 
-📚 See [docs/cli_architecture.md](docs/cli_architecture.md) and for examples see the subsection [demo](#demo)
+📚 See [`cli_architecture.md`](docs/cli_architecture.md) and for examples see the subsection [demo](#demo)
 
 ### 🐍 Python Library Usage
 
@@ -164,7 +164,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 * Fully type-annotated
 * CLI dependencies are not required for library usage
 
-📚 See [docs/core_logic.md](docs/core_logic.md)
+📚 See [`core_logic.md`](docs/core_logic.md)
 
 ### 🧪 Testability & Quality
 
@@ -176,7 +176,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 * Modular `conftest.py` with reusable fixtures
 * Clean `pytest` + `coverage` + `pre-commit` workflow
 
-📚 See [docs/unit_test_design.md](docs/unit_test_design.md)
+📚 See [`unit_test_design.md`](docs/unit_test_design.md)
 
 ### 📑 Modern Packaging & Tooling
 
@@ -338,7 +338,7 @@ CharFinder correctly matches Unicode emoji and symbols. For example:
 
 > Note: Composite emoji like `👩‍💻` (woman technologist) are grapheme clusters, not individual Unicode code points, and are not listed in `UnicodeData.txt`. CharFinder focuses on official single-codepoint characters.
 
-📚 See [docs/unicode_normalization.md](docs/unicode_normalization.md) for deeper technical details and usage tips.
+📚 See [`unicode_normalization.md`](docs/unicode_normalization.md)
 
 
 ---
@@ -354,7 +354,7 @@ Fuzzy matching can use a **single algorithm** (like `token_sort_ratio`) or a **h
 - Normalization is by default applied, but the intensity and level can be tweaked by `--normalization-profile`.
 - Matching logic is configurable via CLI flags like `--fuzzy`, `--prefer-fuzzy`, `--fuzzy-algo`, etc.
 
-📚 See [docs/matching.md](docs/matching.md).
+📚 See [`matching.md`](docs/matching.md).
 
 ---
 
@@ -473,7 +473,7 @@ charfinder --help
 
 
 
-📚 See [docs/cli\_architecture.md](docs/cli_architecture.md).
+📚 See [`cli_architecture.md`](docs/cli_architecture.md).
 
 ---
 
@@ -518,7 +518,7 @@ for item in results:
     print(item)
 ```
 
-📚 See [docs/core\_logic.md](docs/core_logic.md).
+📚 See [`core_logic.md`](docs/core_logic.md).
 
 ---
 
@@ -585,7 +585,7 @@ The system is structured into clearly defined layers:
   * `types.py` — shared types and protocols for core and CLI usage
   * `aliases.py` — fuzzy algorithm aliases and canonical name resolution
 
-  📚 See [`docs/config_constants.md`](docs/config_constants.md), [`docs/config_environment.md`](docs/config_environment.md),  [`docs/config_types_protocols.md`](docs/config_types_protocols.md)
+  📚 See [`config_constants.md`](docs/config_constants.md), [`config_environment.md`](docs/config_environment.md),  [`config_types_protocols.md`](docs/config_types_protocols.md)
 
 #### 7. **Validation Layer** (`validators.py`)
 
@@ -595,7 +595,7 @@ The system is structured into clearly defined layers:
   * Fuzzy algorithm names, match modes, thresholds, color modes
   * CLI/environment/default priority resolution
 
-📚 See [`docs/validators.md`](docs/validators.md)
+📚 See [`validators.md`](docs/validators.md)
 
 ---
 
@@ -614,7 +614,7 @@ CharFinder uses layered caching:
   * `unicode_name_cache.json` stores normalized character name mappings
   * Auto-rebuilt from `UnicodeData.txt` + alternates if missing or outdated
 
-📚 See [`docs/caching.md`](docs/caching.md)
+📚 See [`caching.md`](docs/caching.md)
 
 ---
 
@@ -631,7 +631,7 @@ Supports predictable, override-friendly config loading:
 
 → Enable `CHARFINDER_DEBUG_ENV_LOAD=1` for detailed trace
 
-📚 See [`docs/config_environment.md`](docs/config_environment.md)
+📚 See [`config_environment.md`](docs/config_environment.md)
 
 ---
 
@@ -644,7 +644,7 @@ Flexible logging system supports development, testing, and production:
 * **Color detection** adjusts automatically for terminals and scripts
 * Logging setup via `setup_logging()` in `logger_setup.py`
 
-📚 See [`docs/logging_system.md`](docs/logging_system.md)
+📚 See [`logging_system.md`](docs/logging_system.md)
 
 ---
 
@@ -742,7 +742,7 @@ mypy src/ tests/
 * **Logging tests:** test rotating logging, suppression, environment filtering
 * **Settings tests:** test different `.env` and environment variable scenarios
 
-📚 See [docs/unit_test_design.md](docs/unit_test_design.md)
+📚 See [`unit_test_design.md`](docs/unit_test_design.md)
 
 ---
 ### 👨‍💻 9. Developer Guide
@@ -827,13 +827,13 @@ make develop
 
 ### ⚡ 10. Performance
 
-📚 See [docs/performance.md](docs/performance.md)
+📚 See [`performance.md`](docs/performance.md)
 
 ---
 
 ## 🚧 11. Limitations and Known Issues
 
-📚 See [docs/limitations_issues.md](docs/limitations_issues.md)
+📚 See [`limitations_issues.md`](docs/limitations_issues.md)
 
 
 ---
