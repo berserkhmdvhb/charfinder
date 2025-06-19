@@ -14,7 +14,7 @@ from charfinder.utils.logger_styles import (
 )
 from collections.abc import Callable
 from colorama import Style
-from charfinder.types import FormatterFunc
+from charfinder.config.types import FormatterFunc
 
 
 @pytest.mark.parametrize(

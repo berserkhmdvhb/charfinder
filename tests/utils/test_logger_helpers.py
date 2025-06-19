@@ -19,7 +19,7 @@ import time
 from typing import ContextManager
 
 from charfinder.utils import logger_helpers as lh
-from charfinder.types import EchoFunc
+from charfinder.config.types import EchoFunc
 
 # Optional marker for test categorization
 pytestmark = pytest.mark.unit

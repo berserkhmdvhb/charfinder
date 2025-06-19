@@ -25,10 +25,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from charfinder.config.types import FuzzyMatchContext, MatchTuple, SearchConfig
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import BuildCacheOptions, build_name_cache
 from charfinder.fuzzymatchlib import resolve_algorithm_name
-from charfinder.types import FuzzyMatchContext, MatchTuple, SearchConfig
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_info
 from charfinder.utils.normalizer import normalize
@@ -40,7 +40,7 @@ from charfinder.validators import (
 )
 
 if TYPE_CHECKING:
-    from charfinder.constants import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
+    from charfinder.config.constants import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
 
 
 # ---------------------------------------------------------------------
@@ -155,7 +155,7 @@ def _resolve_matches(
             agg_fn=config.agg_fn,
             verbose=config.verbose,
             use_color=config.use_color,
-            query=query,
+            query=norm_query,
         )
         fuzzy_matches = [
             MatchTuple(code=tpl[0], char=tpl[1], name=tpl[2], score=tpl[3])

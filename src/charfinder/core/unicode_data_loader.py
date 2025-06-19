@@ -36,8 +36,8 @@ from urllib.error import URLError
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
-from charfinder.constants import ALT_NAME_INDEX, EXPECTED_MIN_FIELDS
-from charfinder.settings import get_unicode_data_file, get_unicode_data_url
+from charfinder.config.constants import ALT_NAME_INDEX, EXPECTED_MIN_FIELDS
+from charfinder.config.settings import get_unicode_data_file, get_unicode_data_url
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_info, format_warning

@@ -19,14 +19,14 @@ from dataclasses import dataclass
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
 
-from charfinder.constants import (
+from charfinder.config.constants import (
     EXIT_CANCELLED,
     EXIT_INVALID_USAGE,
     EXIT_NO_RESULTS,
     EXIT_SUCCESS,
 )
+from charfinder.config.types import MatchDiagnosticsInfo, MatchResult
 from charfinder.core.core_main import find_chars_raw, find_chars_with_info
-from charfinder.types import MatchDiagnosticsInfo, MatchResult
 from charfinder.utils.formatter import echo, print_result_lines
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error, format_warning

@@ -13,9 +13,9 @@ Functions:
 # Imports
 # ---------------------------------------------------------------------
 
+from charfinder.config.types import FuzzyMatchContext, MatchTuple
 from charfinder.fuzzymatchlib import compute_similarity
-from charfinder.types import FuzzyMatchContext, MatchTuple
-from charfinder.utils.formatter import echo
+from charfinder.utils.formatter import echo, log_optionally_echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_debug, format_info
 from charfinder.validators import (
@@ -37,10 +37,14 @@ logger = get_logger()
 MSG_UNKNOWN_EXACT_MODE = "Unknown exact match mode: {mode}"
 MSG_NO_SCORE_COMPUTED = "Skipped char '{char}' (U+{code:04X}) — no valid score computed."
 MSG_FUZZY_START = "No exact match found for '{query}', trying fuzzy..."
-MSG_FUZZY_SETTINGS = "Fuzzy settings: threshold={threshold}, agg_fn={agg_fn}"
+MSG_FUZZY_SETTINGS = "[FUZZY] settings: threshold={threshold}, agg_fn={agg_fn}"
+MSG_EXACT_CHECKING = "[EXACT] Checking char U+{code:04X}: norm_name='{name}' alt_norm='{alt}'"
+MSG_EXACT_MATCH = "[EXACT] query='{query}' matched in {field} for char '{char}'"
+MSG_SUBSET_CHECKING = "[EXACT] Checking subset: query_words={query} name_words={name}"
+MSG_SUBSET_MATCH = "[EXACT] (subset) for char '{char}'"
 
 # ---------------------------------------------------------------------
-# Internal Utilities
+# Internal Helpers
 # ---------------------------------------------------------------------
 
 
@@ -58,6 +62,9 @@ def find_exact_matches(
     norm_query: str,
     name_cache: dict[str, dict[str, str]],
     exact_match_mode: str,
+    *,
+    verbose: bool = False,
+    use_color: bool = False,
 ) -> list[MatchTuple]:
     """
     Perform exact matching based on the chosen exact match mode,
@@ -67,6 +74,8 @@ def find_exact_matches(
         norm_query (str): The normalized query string.
         name_cache (dict): The name cache mapping characters to normalized names.
         exact_match_mode (str): The exact match strategy ("substring" or "word-subset").
+        verbose (bool): If True, enables debug logging and echo.
+        use_color (bool): Enables styled echo output if True.
 
     Returns:
         list[MatchTuple]: List of matched entries with score=None.
@@ -85,6 +94,15 @@ def find_exact_matches(
         norm_name = names["normalized"]
         alt_norm = names.get("alternate_normalized")
 
+        if verbose:
+            message = f"[EXACT] Checking char U+{code_point:04X}: norm_name='{norm_name}', "
+            log_optionally_echo(
+                message,
+                level="debug",
+                show=True,
+                style=lambda m: format_debug(message=m, use_color=use_color),
+            )
+
         if exact_match_mode == "substring":
             if norm_query in norm_name or (alt_norm and norm_query in alt_norm):
                 matches.append(MatchTuple(code_point, char, original_name, None))
@@ -93,6 +111,16 @@ def find_exact_matches(
             name_words = set(norm_name.split())
             if alt_norm:
                 name_words |= set(alt_norm.split())
+
+            if verbose:
+                message = f"[EXACT] query_words={query_words}, name_words={name_words}"
+                log_optionally_echo(
+                    message,
+                    level="debug",
+                    show=True,
+                    style=lambda m: format_debug(message=m, use_color=use_color),
+                )
+
             if query_words <= name_words:
                 matches.append(MatchTuple(code_point, char, original_name, None))
         else:

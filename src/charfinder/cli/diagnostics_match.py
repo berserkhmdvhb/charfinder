@@ -19,12 +19,12 @@ from __future__ import annotations
 from argparse import Namespace
 from typing import TYPE_CHECKING
 
-from charfinder.constants import FUZZY_HYBRID_WEIGHTS
+from charfinder.config.constants import FUZZY_HYBRID_WEIGHTS
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_debug
 
 if TYPE_CHECKING:
-    from charfinder.types import MatchDiagnosticsInfo
+    from charfinder.config.types import MatchDiagnosticsInfo
 
 __all__ = [
     "print_exact_match_diagnostics",

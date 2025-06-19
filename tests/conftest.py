@@ -107,7 +107,7 @@ def load_fresh_settings(monkeypatch: MonkeyPatch) -> LoadFreshSettings:
         else:
             monkeypatch.delenv("CHARFINDER_ROOT_DIR_FOR_TESTS", raising=False)
 
-        import charfinder.settings as sett
+        import charfinder.config.settings as sett
         importlib.reload(sett)
         sett.load_settings()
         return sett
@@ -118,7 +118,7 @@ def setup_test_root(monkeypatch: MonkeyPatch, tmp_path: Path) -> Callable[[], Pa
     """Patch project root to tmp_path and reload settings."""
     def _setup() -> Path:
         monkeypatch.setenv("CHARFINDER_ROOT_DIR_FOR_TESTS", str(tmp_path.resolve()))
-        import charfinder.settings as sett
+        import charfinder.config.settings as sett
         importlib.reload(sett)
         sett.load_settings()
         return tmp_path
@@ -146,7 +146,7 @@ def temp_log_dir(monkeypatch: MonkeyPatch) -> Generator[Path, None, None]:
         tmp_path = Path(tmpdir).resolve()
         monkeypatch.setenv("CHARFINDER_ENV", "TEST")
 
-        import charfinder.settings as sett
+        import charfinder.config.settings as sett
         importlib.reload(sett)
         monkeypatch.setattr("charfinder.settings.get_log_dir", lambda: tmp_path)
 

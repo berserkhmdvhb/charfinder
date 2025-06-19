@@ -39,9 +39,9 @@ from typing import TYPE_CHECKING, TextIO
 from colorama import Fore, Style, init
 
 if TYPE_CHECKING:
-    from charfinder.types import CharMatch, MatchTuple
+    from charfinder.config.types import CharMatch, MatchTuple
 
-from charfinder.constants import FIELD_WIDTHS, VALID_LOG_METHODS
+from charfinder.config.constants import FIELD_WIDTHS, VALID_LOG_METHODS
 from charfinder.utils.logger_helpers import suppress_console_logging
 
 __all__ = [
@@ -131,7 +131,7 @@ def echo(
         ValueError: If log=True but log_method is not provided, or if log_method is invalid.
     """
     # Lazy import
-    from charfinder.utils.logger_setup import get_logger
+    from charfinder.utils.logger_setup import get_logger  # noqa: PLC0415
 
     logger = get_logger()
     styled = style(msg)
@@ -174,7 +174,7 @@ def log_optionally_echo(
         stream: Output stream for terminal (default sys.stdout).
     """
     # Lazy Import
-    from charfinder.utils.logger_setup import get_logger
+    from charfinder.utils.logger_setup import get_logger  # noqa: PLC0415
 
     logger = get_logger()
     log_func = getattr(logger, level, None)

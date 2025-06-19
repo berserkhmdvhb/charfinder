@@ -1,6 +1,6 @@
 import pytest
 from charfinder.utils.normalizer import normalize
-from charfinder.constants import DEFAULT_NORMALIZATION_FORM
+from charfinder.config.constants import DEFAULT_NORMALIZATION_FORM
 
 # Define the normalization forms matrix with multiple characters
 test_characters = {

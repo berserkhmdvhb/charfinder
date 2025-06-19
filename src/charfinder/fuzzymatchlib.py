@@ -46,7 +46,7 @@ from typing import TYPE_CHECKING, cast
 import Levenshtein
 from rapidfuzz import fuzz
 
-from charfinder.constants import (
+from charfinder.config.constants import (
     DEFAULT_FUZZY_ALGO,
     DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_HYBRID_AGG_FUNC,
@@ -65,7 +65,7 @@ from charfinder.validators import (
 )
 
 if TYPE_CHECKING:
-    from charfinder.types import AlgorithmFn
+    from charfinder.config.types import AlgorithmFn
 
 ERROR_UNKNOWN_ALGO = (
     "Invalid fuzzy algorithm. Expected one of the supported algorithms or their aliases."

@@ -50,7 +50,7 @@ from pathlib import Path
 from typing import Literal, cast
 from urllib.parse import urlparse
 
-from charfinder.constants import (
+from charfinder.config.constants import (
     DEFAULT_COLOR_MODE,
     DEFAULT_THRESHOLD,
     ENV_COLOR_MODE,
@@ -67,8 +67,8 @@ from charfinder.constants import (
     FuzzyConfig,
     FuzzyMatchMode,
 )
-from charfinder.settings import get_cache_file
-from charfinder.types import HybridAggFunc, NameCache
+from charfinder.config.settings import get_cache_file
+from charfinder.config.types import HybridAggFunc, NameCache
 from charfinder.utils.formatter import echo, should_use_color
 from charfinder.utils.logger_styles import format_warning
 
@@ -131,7 +131,7 @@ def _normalize_and_validate_fuzzy_algo(fuzzy_algo: str) -> FuzzyAlgorithm:
         ValueError: If the algorithm is not supported.
     """
     # Lazy import
-    from charfinder.fuzzymatchlib import FUZZY_ALGORITHM_REGISTRY
+    from charfinder.fuzzymatchlib import FUZZY_ALGORITHM_REGISTRY  # noqa: PLC0415
 
     normalized = fuzzy_algo.strip().lower().replace("-", "_")
     resolved = FUZZY_ALGO_ALIASES.get(normalized, normalized)

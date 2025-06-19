@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import get_args
 
 
-import charfinder.constants as C
+import charfinder.config.constants as C
 
 
 

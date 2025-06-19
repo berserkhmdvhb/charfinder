@@ -10,7 +10,7 @@ from typing import get_type_hints
 
 import pytest
 
-from charfinder import types
+from charfinder.config import types
 
 
 def test_algorithm_fn_type() -> None:

@@ -22,7 +22,7 @@ from typing import Any, NamedTuple, Protocol
 
 from typing_extensions import NotRequired, TypedDict
 
-from charfinder.constants import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
+from charfinder.config.constants import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
 
 __all__ = [
     "AlgorithmFn",

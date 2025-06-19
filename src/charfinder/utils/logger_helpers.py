@@ -77,7 +77,7 @@ class EnvironmentFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         # Lazy import
-        from charfinder.settings import get_environment
+        from charfinder.config.settings import get_environment  # noqa: PLC0415
 
         record.env = get_environment()
         return True
@@ -147,7 +147,7 @@ class CustomRotatingFileHandler(RotatingFileHandler):
                 path.unlink()
             except OSError:  # noqa: PERF203
                 # Lazy import
-                from charfinder.utils.formatter import log_optionally_echo
+                from charfinder.utils.formatter import log_optionally_echo  # noqa: PLC0415
 
                 message = f"Failed to delete old log file: {path}"
                 log_optionally_echo(
@@ -159,7 +159,7 @@ class CustomRotatingFileHandler(RotatingFileHandler):
 
     def _rotate_existing_logs(self) -> None:
         # Lazy import
-        from charfinder.utils.formatter import log_optionally_echo
+        from charfinder.utils.formatter import log_optionally_echo  # noqa: PLC0415
 
         for i in range(self.backupCount - 1, 0, -1):
             src = Path(self.rotation_filename(f"{self.baseFilename}.{i}"))

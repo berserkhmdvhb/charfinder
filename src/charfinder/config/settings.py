@@ -28,7 +28,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from charfinder.constants import (
+from charfinder.config.constants import (
     DEFAULT_LOG_ROOT,
     ENV_ENVIRONMENT,
     ENV_LOG_BACKUP_COUNT,

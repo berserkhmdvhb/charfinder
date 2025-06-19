@@ -42,7 +42,7 @@ from charfinder.cli.args import (
     ARG_VERSION,
 )
 from charfinder.cli.handlers import get_version
-from charfinder.constants import (
+from charfinder.config.constants import (
     DEFAULT_EXACT_MATCH_MODE,
     DEFAULT_FUZZY_ALGO,
     DEFAULT_FUZZY_MATCH_MODE,
@@ -221,7 +221,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Enable argcomplete
     try:
-        import argcomplete
+        import argcomplete  # noqa: PLC0415
 
         argcomplete.autocomplete(parser)
     except ImportError:

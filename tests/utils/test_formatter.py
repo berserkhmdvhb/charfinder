@@ -14,7 +14,7 @@ import pytest
 from colorama import Fore, Style
 
 from charfinder.utils import formatter as F
-from charfinder.types import EchoFunc
+from charfinder.config.types import EchoFunc
 
 
 # ---------------------------------------------------------------------

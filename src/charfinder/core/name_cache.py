@@ -18,9 +18,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
+from charfinder.config.settings import get_cache_file
+from charfinder.config.types import NameCache
 from charfinder.core.unicode_data_loader import load_alternate_names
-from charfinder.settings import get_cache_file
-from charfinder.types import NameCache
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error, format_info

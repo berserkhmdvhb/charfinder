@@ -17,7 +17,7 @@ from collections.abc import Callable
 
 import pytest
 
-import charfinder.settings as settings
+import charfinder.config.settings as settings
 
 
 # ---------------------------------------------------------------------

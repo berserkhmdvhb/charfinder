@@ -20,9 +20,9 @@ from argparse import Namespace
 from dotenv import dotenv_values
 
 from charfinder.cli.diagnostics_match import print_match_diagnostics
-from charfinder.constants import ENV_DEBUG_ENV_LOAD
-from charfinder.settings import resolve_dotenv_path
-from charfinder.types import MatchDiagnosticsInfo
+from charfinder.config.constants import ENV_DEBUG_ENV_LOAD
+from charfinder.config.settings import resolve_dotenv_path
+from charfinder.config.types import MatchDiagnosticsInfo
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_debug
 

@@ -33,8 +33,8 @@ import contextlib
 import logging
 from pathlib import Path
 
-from charfinder import constants as const
-from charfinder.settings import (
+from charfinder.config import constants as const
+from charfinder.config.settings import (
     get_log_backup_count,
     get_log_dir,
     get_log_max_bytes,

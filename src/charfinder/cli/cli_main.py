@@ -30,7 +30,8 @@ from charfinder.cli.utils_runner import (
     handle_cli_workflow,
     resolve_final_query,
 )
-from charfinder.constants import EXIT_SUCCESS
+from charfinder.config.constants import EXIT_SUCCESS
+from charfinder.utils.normalizer import normalize
 from charfinder.validators import (
     apply_fuzzy_defaults,
     resolve_cli_settings,
@@ -59,10 +60,13 @@ def main() -> None:
     args.color, use_color, args.threshold = resolve_cli_settings(args)
 
     # Query handling: resolve final query string
-    query_str = resolve_final_query(args)
-    if not query_str:
+    raw_query = resolve_final_query(args)
+    if not raw_query:
         parser.print_help()
         sys.exit(EXIT_SUCCESS)
+
+    # Normalize query for consistent matching
+    norm_query = normalize(raw_query)
 
     # Enable debug mode if required by CHARFINDER_DEBUG_ENV_LOAD
     auto_enable_debug(args)
@@ -74,7 +78,7 @@ def main() -> None:
     # Execute full CLI pipeline
     exit_code = handle_cli_workflow(
         args=args,
-        query_str=query_str,
+        query_str=norm_query,
         use_color=use_color,
     )
     sys.exit(exit_code)

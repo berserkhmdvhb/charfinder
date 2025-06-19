@@ -32,7 +32,7 @@ from charfinder.utils.formatter import (
 )
 
 if TYPE_CHECKING:
-    from charfinder.types import CharMatch, SearchConfig
+    from charfinder.config.types import CharMatch, SearchConfig
 
 __all__ = [
     "find_chars",

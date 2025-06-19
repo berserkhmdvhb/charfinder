@@ -8,8 +8,8 @@ internal finder functions, and return the expected results.
 import pytest
 from unittest.mock import MagicMock, patch
 from charfinder.core.core_main import find_chars, find_chars_raw, find_chars_with_info
-from charfinder.types import SearchConfig
-from charfinder.constants import DEFAULT_FUZZY_ALGO
+from charfinder.config.types import SearchConfig
+from charfinder.config.constants import DEFAULT_FUZZY_ALGO
 
 # Test for `find_chars` function
 @pytest.mark.parametrize(

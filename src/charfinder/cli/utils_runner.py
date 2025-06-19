@@ -26,13 +26,13 @@ from charfinder.cli.handlers import (
     get_version,
     handle_find_chars,
 )
-from charfinder.constants import (
+from charfinder.config.constants import (
     EXIT_CANCELLED,
     EXIT_ERROR,
     FuzzyConfig,
 )
-from charfinder.settings import get_environment, is_prod, load_settings
-from charfinder.types import MatchResult
+from charfinder.config.settings import get_environment, is_prod, load_settings
+from charfinder.config.types import MatchResult
 from charfinder.utils.formatter import echo, should_use_color
 from charfinder.utils.logger_setup import get_logger, setup_logging, teardown_logger
 from charfinder.utils.logger_styles import (
@@ -44,7 +44,7 @@ from charfinder.utils.logger_styles import (
 from charfinder.validators import resolve_effective_color_mode
 
 if TYPE_CHECKING:
-    from charfinder.types import MatchResult
+    from charfinder.config.types import MatchResult
 
 
 __all__ = [

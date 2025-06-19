@@ -115,7 +115,7 @@ DEFAULT_EXACT_MATCH_MODE: ExactMatchMode = "word-subset"
 DEFAULT_HYBRID_AGG_FUNC: HybridAggFunc = "mean"
 DEFAULT_COLOR_MODE: ColorMode = "auto"
 DEFAULT_OUTPUT_FORMAT: OutputFormat = "text"
-DEFAULT_NORMALIZATION_FORM: NormalizationForm = "NFC"
+DEFAULT_NORMALIZATION_FORM: NormalizationForm = "NFKD"
 # ---------------------------------------------------------------------
 # Hybrid scoring weights for fuzzy match components
 # ---------------------------------------------------------------------

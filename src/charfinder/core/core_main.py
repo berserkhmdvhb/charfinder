@@ -25,7 +25,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Literal
 
-from charfinder.constants import (
+from charfinder.config.constants import (
     DEFAULT_EXACT_MATCH_MODE,
     DEFAULT_FUZZY_ALGO,
     DEFAULT_FUZZY_MATCH_MODE,
@@ -46,9 +46,10 @@ from charfinder.core.finders import (
 )
 from charfinder.core.handlers import build_search_config
 from charfinder.utils.formatter import format_result_header, format_result_row
+from charfinder.utils.normalizer import normalize
 
 if TYPE_CHECKING:
-    from charfinder.types import CharMatch, SearchConfig
+    from charfinder.config.types import CharMatch, SearchConfig
 
 ExactMatchMode = Literal["substring", "word-subset"]
 
@@ -69,6 +70,8 @@ def find_chars(
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
 ) -> Generator[str, None, None]:
+    norm_query = normalize(query)
+
     config: SearchConfig = build_search_config(
         fuzzy=fuzzy,
         threshold=threshold,
@@ -81,7 +84,7 @@ def find_chars(
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
     )
-    return _find_chars_impl(query, config)
+    return _find_chars_impl(norm_query, config)
 
 
 def find_chars_raw(
@@ -98,6 +101,8 @@ def find_chars_raw(
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
 ) -> list[CharMatch]:
+    norm_query = normalize(query)
+
     config: SearchConfig = build_search_config(
         fuzzy=fuzzy,
         threshold=threshold,
@@ -110,7 +115,7 @@ def find_chars_raw(
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
     )
-    return _find_chars_raw_impl(query, config)
+    return _find_chars_raw_impl(norm_query, config)
 
 
 def find_chars_with_info(
@@ -127,6 +132,8 @@ def find_chars_with_info(
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
 ) -> tuple[list[str], bool]:
+    norm_query = normalize(query)
+
     config: SearchConfig = build_search_config(
         fuzzy=fuzzy,
         threshold=threshold,
@@ -140,7 +147,7 @@ def find_chars_with_info(
         prefer_fuzzy=prefer_fuzzy,
     )
 
-    raw_matches, fuzzy_used = _find_chars_info_impl(query, config)
+    raw_matches, fuzzy_used = _find_chars_info_impl(norm_query, config)
 
     lines: list[str] = []
     if raw_matches:
@@ -148,7 +155,7 @@ def find_chars_with_info(
         lines.extend(format_result_header(has_score=has_score))
         lines.extend(
             format_result_row(
-                code := int(match["code"][2:], 16),
+                code := int(match["code"].removeprefix("U+"), 16),
                 match["char"],
                 match["name"].removesuffix(f"  (\\u{code:04x})"),
                 match.get("score"),
