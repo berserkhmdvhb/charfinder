@@ -20,7 +20,7 @@ Designed for both technical and non-technical users, CharFinder enables reliable
 3. [📦 Project Structure](#3--project-structure)
    * [3.1 📂 Structure](#31--structure)
    * [3.2 🧱 Architecture](#32--architecture)
-4. [🌐 What is Unicode?](#4--what-is-unicode)
+4. [🌐 Unicode and Normalization](#4--unicode--normalization)
 5. [🎯 Exact and Fuzzy Match](#-5-exact-and-fuzzy-match)
 
    * [Matching Modes Overview](#matching-modes-overview)
@@ -33,6 +33,7 @@ Designed for both technical and non-technical users, CharFinder enables reliable
 
    * [6.1 Installation](#61-installation)
    * [6.2 💻 CLI Usage](#62--cli-usage)
+     * [Demo](#demo) 
    * [6.3 🐍 Python Library Usage](#63--python-library-usage)
 7. [🧱 Internals and Architecture](#7--internals-and-architecture)
 
@@ -68,6 +69,8 @@ Designed for both technical and non-technical users, CharFinder enables reliable
 # 🎥 1. Demo Video
 
 https://github.com/user-attachments/assets/e19b0bbd-d99b-401b-aa29-0092627f376b
+
+To see another demo of CLI usage, see subsection [Demo](#demo)
 
 ---
 
@@ -122,7 +125,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
   * Log directory changes by environment
   * Test mode activates `.env.test`
 
-See [docs/environment_config.md](docs/environment_config.md)
+📚 See [docs/environment_config.md](docs/environment_config.md)
 
 ### 💻 CLI Features
 
@@ -149,7 +152,7 @@ See [docs/environment_config.md](docs/environment_config.md)
 
 * Detailed CLI help with examples
 
-See [docs/cli_architecture.md](docs/cli_architecture.md)
+📚 See [docs/cli_architecture.md](docs/cli_architecture.md) and for examples see the subsection [demo](#demo)
 
 ### 🐍 Python Library Usage
 
@@ -160,7 +163,7 @@ See [docs/cli_architecture.md](docs/cli_architecture.md)
 * Fully type-annotated
 * CLI dependencies are not required for library usage
 
-See [docs/core_logic.md](docs/core_logic.md)
+📚 See [docs/core_logic.md](docs/core_logic.md)
 
 ### 🧪 Testability & Quality
 
@@ -172,7 +175,7 @@ See [docs/core_logic.md](docs/core_logic.md)
 * Modular `conftest.py` with reusable fixtures
 * Clean `pytest` + `coverage` + `pre-commit` workflow
 
-See [docs/unit_test_design.md](docs/unit_test_design.md)
+📚 See [docs/unit_test_design.md](docs/unit_test_design.md)
 
 ### 📑 Modern Packaging & Tooling
 
@@ -233,8 +236,9 @@ charfinder/
 │   │
 │   ├── core/                        # Core Unicode search logic
 │   │   ├── __init__.py
-│   │   ├── core_main.py             # Public API functions
-│   │   ├── finders.py               # Match mode and algorithm routing
+│   │   ├── core_main.py             # Thin public API wrapper for core search logic
+│   │   ├── finders.py               # Output routing and formatting logic
+│   │   ├── handlers.py              # Matching coordinator and config builder
 │   │   ├── matching.py              # Exact and fuzzy matching logic
 │   │   ├── name_cache.py            # Unicode name cache builder
 │   │   └── unicode_data_loader.py   # UnicodeData.txt loader and parser
@@ -261,7 +265,7 @@ charfinder/
 
 CharFinder implements a **layered architecture** with clear boundaries:
 
-See section [Internals and Architecture](#9-internals-and-architecture), and following documentatoins:
+📚 See section [Internals and Architecture](#9-internals-and-architecture), and following documentatoins:
 
 * [docs/cli\_architecture.md](docs/cli_architecture.md)
 * [docs/core\_logic.md](docs/core_logic.md)
@@ -271,41 +275,54 @@ See section [Internals and Architecture](#9-internals-and-architecture), and fol
 
 ---
 
-## 4. 🌐 What is Unicode?
+## 4. 🌐 Unicode & Normalization
 
-Unicode is the universal standard for encoding text across all writing systems, symbols, and emojis in the world. It assigns a unique code point to every character, ensuring that text is represented consistently across different platforms, languages, and applications.
-
-In other words, Unicode provides the foundation that enables modern software to handle multilingual text and a vast array of symbols reliably.
+**Unicode** is the global standard for encoding text, defining unique code points for every letter, symbol, emoji, and script. It enables CharFinder to search across more than 140,000 characters—covering everything from Latin letters to CJK ideograms and emojis.
 
 ### Why It Matters for CharFinder
 
-* **Uniform Search Space**: Unicode encompasses over 140,000 characters, making it possible to search and retrieve any symbol, emoji, or letter from a single source.
-* **Cross-Language Support**: Whether you search for Latin letters, mathematical symbols, arrows, CJK characters, or ancient scripts, Unicode ensures consistent handling.
-* **Emojis & Symbols**: Emojis are part of Unicode and fully supported by CharFinder.
+* ✅ **Multilingual coverage**: Supports scripts from all major languages and symbol sets.
+* ✅ **Emoji and symbol support**: All emoji and symbols are part of Unicode and fully searchable.
+* ✅ **Alternate name discovery**: CharFinder indexes official names *and* alternate names (from field 10 of `UnicodeData.txt`) to support queries like `"underscore"`, `"slash"`, or `"period"`.
 
-### Normalization in CharFinder
+---
 
-Text normalization is crucial when performing searches across Unicode:
+### 🔄 Normalization
 
-* Different character sequences may visually or semantically represent the same character (e.g. `é` vs `é`).
-* Normalization converts these variations to a consistent form before comparison.
+Characters can be visually identical but encoded differently. For example:
 
-**CharFinder** uses **Unicode NFC (Normalization Form C)** by default, which:
+* `é` (U+00E9) and `é` (`e` + U+0301) look the same, but are different code points.
 
-* Ensures composed characters are used where possible.
-* Provides stable and predictable search behavior.
+CharFinder applies **Unicode NFKD normalization + uppercasing** to:
 
-For example:
+* Normalize all inputs and cached names
+* Ensure matching is **stable**, **reliable**, and **encoding-independent**
 
-| Input Query | Normalized Form (NFC) | Effective Search Behavior |
-| ----------- | --------------------- | ------------------------- |
-| café        | café (U+00E9)         | Matches correctly         |
-| café       | café (U+00E9)         | Matches correctly         |
+#### 🔍 Normalization in Action
 
-See following:
+| Input                   | Codepoints                           | Normalized | Matches?     |
+| ----------------------- | ------------------------------------ | ---------- | ------------ |
+| `café`                  | `U+0063 U+0061 U+0066 U+00E9`        | `CAFÉ`     | ✅            |
+| `café`                 | `U+0063 U+0061 U+0066 U+0065 U+0301` | `CAFÉ`     | ✅            |
+| `CAFÉ`                  | `U+0043 U+0041 U+0046 U+00C9`        | `CAFÉ`     | ✅            |
+| `CAFÉ`                 | `U+0043 U+0041 U+0046 U+0045 U+0301` | `CAFÉ`     | ✅            |
+| `𝒸𝒶𝓻é` (italic math) | `U+1D4B8 U+1D4B6 U+1D4FB U+00E9`     | `CAFÉ`     | ✅ (fallback) |
+| `ｃａｆｅ́` (fullwidth)     | `U+FF43 U+FF41 U+FF46 U+FF45 U+0301` | `CAFÉ`     | ✅ (folded)   |
 
-* [Unicode® Standard Annex #15 — Unicode Normalization Forms](https://unicode.org/reports/tr15/)
-* CharFinder documentation: [docs/normalization.md](docs/normalization.md)
+Even though the second input uses a decomposed form (`e` + combining acute), CharFinder normalizes it before matching.
+
+
+### Terminal Example with Emoji
+
+CharFinder correctly matches Unicode emoji and symbols. For example:
+
+![ex6](https://github.com/user-attachments/assets/e7c781cf-48b1-4e93-b1d6-58e0d5c29d20)
+
+
+
+> Note: Composite emoji like `👩‍💻` (woman technologist) are grapheme clusters, not individual Unicode code points, and are not listed in `UnicodeData.txt`. CharFinder focuses on official single-codepoint characters.
+
+📚 See [docs/unicode\_and\_normalization.md](docs/unicode_and_normalization.md).
 
 ---
 
@@ -320,7 +337,7 @@ Fuzzy matching can use a **single algorithm** (like `token_sort_ratio`) or a **h
 - Normalization is always applied (NFC + uppercase).
 - Matching logic is configurable via CLI flags like `--fuzzy`, `--prefer-fuzzy`, `--fuzzy-algo`, etc.
 
-See [docs/matching.md](docs/matching.md) for full details on algorithms, thresholds, fallback flow, hybrid weights, and diagnostics.
+📚 See [docs/matching.md](docs/matching.md).
 
 ---
 
@@ -409,7 +426,34 @@ charfinder --help
 * Use `--format json` for scripting and automation.
 * Enable diagnostics with `--debug` or by setting `CHARFINDER_DEBUG_ENV_LOAD=1`.
 
-See [docs/cli\_architecture.md](docs/cli_architecture.md).
+
+#### Demo
+
+**Basic Example**
+![ex1](https://github.com/user-attachments/assets/53e7770f-cb14-4ba7-8157-bc0eeacc19f6)
+
+**Usage of `--verbose` or `-v` flag**
+
+![ex2](https://github.com/user-attachments/assets/ce9914d5-a75a-4fa1-8a84-4eda2c5c6988)
+
+
+**Usage of `--debug` for diagnostics**
+
+![ex3](https://github.com/user-attachments/assets/bd4b9bd5-1d48-468a-8002-b05dc4b04277)
+
+
+**Fuzzy Match Example**
+
+![ex4](https://github.com/user-attachments/assets/a74ff5c3-0442-4309-bf52-8ef3824ae1bc)
+
+
+**Usage `--format` to export JSON Output**
+
+![ex5](https://github.com/user-attachments/assets/2db50733-3e13-4e4e-bc67-6b35884a625b)
+
+
+
+📚 See [docs/cli\_architecture.md](docs/cli_architecture.md).
 
 ---
 
@@ -454,7 +498,7 @@ for item in results:
     print(item)
 ```
 
-See [docs/core\_logic.md](docs/core_logic.md).
+📚 See [docs/core\_logic.md](docs/core_logic.md).
 
 ---
 
@@ -541,7 +585,7 @@ CharFinder uses layered caching for performance:
   * `unicode_name_cache.json` is loaded or rebuilt from `UnicodeData.txt`
   * Avoids repeated downloads and accelerates startup
 
-→ See: [`docs/caching.md`](docs/caching.md)
+📚 See [`docs/caching.md`](docs/caching.md)
 
 ---
 
@@ -558,7 +602,7 @@ Supports predictable environment resolution:
 
 → Use `CHARFINDER_DEBUG_ENV_LOAD=1` for config trace output
 
-→ See: [`docs/environment_config.md`](docs/environment_config.md)
+📚 See [`docs/environment_config.md`](docs/environment_config.md)
 
 ---
 
@@ -571,7 +615,7 @@ CharFinder uses a flexible and color-aware logging setup:
 * **Color output** auto-detected for terminals vs. scripts
 * Logging initialized via `setup_logging()` and shared globally
 
-→ See: [`docs/logging_system.md`](docs/logging_system.md)
+📚 See [`docs/logging_system.md`](docs/logging_system.md)
 
 ---
 
@@ -628,8 +672,20 @@ This runs all of the following commands:
 make lint-ruff
 ```
 
+which is equivalent to 
+
+```bash
+ruff check src/ tests/
+```
+
 ```bash
 make fmt
+```
+
+which is equivalent to
+
+```bash
+ruff format src/ tests/
 ```
 
 #### Static Type Checks
@@ -638,26 +694,11 @@ make fmt
 make type-check
 ```
 
-CharFinder uses **pre-commit** to enforce code quality automatically on each commit.
-
-Set up hooks:
+which is equivalent to
 
 ```bash
-make precommit
+mypy src/ tests/
 ```
-
-Manually run all hooks:
-
-```bash
-make precommit-run
-```
-
-Hooks include:
-
-* Ruff linting
-* MyPy type checking
-* Black formatting check
-* Check for common errors
 
 ### Coverage Policy
 
@@ -672,7 +713,7 @@ Hooks include:
 * **Logging tests:** test rotating logging, suppression, environment filtering
 * **Settings tests:** test different `.env` and environment variable scenarios
 
-See [docs/unit_test_design.md](docs/unit_test_design.md)
+📚 See [docs/unit_test_design.md](docs/unit_test_design.md)
 
 ---
 ### 👨‍💻 9. Developer Guide
@@ -757,146 +798,13 @@ make develop
 
 ### ⚡ 10. Performance
 
-`charfinder` is designed with a focus on speed, efficiency, and responsiveness—even when processing the entire Unicode space (1.1M+ code points).
-
-#### Key Optimizations
-
-* **Unicode Name Caching**
-
-  * The Unicode name cache is built once and stored as a local JSON file.
-  * On subsequent runs, the cache is loaded instantly, enabling fast lookups.
-
-* **Normalization Caching**
-
-  * The `cached_normalize()` function uses an LRU cache to avoid redundant Unicode normalization calls.
-  * This significantly speeds up matching, especially for fuzzy modes where many comparisons are performed.
-
-* **Matching Optimizations**
-
-  * Exact match mode uses fast `in` and set operations.
-  * Fuzzy match mode supports multiple optimized algorithms:
-
-    * `rapidfuzz` (fastest)
-    * `Levenshtein` (optimized C extension)
-    * `SequenceMatcher` (Python stdlib baseline)
-
-* **Efficient CLI Output**
-
-  * Result rows are streamed lazily via generators.
-  * Logging and console output are buffered to minimize I/O overhead.
-
-#### Benchmarks (Informal)
-
-| Query                   | Match Mode      | Time (1st run) | Time (cached) |
-| ----------------------- | --------------- | -------------- | ------------- |
-| `snowman`               | exact           | \~40ms         | \~5ms         |
-| `snwmn` (fuzzy)         | fuzzy+rapidfuzz | \~150ms        | \~25ms        |
-| `grnning face` (hybrid) | fuzzy+hybrid    | \~200ms        | \~35ms        |
-
-*Tests run on Python 3.12, macOS M2 Pro, full Unicode set.*
-
-#### Profiling Tips
-
-* To profile CLI runs:
-
-  ```bash
-  python -m cProfile -m charfinder -q heart --fuzzy
-  ```
-* To profile library calls:
-
-  ```python
-  import cProfile
-  cProfile.run("list(find_chars('heart', fuzzy=True))")
-  ```
-
-#### Future Improvements
-
-* Smarter pre-filtering to skip unrelated blocks.
-* Parallelization of fuzzy matching (via joblib or multiprocessing).
-* Optional faster UnicodeData loaders (binary format).
-* Support for custom user-provided fuzzy match algorithms (plugin architecture)
+📚 See [docs/performance.md](docs/performance.md)
 
 ---
 
 ## 🚧 11. Limitations and Known Issues
 
-While **CharFinder** is a robust and flexible tool, it is important to be aware of the following current limitations and known constraints:
-
-### 🔹 Fuzzy Algorithms Scope
-
-CharFinder currently supports five fuzzy matching algorithms:
-
-* `simple_ratio` — based on `difflib.SequenceMatcher`
-* `normalized_ratio` — normalized variant of `simple_ratio`
-* `levenshtein_ratio` — based on `python-Levenshtein`
-* `token_sort_ratio` — word-order invariant, from `rapidfuzz`
-* `hybrid_score` — aggregates multiple algorithms using predefined weights
-
-These algorithms are selected for performance, robustness, and compatibility across systems.
-
-The `hybrid_score` mode combines results from multiple algorithms to improve match accuracy. However, the internal weights used for aggregation are **not user-configurable**.
-
-To extend support for additional fuzzy algorithms (e.g., Jaro-Winkler, Damerau-Levenshtein), or to enable weight customization, the internal `fuzzymatchlib.py` module would need to be updated. PRs are welcome (see [Contributing](#contributing)).
-
-### 🔹 Limitations for Embedding in APIs or External Applications
-
-While **CharFinder** is designed as both a library and CLI, embedding it into high-throughput applications (e.g., servers, chatbots) requires extra care:
-
-* The Unicode name cache (`name_cache`) is built at runtime and saved as a local JSON file.
-* Without pre-building and injecting the cache, each process may rebuild it unnecessarily, introducing latency.
-* For real-time or distributed usage:
-
-  * Pre-build the cache with `build_name_cache()` and inject it as an argument.
-  * Avoid using CLI-level diagnostics or console outputs.
-  * Cache sharing between processes is not optimized out-of-the-box.
-
-### 🔹 UnicodeData.txt Updates
-
-* CharFinder fetches character names from the Unicode Consortium's **UnicodeData.txt**.
-* This file should be updated manually when Unicode standards evolve.
-* No automatic refresh mechanism is included. You must manually rebuild the cache.
-
-### 🔹 Limitations of Matching Model
-
-* **Exact matching**:
-
-  * Limited to substring and bag-of-words (word-subset) matches.
-* **Fuzzy matching**:
-
-  * Only supports the predefined algorithms listed above.
-  * Hybrid scores use predefined aggregation strategies (e.g., mean, median, max) and fixed internal weights.
-* **Alternate names**:
-
-  * Only field 10 of UnicodeData.txt is used.
-  * No CLDR or extended alias datasets are currently integrated.
-
-### 🔹 Known Issues
-
-* First runs may take several seconds to build the Unicode name cache (logged visibly).
-* Unicode normalization can result in differences between visual and textual similarity.
-* No support yet for:
-
-  * Learning-based match improvements
-  * Interactive fuzzy tuning
-* Matching scales linearly with dataset size. While usually <1s, constrained environments may vary.
-
-### 🔹 Embedding Checklist
-
-If embedding CharFinder in a chatbot, server, or interactive app:
-
-* ✅ Pre-build and inject the name cache.
-* ✅ Avoid CLI components and stdout printing.
-* ✅ Silence or override logging as needed.
-* ✅ Benchmark in your production environment.
-* ✅ Periodically check and update UnicodeData.txt.
-
-**Summary:**
-
-CharFinder is well-suited for use as both a CLI tool and a Python library. However, when embedding into latency-sensitive or distributed systems, additional considerations are necessary to ensure performance and correctness.
-
-The current matching pipeline is deliberately designed to be static and deterministic—prioritizing **simplicity, reproducibility, and explainability** over dynamic or learning-based behavior.
-
-Support for advanced embedding scenarios (such as pre-injected caches, multi-process sharing, and plugin-based algorithm extension) is planned for future versions.
+📚 See [docs/limitations_issues.md](docs/limitations_issues.md)
 
 
 ---
@@ -917,9 +825,8 @@ The following documents are located in the [`docs/`](docs/) directory:
 | [`environment_config.md`](docs/environment_config.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities.                             |
 | [`logging_system.md`](docs/logging_system.md)               | Logging architecture: setup, structured logging, rotating files, and environment-based folders.                     |
 | [`matching.md`](docs/matching.md)                           | Detailed explanation of exact and fuzzy matching algorithms and options. Includes mode combinations and flowcharts. |
-| [`normalization.md`](docs/normalization.md)                 | Unicode normalization explained: what is used (`NFC`), why, and implications for search.                            |
+| [`unicode_normalization.md`](docs/unicode_normalization.md) | Unicode normalization explained: what is used (`NFC`), why, and implications for search.                            |
 | [`packaging.md`](docs/packaging.md)                         | Packaging and publishing: `pyproject.toml`, build tools, versioning strategy, and PyPI release process.             |
-| [`roadmap.md`](docs/roadmap.md)                             | Future plans and enhancements.                                                                                      |
 | [`types_protocols.md`](docs/types_protocols.md)             | Project-wide types, `Protocol` interfaces, and their role in extensibility and static typing.                       |
 | [`unit_test_design.md`](docs/unit_test_design.md)           | Testing layers: unit tests, CLI integration tests, coverage strategy.                                               |
 | [`validators.md`](docs/validators.md)                       | Centralized validation logic shared across CLI and core. Type safety, fallbacks, source-aware behavior.             |
