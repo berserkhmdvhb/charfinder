@@ -27,9 +27,10 @@ from charfinder.config.aliases import (
     FuzzyMatchMode,
     HybridAggFunc,
     NormalizationForm,
+    NormalizationProfile,
     OutputFormat,
 )
-from charfinder.config.types import NormalizationProfile
+from charfinder.config.types import NormalizationProfileDict
 
 __all__ = [
     "ALT_NAME_INDEX",
@@ -40,6 +41,7 @@ __all__ = [
     "DEFAULT_FUZZY_MATCH_MODE",
     "DEFAULT_LOG_ROOT",
     "DEFAULT_NORMALIZATION_FORM",
+    "DEFAULT_NORMALIZATION_PROFILE",
     "DEFAULT_OUTPUT_FORMAT",
     "DEFAULT_THRESHOLD",
     "ENV_COLOR_MODE",
@@ -66,6 +68,7 @@ __all__ = [
     "VALID_FUZZY_MATCH_MODES",
     "VALID_HYBRID_AGG_FUNCS",
     "VALID_LOG_METHODS",
+    "VALID_NORMALIZATION_PROFILES",
     "VALID_OUTPUT_FORMATS",
 ]
 
@@ -106,6 +109,7 @@ VALID_LOG_METHODS = {"debug", "info", "warning", "error", "exception"}
 VALID_HYBRID_AGG_FUNCS = {"mean", "median", "max", "min"}
 VALID_OUTPUT_FORMATS = {"text", "json"}
 VALID_NORMALIZATION_FORMS = {"NFC", "NFD", "NFKC", "NFKD"}
+VALID_NORMALIZATION_PROFILES = {"raw", "light", "medium", "aggressive"}
 VALID_FUZZY_ALGO_NAMES: set[str] = set(FUZZY_ALGO_ALIASES.values())
 
 LOG_METHODS = SimpleNamespace(
@@ -148,7 +152,7 @@ DEFAULT_HYBRID_AGG_FUNC: HybridAggFunc = "mean"
 DEFAULT_COLOR_MODE: ColorMode = "auto"
 DEFAULT_OUTPUT_FORMAT: OutputFormat = "text"
 DEFAULT_NORMALIZATION_FORM: NormalizationForm = "NFKD"
-
+DEFAULT_NORMALIZATION_PROFILE: NormalizationProfile = "aggressive"
 # ---------------------------------------------------------------------
 # Hybrid scoring weights for fuzzy match components
 # ---------------------------------------------------------------------
@@ -163,7 +167,7 @@ FUZZY_HYBRID_WEIGHTS: dict[str, float] = {
 # Normalization Profiles
 # ---------------------------------------------------------------------
 
-NORMALIZATION_PROFILES: dict[str, NormalizationProfile] = {
+NORMALIZATION_PROFILES: dict[NormalizationProfile, NormalizationProfileDict] = {
     "raw": {
         "form": "NFC",
         "strip_accents": False,
@@ -181,7 +185,6 @@ NORMALIZATION_PROFILES: dict[str, NormalizationProfile] = {
         "form": "NFKD",
         "strip_accents": True,
     },
-    # Optionally later: "max": {...}
 }
 
 # ---------------------------------------------------------------------
@@ -203,6 +206,7 @@ ENV_LOG_LEVEL = "CHARFINDER_LOG_LEVEL"
 ENV_DEBUG_ENV_LOAD = "CHARFINDER_DEBUG_ENV_LOAD"
 ENV_MATCH_THRESHOLD = "CHARFINDER_MATCH_THRESHOLD"
 ENV_COLOR_MODE = "CHARFINDER_COLOR_MODE"
+ENV_NORMALIZATION_PROFILE = "CHARFINDER_NORMALIZATION_PROFILE"
 
 
 # ------------------------------------------------------------------------

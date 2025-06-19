@@ -1,5 +1,4 @@
-"""
-Public API for high-level character search in CharFinder.
+"""Public API for high-level character search in CharFinder.
 
 Provides a user-facing wrapper for executing Unicode character searches
 with validated configuration and optional CLI-style parameters.
@@ -30,6 +29,7 @@ from charfinder.config.constants import (
     DEFAULT_FUZZY_ALGO,
     DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_HYBRID_AGG_FUNC,
+    DEFAULT_NORMALIZATION_PROFILE,
     DEFAULT_THRESHOLD,
 )
 from charfinder.core.finders import (
@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from charfinder.config.types import CharMatch, SearchConfig
 
 ExactMatchMode = Literal["substring", "word-subset"]
+NormalizationProfile = Literal["raw", "light", "medium", "aggressive"]
 
 __all__ = ["find_chars", "find_chars_raw", "find_chars_with_info"]
 
@@ -67,8 +68,9 @@ def find_chars(
     exact_match_mode: ExactMatchMode = DEFAULT_EXACT_MATCH_MODE,
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
+    normalization_profile: NormalizationProfile = DEFAULT_NORMALIZATION_PROFILE,
 ) -> Generator[str, None, None]:
-    norm_query = normalize(query)
+    norm_query = normalize(query, profile=normalization_profile)
 
     config: SearchConfig = build_search_config(
         fuzzy=fuzzy,
@@ -98,8 +100,9 @@ def find_chars_raw(
     exact_match_mode: ExactMatchMode = DEFAULT_EXACT_MATCH_MODE,
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
+    normalization_profile: NormalizationProfile = DEFAULT_NORMALIZATION_PROFILE,
 ) -> list[CharMatch]:
-    norm_query = normalize(query)
+    norm_query = normalize(query, profile=normalization_profile)
 
     config: SearchConfig = build_search_config(
         fuzzy=fuzzy,
@@ -129,8 +132,9 @@ def find_chars_with_info(
     exact_match_mode: ExactMatchMode = DEFAULT_EXACT_MATCH_MODE,
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
+    normalization_profile: NormalizationProfile = DEFAULT_NORMALIZATION_PROFILE,
 ) -> tuple[list[str], bool]:
-    norm_query = normalize(query)
+    norm_query = normalize(query, profile=normalization_profile)
 
     config: SearchConfig = build_search_config(
         fuzzy=fuzzy,

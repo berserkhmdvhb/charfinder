@@ -43,7 +43,7 @@ __all__ = [
     "MatchResult",
     "MatchTuple",
     "NameCache",
-    "NormalizationProfile",
+    "NormalizationProfileDict",
     "SearchConfig",
     "UnicodeDataLoader",
 ]
@@ -194,7 +194,7 @@ class MatchTuple(NamedTuple):
     score: float | None
 
 
-class NormalizationProfile(TypedDict, total=False):
+class NormalizationProfileDict(TypedDict, total=False):
     form: NormalizationForm
     strip_accents: bool
     strip_whitespace: bool

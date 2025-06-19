@@ -45,9 +45,9 @@ and ensure strict consistency for all user- or config-sourced inputs.
 
 import os
 from argparse import Action, ArgumentParser, Namespace
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Literal, cast
+from typing import Any, Literal, cast
 from urllib.parse import urlparse
 
 from charfinder.config.aliases import (
@@ -55,23 +55,27 @@ from charfinder.config.aliases import (
     ExactMatchMode,
     FuzzyAlgorithm,
     FuzzyMatchMode,
+    HybridAggFunc,
+    NormalizationProfile,
 )
 from charfinder.config.constants import (
     DEFAULT_COLOR_MODE,
+    DEFAULT_NORMALIZATION_PROFILE,
     DEFAULT_THRESHOLD,
     ENV_COLOR_MODE,
     ENV_MATCH_THRESHOLD,
+    ENV_NORMALIZATION_PROFILE,
     FUZZY_ALGO_ALIASES,
     VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
     VALID_FUZZY_MATCH_MODES,
     VALID_HYBRID_AGG_FUNCS,
+    VALID_NORMALIZATION_PROFILES,
     VALID_OUTPUT_FORMATS,
 )
 from charfinder.config.settings import get_cache_file
 from charfinder.config.types import (
     FuzzyConfig,
-    HybridAggFunc,
     NameCache,
 )
 from charfinder.utils.formatter import echo, should_use_color
@@ -179,8 +183,8 @@ class ValidateFuzzyAlgoAction(Action):
     """
     Argparse custom action to validate and normalize fuzzy algorithm names.
 
-    This action is used in CLI argument parsing to ensure that the fuzzy algorithm
-    specified by the user is valid and normalized at parse time.
+    This action ensures the fuzzy algorithm specified by the user is valid and
+    normalized at parse time.
 
     Example:
         parser.add_argument(
@@ -192,6 +196,14 @@ class ValidateFuzzyAlgoAction(Action):
     Methods:
         __call__: Invoked by argparse to process and validate the argument.
     """
+
+    def __init__(
+        self,
+        option_strings: Sequence[str],
+        dest: str,
+        **kwargs: Mapping[str, Any],
+    ) -> None:
+        super().__init__(option_strings, dest, **kwargs)  # type: ignore[arg-type]
 
     def __call__(
         self,
@@ -710,3 +722,52 @@ def validate_name_cache_structure(name_cache: object) -> None:
                 "Expected keys: 'original', 'normalized'."
             )
             raise ValueError(message)
+
+
+def validate_normalization_profile(
+    value: str | None, *, source: Literal["cli", "env"] = "cli"
+) -> NormalizationProfile:
+    """
+    Validate and normalize a normalization profile string input.
+
+    Args:
+        value: Input string from CLI or environment.
+        source: Indicates input origin ("cli" or "env").
+
+    Returns:
+        A valid NormalizationProfile literal.
+
+    Raises:
+        ValueError: If the profile name is not recognized.
+    """
+
+    if value is None:
+        return DEFAULT_NORMALIZATION_PROFILE
+
+    lowered = value.lower()
+    if lowered in VALID_NORMALIZATION_PROFILES:
+        return cast("NormalizationProfile", lowered)
+    message = (
+        f"Invalid normalization profile '{value}' from {source}. "
+        f"Must be one of: {', '.join(VALID_NORMALIZATION_PROFILES)}."
+    )
+    raise ValueError(message)
+
+
+def resolve_effective_normalization_profile(
+    cli_value: str | None,
+) -> NormalizationProfile:
+    """
+    Determine the effective normalization profile based on CLI, env, or default.
+
+    Args:
+        cli_value: Value from CLI or None.
+
+    Returns:
+        A valid NormalizationProfile.
+    """
+    if cli_value is not None:
+        return validate_normalization_profile(cli_value, source="cli")
+
+    env_value = os.getenv(ENV_NORMALIZATION_PROFILE)
+    return validate_normalization_profile(env_value, source="env")

@@ -66,7 +66,7 @@ def main() -> None:
         sys.exit(EXIT_SUCCESS)
 
     # Normalize query for consistent matching
-    norm_query = normalize(raw_query)
+    norm_query = normalize(raw_query, profile=args.normalization_profile)
 
     # Enable debug mode if required by CHARFINDER_DEBUG_ENV_LOAD
     auto_enable_debug(args)

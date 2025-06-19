@@ -10,7 +10,8 @@ Used by:
 
 Constants:
     ARG_QUERY, ARG_THRESHOLD, ARG_COLOR, ARG_EXACT_MATCH_MODE, ARG_FUZZY_MATCH_MODE,
-    ARG_HYBRID_AGG_FN, ARG_VERBOSE, ARG_DEBUG, ARG_FORMAT, ARG_VERSION
+    ARG_HYBRID_AGG_FN, ARG_VERBOSE, ARG_DEBUG, ARG_FORMAT, ARG_VERSION,
+    ARG_NORMALIZATION_PROFILE
 """
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "ARG_FUZZY_ALGO",
     "ARG_FUZZY_MATCH_MODE",
     "ARG_HYBRID_AGG_FN",
+    "ARG_NORMALIZATION_PROFILE",
     "ARG_POSITIONAL_QUERY",
     "ARG_PREFER_FUZZY",
     "ARG_QUERY",
@@ -51,7 +53,6 @@ ARG_DEBUG = "--debug"
 # Core Options
 ARG_FUZZY = "--fuzzy"
 ARG_PREFER_FUZZY = "--prefer-fuzzy"
-
 ARG_THRESHOLD = "--threshold"
 ARG_COLOR = "--color"
 
@@ -60,6 +61,9 @@ ARG_EXACT_MATCH_MODE = "exact_match-mode"
 ARG_FUZZY_MATCH_MODE = "fuzzy-match-mode"
 ARG_FUZZY_ALGO = "--fuzzy-algo"
 ARG_HYBRID_AGG_FN = "--hybrid-agg-fn"
+
+# Normalization
+ARG_NORMALIZATION_PROFILE = "--normalization-profile"
 
 # Output Options
 ARG_FORMAT = "--format"

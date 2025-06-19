@@ -32,6 +32,7 @@ from charfinder.cli.args import (
     ARG_FUZZY_ALGO,
     ARG_FUZZY_MATCH_MODE,
     ARG_HYBRID_AGG_FN,
+    ARG_NORMALIZATION_PROFILE,
     ARG_POSITIONAL_QUERY,
     ARG_PREFER_FUZZY,
     ARG_QUERY,
@@ -43,16 +44,20 @@ from charfinder.cli.args import (
 )
 from charfinder.cli.handlers import get_version
 from charfinder.config.constants import (
+    DEFAULT_COLOR_MODE,
     DEFAULT_EXACT_MATCH_MODE,
     DEFAULT_FUZZY_ALGO,
     DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_HYBRID_AGG_FUNC,
+    DEFAULT_NORMALIZATION_PROFILE,
     DEFAULT_OUTPUT_FORMAT,
     DEFAULT_THRESHOLD,
     VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
+    VALID_FUZZY_ALGO_NAMES,
     VALID_FUZZY_MATCH_MODES,
     VALID_HYBRID_AGG_FUNCS,
+    VALID_NORMALIZATION_PROFILES,
     VALID_OUTPUT_FORMATS,
 )
 from charfinder.validators import (
@@ -146,7 +151,7 @@ def create_parser() -> argparse.ArgumentParser:
         ARG_COLOR,
         choices=VALID_COLOR_MODES,
         default=None,
-        help="Control color output.",
+        help=f"Control color output.Default: {DEFAULT_COLOR_MODE}.",
     )
 
     parser.add_argument(
@@ -186,8 +191,8 @@ def create_parser() -> argparse.ArgumentParser:
         action=ValidateFuzzyAlgoAction,
         default=DEFAULT_FUZZY_ALGO,
         help=(
-            "Fuzzy matching algorithm (case-insensitive). "
-            "Examples: 'token_sort', 'hybrid', 'levenshtein'."
+            "Fuzzy matching algorithm to use (case-insensitive). "
+            f"Options: {', '.join(sorted(VALID_FUZZY_ALGO_NAMES))}."
         ),
     )
 
@@ -203,6 +208,20 @@ def create_parser() -> argparse.ArgumentParser:
         choices=VALID_HYBRID_AGG_FUNCS,
         default=DEFAULT_HYBRID_AGG_FUNC,
         help="Aggregation function for hybrid match mode (default: mean).",
+    )
+    # ---------------------------------------------------------------------
+    # Normalization Options
+    # ---------------------------------------------------------------------
+
+    parser.add_argument(
+        ARG_NORMALIZATION_PROFILE,
+        choices=VALID_NORMALIZATION_PROFILES,
+        default=None,
+        help=(
+            "Character normalization profile to apply before matching. "
+            "Options: raw, light, medium, aggressive. "
+            f"Default: {DEFAULT_NORMALIZATION_PROFILE}."
+        ),
     )
 
     # ---------------------------------------------------------------------

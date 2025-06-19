@@ -7,6 +7,7 @@ __all__ = [
     "FuzzyMatchMode",
     "HybridAggFunc",
     "NormalizationForm",
+    "NormalizationProfile",
     "OutputFormat",
 ]
 
@@ -28,3 +29,4 @@ ColorMode = Literal["auto", "always", "never"]
 HybridAggFunc = Literal["mean", "median", "max", "min"]
 OutputFormat = Literal["text", "json"]
 NormalizationForm = Literal["NFC", "NFD", "NFKC", "NFKD"]
+NormalizationProfile = Literal["raw", "light", "medium", "aggressive"]
