@@ -33,6 +33,7 @@ Designed for both technical and non-technical users, CharFinder enables reliable
 
    * [6.1 Installation](#61-installation)
    * [6.2 💻 CLI Usage](#62--cli-usage)
+     * [Demo](#demo) 
    * [6.3 🐍 Python Library Usage](#63--python-library-usage)
 7. [🧱 Internals and Architecture](#7--internals-and-architecture)
 
@@ -69,7 +70,7 @@ Designed for both technical and non-technical users, CharFinder enables reliable
 
 https://github.com/user-attachments/assets/e19b0bbd-d99b-401b-aa29-0092627f376b
 
-To see more examples, see subsection ?
+To see another demo of CLI usage, see subsection [Demo](#demo)
 
 ---
 
@@ -151,7 +152,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 
 * Detailed CLI help with examples
 
-📚 See [docs/cli_architecture.md](docs/cli_architecture.md)
+📚 See [docs/cli_architecture.md](docs/cli_architecture.md) and for examples see the subsection [demo](#demo)
 
 ### 🐍 Python Library Usage
 
