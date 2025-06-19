@@ -20,7 +20,7 @@ Designed for both technical and non-technical users, CharFinder enables reliable
 3. [📦 Project Structure](#3--project-structure)
    * [3.1 📂 Structure](#31--structure)
    * [3.2 🧱 Architecture](#32--architecture)
-4. [🌐 What is Unicode?](#4--what-is-unicode)
+4. [🌐 Unicode and Normalization](#4--unicode--normalization)
 5. [🎯 Exact and Fuzzy Match](#-5-exact-and-fuzzy-match)
 
    * [Matching Modes Overview](#matching-modes-overview)
@@ -323,7 +323,7 @@ CharFinder correctly matches Unicode emoji and symbols. For example:
 
 > Note: Composite emoji like `👩‍💻` (woman technologist) are grapheme clusters, not individual Unicode code points, and are not listed in `UnicodeData.txt`. CharFinder focuses on official single-codepoint characters.
 
-📚 See [docs/unicode\_and\_normalization.md](docs/unicode_and_normalization.md) for technical details.
+📚 See [docs/unicode\_and\_normalization.md](docs/unicode_and_normalization.md).
 
 
 
