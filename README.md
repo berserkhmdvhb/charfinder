@@ -126,7 +126,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
   * Log directory changes by environment
   * Test mode activates `.env.test`
 
-📚 See [docs/environment_config.md](docs/environment_config.md)
+📚 See [docs/config_environment.md](docs/config_environment.md)
 
 ### 💻 CLI Features
 
@@ -277,7 +277,7 @@ CharFinder implements a **layered architecture** with clear boundaries:
 
 * [docs/cli\_architecture.md](docs/cli_architecture.md)
 * [docs/core\_logic.md](docs/core_logic.md)
-* [docs/environment\_config.md](docs/environment_config.md)
+* [docs/environment\_config.md](docs/config_environment.md)
 * [docs/logging\_system.md](docs/logging_system.md)
 * [docs/caching.md](docs/caching.md)
 
@@ -524,69 +524,76 @@ for item in results:
 
 ## 7. 🧱 Internals and Architecture
 
-CharFinder is built with a **layered, modular architecture** that emphasizes clean separation of concerns, testability, and extensibility. It supports both robust CLI interaction and Python library usage.
+CharFinder is built with a **layered, modular architecture** designed for clarity, testability, and extensibility. It supports robust CLI interaction and Python API usage.
 
 ### 7.1 Architecture Overview
 
-The system is organized into clearly defined layers:
+The system is structured into clearly defined layers:
 
 #### 1. **Core Logic Layer** (`core/`)
 
-* Implements the core Unicode search logic: exact and fuzzy matching, normalization, and scoring.
-* Fully decoupled from CLI and output formatting.
+* Implements the core Unicode search engine: exact/fuzzy matching, scoring, and normalization.
+* Fully decoupled from CLI and formatting logic.
 * Key modules:
 
-  * `finders.py` — orchestrates matching workflows
-  * `matching.py` — defines fuzzy scoring methods
-  * `name_cache.py` — handles persistent cache
-  * `unicode_data_loader.py` — parses and downloads Unicode data
+  * `finders.py` — main search orchestrator
+  * `matching.py` — scoring logic for fuzzy and exact matches
+  * `name_cache.py` — Unicode name caching, loading, and saving
+  * `unicode_data_loader.py` — parses and validates `UnicodeData.txt` and alternate names
+
+
+📚 See [`core_logic.md`](docs/core_logic.md)
 
 #### 2. **Finder API Layer** (`core/core_main.py`)
 
-* Provides unified public APIs:
-
-  * `find_chars()`, `find_chars_raw()`, `find_chars_with_info()`
-* Orchestrates input validation, normalization, and config construction
-* Shared by both CLI and library consumers
+* Exposes public APIs: `find_chars()`, `find_chars_with_info()`, etc.
+* Orchestrates validation, normalization, and config setup
+* Consumed by CLI and external Python usage
 
 #### 3. **CLI Layer** (`cli/`)
 
-* Parses arguments and flags (`args.py`, `parser.py`)
-* Executes logic and outputs results (`cli_main.py`, `handlers.py`)
-* Formats text and JSON output (`formatter.py`, `utils_runner.py`)
-* Fully testable and decoupled from core logic
+* Argument parsing (`args.py`, `parser.py`)
+* Execution and output routing (`cli_main.py`, `handlers.py`)
+* Output formatting (`formatter.py`, `utils_runner.py`)
+* Fully testable and modular CLI engine
+
+📚 See [`cli_architecture.md`](docs/cli_architecture.md)
 
 #### 4. **Diagnostics Layer** (`cli/diagnostics.py`, `cli/diagnostics_match.py`)
 
-* Provides structured debug output:
+* Provides structured debug output for:
 
-  * Matching strategy decisions, fallback logic, scoring insights
-* Activated by `--debug` or `CHARFINDER_DEBUG_ENV_LOAD=1`
+  * Matching decisions, fallback logic, algorithm insights
+* Activated via `--debug` or `CHARFINDER_DEBUG_ENV_LOAD=1`
+
+📚 See [`debug_diagnostics.md`](docs/debug_diagnostics.md)
 
 #### 5. **Utilities Layer** (`utils/`)
 
-* Cross-cutting utilities shared across layers:
+* Shared helpers:
 
-  * Normalization helpers (`normalizer.py`)
-  * Logging setup (`logger_helpers.py`, `logger_setup.py`)
-  * Output styling (`formatter.py`, `logger_styles.py`)
+  * `normalizer.py` — normalization, folding, and caching
+  * `logger_helpers.py`, `logger_setup.py` — terminal and file-based logging utilities
+  * `formatter.py`, `logger_styles.py` — console output styling
 
-#### 6. **Configuration Layer** (`settings.py`)
+#### 6. **Configuration Layer** (`config/`)
 
-* Handles all environment and `.env` logic
+* Centralized configuration:
 
-  * Resolves runtime mode (DEV, UAT, PROD, TEST)
-  * Supports debug tracing of dotenv loading
-* Centralized logger, root path, and environment behavior
+  * `settings.py` — dotenv loading, environment mode detection, paths, log config
+  * `constants.py` — global constant values (defaults, exit codes, env var names)
+  * `types.py` — shared types and protocols for core and CLI usage
+  * `aliases.py` — fuzzy algorithm aliases and canonical name resolution
 
 #### 7. **Validation Layer** (`validators.py`)
 
-* Shared by both CLI and core layers
-* Centralizes all validation logic:
+* Core + CLI shared validation
+* Ensures consistent input handling:
 
-  * Thresholds, algorithm names, match modes, color modes
-  * Argument resolution and normalization logic
-* Ensures consistent behavior and error handling across the project
+  * Fuzzy algorithm names, match modes, thresholds, color modes
+  * CLI/environment/default priority resolution
+
+📚 See [`docs/validators.md`](docs/validators.md)
 
 ---
 
@@ -594,16 +601,16 @@ The system is organized into clearly defined layers:
 
 #### 🔁 Caching
 
-CharFinder uses layered caching for performance:
+CharFinder uses layered caching:
 
-* **In-Memory:**
+* **In-Memory**:
 
-  * `cached_normalize()` memoizes normalization results
+  * `cached_normalize()` — memoizes normalization results for performance
 
-* **Persistent:**
+* **Persistent**:
 
-  * `unicode_name_cache.json` is loaded or rebuilt from `UnicodeData.txt`
-  * Avoids repeated downloads and accelerates startup
+  * `unicode_name_cache.json` stores normalized character name mappings
+  * Auto-rebuilt from `UnicodeData.txt` + alternates if missing or outdated
 
 📚 See [`docs/caching.md`](docs/caching.md)
 
@@ -611,29 +618,29 @@ CharFinder uses layered caching for performance:
 
 #### ⚙️ Environment Management
 
-Supports predictable environment resolution:
+Supports predictable, override-friendly config loading:
 
 * Runtime modes: `DEV`, `UAT`, `PROD`, `TEST`
 * Load order:
 
-  1. `DOTENV_PATH` (if set)
-  2. `.env` in project root (if found)
-  3. System environment
+  1. `DOTENV_PATH` if explicitly set
+  2. `.env` from project root
+  3. Fallback to system environment
 
-→ Use `CHARFINDER_DEBUG_ENV_LOAD=1` for config trace output
+→ Enable `CHARFINDER_DEBUG_ENV_LOAD=1` for detailed trace
 
-📚 See [`docs/environment_config.md`](docs/environment_config.md)
+📚 See [`docs/config_environment.md`](docs/config_environment.md)
 
 ---
 
 #### 📋 Logging
 
-CharFinder uses a flexible and color-aware logging setup:
+Flexible logging system supports development, testing, and production:
 
-* **Rotating file logs** stored in `logs/{ENV}/charfinder.log`
-* **Console logs** based on `--verbose` and `--debug`
-* **Color output** auto-detected for terminals vs. scripts
-* Logging initialized via `setup_logging()` and shared globally
+* **Rotating file logs** per environment: `logs/{ENV}/charfinder.log`
+* **Console output** respects `--verbose` and `--debug`
+* **Color detection** adjusts automatically for terminals and scripts
+* Logging setup via `setup_logging()` in `logger_setup.py`
 
 📚 See [`docs/logging_system.md`](docs/logging_system.md)
 
@@ -842,7 +849,7 @@ The following documents are located in the [`docs/`](docs/) directory:
 | [`core_logic.md`](docs/core_logic.md)                       | Core logic and library API (`find_chars`, `find_chars_raw`): processing rules, transformations, architecture.       |
 | [`debug_diagnostics.md`](docs/debug_diagnostics.md)         | Debug and diagnostic output systems: `--debug`, `CHARFINDER_DEBUG_ENV_LOAD`, dotenv introspection.                  |
 | [`env-logging-scenarios.md`](docs/env-logging-scenarios.md) | End-to-end `.env` and logging scenarios, edge cases, fallback resolution.                                           |
-| [`environment_config.md`](docs/environment_config.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities.                             |
+| [`config_environment.md`](docs/config_environment.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities.                             |
 | [`logging_system.md`](docs/logging_system.md)               | Logging architecture: setup, structured logging, rotating files, and environment-based folders.                     |
 | [`matching.md`](docs/matching.md)                           | Detailed explanation of exact and fuzzy matching algorithms and options. Includes mode combinations and flowcharts. |
 | [`unicode_normalization.md`](docs/unicode_normalization.md) | Unicode normalization explained: what is used (`NFC`), why, and implications for search.                            |
