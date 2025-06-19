@@ -233,8 +233,9 @@ charfinder/
 │   │
 │   ├── core/                        # Core Unicode search logic
 │   │   ├── __init__.py
-│   │   ├── core_main.py             # Public API functions
-│   │   ├── finders.py               # Match mode and algorithm routing
+│   │   ├── core_main.py             # Thin public API wrapper for core search logic
+│   │   ├── finders.py               # Output routing and formatting logic
+│   │   ├── handlers.py              # Matching coordinator and config builder
 │   │   ├── matching.py              # Exact and fuzzy matching logic
 │   │   ├── name_cache.py            # Unicode name cache builder
 │   │   └── unicode_data_loader.py   # UnicodeData.txt loader and parser
@@ -261,7 +262,7 @@ charfinder/
 
 CharFinder implements a **layered architecture** with clear boundaries:
 
-See section [Internals and Architecture](#9-internals-and-architecture), and following documentatoins:
+📚 See section [Internals and Architecture](#9-internals-and-architecture), and following documentatoins:
 
 * [docs/cli\_architecture.md](docs/cli_architecture.md)
 * [docs/core\_logic.md](docs/core_logic.md)
@@ -269,43 +270,51 @@ See section [Internals and Architecture](#9-internals-and-architecture), and fol
 * [docs/logging\_system.md](docs/logging_system.md)
 * [docs/caching.md](docs/caching.md)
 
----
+---## 4. 🌐 Unicode & Normalization
 
-## 4. 🌐 What is Unicode?
-
-Unicode is the universal standard for encoding text across all writing systems, symbols, and emojis in the world. It assigns a unique code point to every character, ensuring that text is represented consistently across different platforms, languages, and applications.
-
-In other words, Unicode provides the foundation that enables modern software to handle multilingual text and a vast array of symbols reliably.
+**Unicode** is the global standard for encoding text, defining unique code points for every letter, symbol, emoji, and script. It enables CharFinder to search across more than 140,000 characters—covering everything from Latin letters to CJK ideograms and emojis.
 
 ### Why It Matters for CharFinder
 
-* **Uniform Search Space**: Unicode encompasses over 140,000 characters, making it possible to search and retrieve any symbol, emoji, or letter from a single source.
-* **Cross-Language Support**: Whether you search for Latin letters, mathematical symbols, arrows, CJK characters, or ancient scripts, Unicode ensures consistent handling.
-* **Emojis & Symbols**: Emojis are part of Unicode and fully supported by CharFinder.
+- ✅ **Multilingual coverage**: Supports scripts from all major languages and symbol sets.
+- ✅ **Emoji and symbol support**: All emoji and symbols are part of Unicode and fully searchable.
+- ✅ **Alternate name discovery**: CharFinder indexes official names *and* alternate names (from field 10 of `UnicodeData.txt`) to support queries like `"underscore"`, `"slash"`, or `"period"`.
 
-### Normalization in CharFinder
+---
 
-Text normalization is crucial when performing searches across Unicode:
+### 🔄 Unicode Normalization
 
-* Different character sequences may visually or semantically represent the same character (e.g. `é` vs `é`).
-* Normalization converts these variations to a consistent form before comparison.
+Characters can be visually identical but encoded differently. For example:
 
-**CharFinder** uses **Unicode NFC (Normalization Form C)** by default, which:
+- `é` (U+00E9) and `é` (`e` + U+0301) look the same, but are different code points.
 
-* Ensures composed characters are used where possible.
-* Provides stable and predictable search behavior.
+CharFinder applies **Unicode NFC normalization + uppercasing** to:
 
-For example:
+- Normalize all inputs and cached names
+- Ensure matching is **stable**, **reliable**, and **encoding-independent**
 
-| Input Query | Normalized Form (NFC) | Effective Search Behavior |
-| ----------- | --------------------- | ------------------------- |
-| café        | café (U+00E9)         | Matches correctly         |
-| café       | café (U+00E9)         | Matches correctly         |
+| Input Query | Normalized | Matches? |
+|-------------|------------|----------|
+| café        | CAFÉ       | ✅       |
+| café       | CAFÉ       | ✅       |
 
-See following:
+---
 
-* [Unicode® Standard Annex #15 — Unicode Normalization Forms](https://unicode.org/reports/tr15/)
-* CharFinder documentation: [docs/normalization.md](docs/normalization.md)
+### 🔍 Alternate Names from UnicodeData.txt
+
+Many characters (e.g. `_`, `.`, `/`) have common aliases not reflected in their official names. CharFinder solves this by indexing **alternate names (Field 10)** from [`UnicodeData.txt`](https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt), enhancing discoverability:
+
+| Character | Codepoint | Official Name | Alt Name |
+|----------|-----------|----------------|----------|
+| `_`      | U+005F    | LOW LINE       | SPACING UNDERSCORE |
+| `.`      | U+002E    | FULL STOP      | PERIOD             |
+| `/`      | U+002F    | SOLIDUS        | SLASH              |
+
+Alternate names are merged into the cache and normalized for full search support.
+
+
+📚 See [docs/unicode_and_normalization.md](docs/unicode_and_normalization.md),
+
 
 ---
 
@@ -320,7 +329,7 @@ Fuzzy matching can use a **single algorithm** (like `token_sort_ratio`) or a **h
 - Normalization is always applied (NFC + uppercase).
 - Matching logic is configurable via CLI flags like `--fuzzy`, `--prefer-fuzzy`, `--fuzzy-algo`, etc.
 
-See [docs/matching.md](docs/matching.md) for full details on algorithms, thresholds, fallback flow, hybrid weights, and diagnostics.
+📚 See [docs/matching.md](docs/matching.md).
 
 ---
 
@@ -454,7 +463,7 @@ for item in results:
     print(item)
 ```
 
-See [docs/core\_logic.md](docs/core_logic.md).
+📚 See [docs/core\_logic.md](docs/core_logic.md).
 
 ---
 
@@ -541,7 +550,7 @@ CharFinder uses layered caching for performance:
   * `unicode_name_cache.json` is loaded or rebuilt from `UnicodeData.txt`
   * Avoids repeated downloads and accelerates startup
 
-→ See: [`docs/caching.md`](docs/caching.md)
+📚 See [`docs/caching.md`](docs/caching.md)
 
 ---
 
@@ -558,7 +567,7 @@ Supports predictable environment resolution:
 
 → Use `CHARFINDER_DEBUG_ENV_LOAD=1` for config trace output
 
-→ See: [`docs/environment_config.md`](docs/environment_config.md)
+📚 See [`docs/environment_config.md`](docs/environment_config.md)
 
 ---
 
@@ -571,7 +580,7 @@ CharFinder uses a flexible and color-aware logging setup:
 * **Color output** auto-detected for terminals vs. scripts
 * Logging initialized via `setup_logging()` and shared globally
 
-→ See: [`docs/logging_system.md`](docs/logging_system.md)
+📚 See [`docs/logging_system.md`](docs/logging_system.md)
 
 ---
 
@@ -672,7 +681,7 @@ Hooks include:
 * **Logging tests:** test rotating logging, suppression, environment filtering
 * **Settings tests:** test different `.env` and environment variable scenarios
 
-See [docs/unit_test_design.md](docs/unit_test_design.md)
+📚 See [docs/unit_test_design.md](docs/unit_test_design.md)
 
 ---
 ### 👨‍💻 9. Developer Guide
@@ -917,7 +926,7 @@ The following documents are located in the [`docs/`](docs/) directory:
 | [`environment_config.md`](docs/environment_config.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities.                             |
 | [`logging_system.md`](docs/logging_system.md)               | Logging architecture: setup, structured logging, rotating files, and environment-based folders.                     |
 | [`matching.md`](docs/matching.md)                           | Detailed explanation of exact and fuzzy matching algorithms and options. Includes mode combinations and flowcharts. |
-| [`normalization.md`](docs/normalization.md)                 | Unicode normalization explained: what is used (`NFC`), why, and implications for search.                            |
+| [`unicode_and_normalization.md`](docs/unicode_and_normalization.md)                 | Unicode normalization explained: what is used (`NFC`), why, and implications for search.                            |
 | [`packaging.md`](docs/packaging.md)                         | Packaging and publishing: `pyproject.toml`, build tools, versioning strategy, and PyPI release process.             |
 | [`roadmap.md`](docs/roadmap.md)                             | Future plans and enhancements.                                                                                      |
 | [`types_protocols.md`](docs/types_protocols.md)             | Project-wide types, `Protocol` interfaces, and their role in extensibility and static typing.                       |
