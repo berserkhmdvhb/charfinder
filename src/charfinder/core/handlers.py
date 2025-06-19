@@ -30,7 +30,7 @@ from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import BuildCacheOptions, build_name_cache
 from charfinder.fuzzymatchlib import resolve_algorithm_name
 from charfinder.utils.formatter import echo
-from charfinder.utils.logger_styles import format_info
+from charfinder.utils.logger_styles import format_info, format_debug
 from charfinder.utils.normalizer import normalize
 from charfinder.validators import (
     validate_exact_match_mode,
@@ -138,9 +138,16 @@ def _resolve_matches(
 
     norm_query = normalize(query)
     exact_matches = [
-        MatchTuple(code=tpl[0], char=tpl[1], name=tpl[2], score=tpl[3])
+        MatchTuple(
+            code=tpl.code,
+            char=tpl.char,
+            name=tpl.name,
+            score=1.0,
+            is_fuzzy=False,
+        )
         for tpl in find_exact_matches(norm_query, name_cache, config.exact_match_mode)
     ]
+    exact_codes = {m.code for m in exact_matches}
 
     fuzzy_matches: list[MatchTuple] = []
     used_fuzzy = False
@@ -157,12 +164,34 @@ def _resolve_matches(
             use_color=config.use_color,
             query=norm_query,
         )
+        
+        raw_fuzzy_results = find_fuzzy_matches(norm_query, name_cache, context)
         fuzzy_matches = [
-            MatchTuple(code=tpl[0], char=tpl[1], name=tpl[2], score=tpl[3])
-            for tpl in find_fuzzy_matches(norm_query, name_cache, context)
+            MatchTuple(
+                code=tpl.code,
+                char=tpl.char,
+                name=tpl.name,
+                score=tpl.score,
+                is_fuzzy=True,
+            )
+            for tpl in raw_fuzzy_results
+            # Remove fuzzy results already returned by exact match
+            if tpl.code not in exact_codes
         ]
-
-    all_matches = exact_matches + fuzzy_matches
+        removed_count = len(raw_fuzzy_results) - len(fuzzy_matches)
+        message = f"Removed {removed_count} duplicate fuzzy match(es) already present in exact results."
+        if removed_count > 0 and config.verbose:
+            echo(
+                message,
+                style=lambda m: format_debug(m, use_color=config.use_color),
+                show=config.verbose,
+                log=True,
+                log_method="debug",
+            )
+    all_matches = sorted(
+        exact_matches + fuzzy_matches,
+        key=lambda m: (m.is_fuzzy, -(m.score or 0.0))
+    )
     _log_match_message(all_matches, query, use_color=config.use_color, verbose=config.verbose)
     return all_matches, used_fuzzy
 

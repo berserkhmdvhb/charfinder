@@ -53,9 +53,9 @@ def find_chars(query: str, config: SearchConfig) -> Generator[str, None, None]:
         str: CLI-formatted output lines with matched characters.
     """
     matches, _ = _resolve_matches(query, config)
-    has_score = bool(matches) and matches[0].score is not None
+    has_score = any(m.is_fuzzy for m in matches)
 
-    yield from format_result_header(has_score=has_score)
+    yield from format_result_header()
     for match in matches:
         yield format_result_row(
             match.code,

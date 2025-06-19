@@ -153,8 +153,8 @@ def find_chars_with_info(
 
     lines: list[str] = []
     if raw_matches:
-        has_score = bool(raw_matches) and "score" in raw_matches[0]
-        lines.extend(format_result_header(has_score=has_score))
+        has_score = any(m.get("is_fuzzy") for m in raw_matches)
+        lines.extend(format_result_header())
         lines.extend(
             format_result_row(
                 code := int(match["code"].removeprefix("U+"), 16),

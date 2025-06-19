@@ -2,11 +2,9 @@
 Type definitions and reusable dataclasses for CharFinder.
 
 Defines:
-- AlgorithmFn: Callable type alias for fuzzy algorithm functions.
-- FuzzyMatchContext: Dataclass holding parameters for fuzzy matching.
 - SearchConfig: Dataclass grouping parameters for Unicode search.
-- CharMatch: TypedDict representing a single match result.
-- FormatterFunc: Protocol for formatting functions with [PREFIX] and optional color.
+- AlgorithmFn: Callable type alias for fuzzy algorithm functions.
+
 """
 
 # ---------------------------------------------------------------------
@@ -94,6 +92,8 @@ class CharMatch(TypedDict):
     char: str
     name: str
     score: NotRequired[float]
+    is_fuzzy: NotRequired[bool]
+
 
 
 @dataclass
@@ -187,12 +187,13 @@ class MatchResult:
     match_info: MatchDiagnosticsInfo | None = None
 
 
-class MatchTuple(NamedTuple):
+@dataclass
+class MatchTuple:
     code: int
     char: str
     name: str
-    score: float | None
-
+    score: float | None = None
+    is_fuzzy: bool = False
 
 class NormalizationProfileDict(TypedDict, total=False):
     form: NormalizationForm

@@ -209,28 +209,20 @@ def format_result_line(line: str, *, use_color: bool = False) -> str:
     return _color_wrap(line, Fore.YELLOW, use_color=use_color)
 
 
-def format_result_header(*, has_score: bool) -> list[str]:
+def format_result_header() -> list[str]:
     """
     Format the result table header and divider.
-
-    Args:
-        has_score: Whether the results include a score column.
 
     Returns:
         list[str]: A list of two strings: header line and divider line.
     """
-    if has_score:
-        header = (
-            f"{'CODE':<{FIELD_WIDTHS['code']}} "
-            f"{'CHAR':<{FIELD_WIDTHS['char']}} "
-            f"{'NAME':<{FIELD_WIDTHS['name']}} "
-            "SCORE"
-        )
-    else:
-        header = f"{'CODE':<{FIELD_WIDTHS['code']}} {'CHAR':<{FIELD_WIDTHS['char']}} NAME"
-
+    header = (
+        f"{'CODE':<{FIELD_WIDTHS['code']}} "
+        f"{'CHAR':<{FIELD_WIDTHS['char']}} "
+        f"{'NAME':<{FIELD_WIDTHS['name']}} "
+        f"{'SCORE':>{FIELD_WIDTHS['score']}}"
+    )
     divider = "-" * len(header)
-
     return [header, divider]
 
 
@@ -249,13 +241,13 @@ def format_result_row(code: int, char: str, name: str, score: float | None) -> s
     """
     code_str = f"U+{code:04X}"
     name_str = f"{name}  (\\u{code:04x})"
-    score_str = f"{score:>6.3f}" if score is not None else ""
+    score_str = f"{score:>6.3f}"
 
     return (
         f"{code_str:<{FIELD_WIDTHS['code']}} "
         f"{char:<{FIELD_WIDTHS['char']}} "
         f"{name_str:<{FIELD_WIDTHS['name']}} "
-        f"{score_str}".rstrip()
+        f"{score_str:<{FIELD_WIDTHS['score']}} "
     )
 
 
@@ -274,8 +266,8 @@ def matchtuple_to_charmatch(mt: MatchTuple) -> CharMatch:
         "char": mt.char,
         "name": f"{mt.name}  (\\u{mt.code:04x})",
     }
-    if mt.score is not None:
-        result["score"] = round(mt.score, 3)
+    result["score"] = round(mt.score, 3) if mt.score is not None else None
+    result["is_fuzzy"] = mt.is_fuzzy
     return result
 
 

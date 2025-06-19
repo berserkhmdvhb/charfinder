@@ -92,14 +92,14 @@ def test_format_result_line_plain() -> None:
 
 def test_format_result_header_with_score() -> None:
     """Header and divider line when score column is shown."""
-    header, divider = F.format_result_header(has_score=True)
+    header, divider = F.format_result_header()
     assert "CODE" in header and "SCORE" in header
     assert len(divider) == len(header)
 
 
 def test_format_result_header_without_score() -> None:
     """Header and divider when score column is hidden."""
-    header, divider = F.format_result_header(has_score=False)
+    header, divider = F.format_result_header()
     assert "CODE" in header and "SCORE" not in header
     assert len(divider) == len(header)
 
