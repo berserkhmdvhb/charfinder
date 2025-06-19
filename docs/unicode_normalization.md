@@ -45,7 +45,7 @@ CharFinder applies normalization at all key stages of operation, enabling determ
 * Character names are normalized **at cache build time**
 * User input queries are normalized **at search time**
 * Normalization steps:
-  - Apply a **Unicode normalization form** (default: **NFC**)
+  - Apply a **Unicode normalization form** (default: **NFKD**)
   - Convert to **uppercase**
 
 This ensures accurate matching even when:
@@ -63,7 +63,7 @@ This ensures accurate matching even when:
 In `core/name_cache.py`, during `build_name_cache()`:
 
 ```python
-normalized = normalize(name)  # applies NFC + upper()
+normalized = normalize(name)  # applies NFKD + upper()
 ```
 
 This affects both:
@@ -83,34 +83,68 @@ normalized_query = normalize(query)
 This ensures query strings are directly comparable to the normalized cache.
 
 ---
-
 ## 5. Implementation Details
 
-### Source Module
-
-Normalization logic is centralized in:
+CharFinder applies normalization consistently across both **cache building** and **search queries**. The logic is implemented in `utils/normalizer.py`:
 
 ```python
-# utils/normalizer.py
-
 def normalize(text: str, form: Literal["NFC", "NFD", "NFKC", "NFKD"] = DEFAULT_NORMALIZATION_FORM) -> str:
     normalized_text = unicodedata.normalize(form, text)
-    return normalized_text.upper()
+    text_without_accents = STRIP_ACCENTS_RE.sub("", normalized_text)
+    cleaned_text = text_without_accents.strip().upper()
+    return cleaned_text
 ```
 
-- The default form (`NFC`) is configured via `DEFAULT_NORMALIZATION_FORM` in `constants.py`.
-- This ensures maintainable and testable normalization across the system.
+### 🔧 Step-by-Step: How Normalization Works
 
-### Forms Supported
+The normalization process includes the following steps:
 
-| Form   | Description                                  |
-|--------|----------------------------------------------|
-| NFC    | Composed (default): preferred, stable form   |
-| NFD    | Decomposed: splits accents from base         |
-| NFKC   | Compatibility-composed (e.g., ligatures)     |
-| NFKD   | Compatibility-decomposed                     |
+1. **Apply Unicode Normalization Form**:
 
-CharFinder uses **NFC** by default, matching most input sources like keyboard and file names.
+   * The default form is `NFKD` (Normalization Form Compatibility Decomposed).
+   * This decomposes characters such as:
+
+     * Ligatures (`ﬁ` → `f` + `i`)
+     * Superscripts (`²     - Superscripts (`\xb2`→`2\`)
+     * Roman numerals (`Ⅷ` → `VIII`)
+     * Full-width characters (`Ａ` → `A`)
+     * Accented letters (`é` → `e` + combining acute)
+
+2. **Strip Accents**:
+
+   * All combining marks (e.g., U+0301 COMBINING ACUTE ACCENT) are removed using a regular expression that filters characters by Unicode category (`Mn`).
+
+3. **Trim Whitespace**:
+
+   * Leading and trailing whitespace is removed with `.strip()`.
+
+4. **Convert to Uppercase**:
+
+   * The result is converted to uppercase to ensure case-insensitive, canonical matching.
+
+These steps ensure that:
+
+* `café` (U+00E9) and `café` (`e` + U+0301) normalize identically.
+* Compatibility glyphs like `ﬁ`, superscript digits, and full-width forms reduce to simple ASCII equivalents.
+* Matching is robust regardless of how the input is entered or encoded.
+
+### 🔐 Centralized & Configurable
+
+* Normalization is centrally handled by `normalize()` in `utils/normalizer.py`.
+* The default normalization form (`NFKD`) is defined in `DEFAULT_NORMALIZATION_FORM` in `constants.py`.
+* This setup ensures consistency, configurability, and testability across all stages of cache building and search.
+
+### ✨ Supported Normalization Forms
+
+| Form | Description                                       |
+| ---- | ------------------------------------------------- |
+| NFC  | Canonical composed                                |
+| NFD  | Canonical decomposed                              |
+| NFKC | Compatibility composed (e.g., ligature = letters) |
+| NFKD | Compatibility decomposed (**CharFinder default**) |
+
+CharFinder uses **NFKD** because it maximizes compatibility and decomposes characters to their simplest searchable form, matching typical keyboard input and file encodings.
+
 
 ---
 
@@ -132,12 +166,26 @@ With normalization:
 
 ## 7. Real-World Example
 
-| Input Query | Code Points | Normalized Form (NFC) | Matches? |
-|-------------|-------------|------------------------|----------|
-| café        | `U+00E9`    | ✅ `CAFÉ`              | ✅       |
-| café       | `U+0065 U+0301` | ✅ `CAFÉ`          | ✅       |
+| Input Query | Code Points             | Normalized Form (NFKD + upper) | Matches? |
+|-------------|-------------------------|----------------------------------|----------|
+| café        | `U+0063 U+0061 U+0066 U+00E9`        | `CAFÉ`       | ✅       |
+| café       | `U+0063 U+0061 U+0066 U+0065 U+0301` | `CAFÉ`       | ✅       |
+
+
 
 Thanks to NFC normalization and uppercasing, both queries match identically.
+
+Other special characters:
+
+| Input Query   | Code Points                            | Normalized Form (NFKD + upper) | Matches? |
+|---------------|----------------------------------------|----------------------------------|----------|
+| ﬁ             | U+FB01                                | FI                               | ✅       |
+| Ⅷ           | U+2167                              | VIII                               | ✅       |
+| full-width A  | U+FF21                                | A                                | ✅       |
+| superscript 2 | U+00B2                                | 2                                | ✅       |
+| ①             | U+2460                                | 1                                | ✅       |
+| Å (angstrom)  | U+212B                                | Å                                | ✅       |
+
 
 ---
 
