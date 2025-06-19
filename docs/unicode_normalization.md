@@ -2,15 +2,17 @@
 
 CharFinder ensures **reliable and consistent search behavior** through deep integration with the Unicode standard and careful normalization of input and data. This page explains what Unicode is, why it matters, and how CharFinder handles normalization to guarantee robust and accurate matching.
 
+---
 
 ## 1. What Is Unicode?
 
 **Unicode** is the universal standard for encoding text and symbols used across all languages and digital platforms. Every character—letters, emojis, mathematical symbols, currency signs—has a unique **code point**.
 
 For example:
-- `A` → U+0041
-- `€` → U+20AC
-- `😄` → U+1F604
+
+* `A` → U+0041
+* `€` → U+20AC
+* `😄` → U+1F604
 
 ### Why It Matters for CharFinder
 
@@ -29,7 +31,7 @@ Unicode normalization transforms text into a **standardized binary form**, resol
 
 For instance:
 
-- `café` (with `é` as U+00E9) vs. `café` (`e` + combining acute accent U+0301)
+* `café` (with `é` as U+00E9) vs. `café` (`e` + combining acute accent U+0301)
 
 These forms **look identical** but are different byte-wise and won't match without normalization.
 
@@ -43,111 +45,147 @@ CharFinder applies normalization at all key stages of operation, enabling determ
 
 * Character names are normalized **at cache build time**
 * User input queries are normalized **at search time**
-* Normalization steps:
-  - Apply a **Unicode normalization form** (default: **NFKD**)
-  - Convert to **uppercase**
+* Normalization includes:
+
+  * Apply a **Unicode normalization form**
+  * Optional **accent stripping**
+  * Optional **whitespace stripping**
+  * Convert to **uppercase**
 
 This ensures accurate matching even when:
 
-- Users input differently encoded diacritics or composed forms
-- Names contain symbols or non-ASCII characters
-- Queries vary in case or formatting
+* Users input differently encoded diacritics or composed forms
+* Names contain symbols or non-ASCII characters
+* Queries vary in case or formatting
 
 ---
 
-## 4. Where Normalization Happens
+## 4. Normalization Profiles
 
-### ✅ Cache Build Time
+To support different use cases, CharFinder introduces the `--normalization-profile` argument (CLI) and `normalization_profile` option (core API). This provides **preset normalization behaviors** optimized for varying levels of strictness.
 
-In `core/name_cache.py`, during `build_name_cache()`:
+### 🔧 Preset Levels
 
-```python
-normalized = normalize(name)  # applies NFKD + upper()
-```
+| Level        | Unicode Normalization Form | Strip Accents | Strip Whitespace      | Transformation Summary             |
+| ------------ | ------------ | ------------- | --------------------- | ---------------------------------- |
+| `raw`        | NFC          | False         | False                 | NFC + `.upper()` (no stripping)    |
+| `light`      | NFC          | False         | (unspecified → False) | NFC + `.upper()`                   |
+| `medium`     | NFKD         | False         | (unspecified → False) | NFKD + `.upper()`                  |
+| `aggressive` | NFKD         | True          | (unspecified → False) | NFKD + remove accents + `.upper()` |
 
-This affects both:
-- `"normalized"`: the official Unicode name
-- `"alternate_normalized"`: any alternate name defined for a character
 
-These normalized values are stored for fast lookup.
-
-### ✅ Search Time (User Query)
-
-In `core/handlers.py`, the input is normalized before matching:
-
-```python
-normalized_query = normalize(query)
-```
-
-This ensures query strings are directly comparable to the normalized cache.
-
----
-## 5. Implementation Details
-
-CharFinder applies normalization consistently across both **cache building** and **search queries**. The logic is implemented in `utils/normalizer.py`:
-
-```python
-def normalize(text: str, form: Literal["NFC", "NFD", "NFKC", "NFKD"] = DEFAULT_NORMALIZATION_FORM) -> str:
-    normalized_text = unicodedata.normalize(form, text)
-    text_without_accents = STRIP_ACCENTS_RE.sub("", normalized_text)
-    cleaned_text = text_without_accents.strip().upper()
-    return cleaned_text
-```
-
-### 🔧 Step-by-Step: How Normalization Works
-
-The normalization process includes the following steps:
-
-1. **Apply Unicode Normalization Form**:
-
-   * The default form is `NFKD` (Normalization Form Compatibility Decomposed).
-   * This decomposes characters such as:
-
-     * Ligatures (`ﬁ` → `f` + `i`)
-     * Superscripts (`²     - Superscripts (`\xb2`→`2\`)
-     * Roman numerals (`Ⅷ` → `VIII`)
-     * Full-width characters (`Ａ` → `A`)
-     * Accented letters (`é` → `e` + combining acute)
-
-2. **Strip Accents**:
-
-   * All combining marks (e.g., U+0301 COMBINING ACUTE ACCENT) are removed using a regular expression that filters characters by Unicode category (`Mn`).
-
-3. **Trim Whitespace**:
-
-   * Leading and trailing whitespace is removed with `.strip()`.
-
-4. **Convert to Uppercase**:
-
-   * The result is converted to uppercase to ensure case-insensitive, canonical matching.
-
-These steps ensure that:
-
-* `café` (U+00E9) and `café` (`e` + U+0301) normalize identically.
-* Compatibility glyphs like `ﬁ`, superscript digits, and full-width forms reduce to simple ASCII equivalents.
-* Matching is robust regardless of how the input is entered or encoded.
-
-### 🔐 Centralized & Configurable
-
-* Normalization is centrally handled by `normalize()` in `utils/normalizer.py`.
-* The default normalization form (`NFKD`) is defined in `DEFAULT_NORMALIZATION_FORM` in `constants.py`.
-* This setup ensures consistency, configurability, and testability across all stages of cache building and search.
-
-### ✨ Supported Normalization Forms
+### Normalization Forms
 
 | Form | Description                                       |
 | ---- | ------------------------------------------------- |
 | NFC  | Canonical composed                                |
 | NFD  | Canonical decomposed                              |
 | NFKC | Compatibility composed (e.g., ligature = letters) |
-| NFKD | Compatibility decomposed (**CharFinder default**) |
+| NFKD | Compatibility decomposed                          |
 
-CharFinder uses **NFKD** because it maximizes compatibility and decomposes characters to their simplest searchable form, matching typical keyboard input and file encodings.
+### 🎯 Choosing a Profile
 
+The default profile is **`aggressive`**, which maximizes matchability by:
+
+* Using NFKD normalization (decomposes characters)
+* Removing diacritics (accents)
+* Ensuring case-insensitivity
+
+You can override the profile using:
+
+```bash
+charfinder --query cafe --normalization-profile=light
+```
+
+Or programmatically:
+
+```python
+find_chars("cafe", normalization_profile="light")
+```
 
 ---
 
-## 6. Why Normalization Matters
+## 5. Where Normalization Happens
+
+### ✅ Cache Build Time
+
+In `core/name_cache.py`, during `build_name_cache()`:
+
+```python
+normalized = normalize(name)  # uses aggressive profile by default
+```
+
+This affects both:
+
+* `"normalized"`: the official Unicode name
+* `"alternate_normalized"`: any alternate name defined for a character
+
+These normalized values are stored for fast lookup.
+
+### ✅ Search Time (User Query)
+
+In `core/handlers.py`, the input is normalized using the selected profile:
+
+```python
+normalized_query = normalize(query, profile="medium")
+```
+
+This ensures query strings are directly comparable to the normalized cache.
+
+---
+
+## 6. Implementation Details
+
+CharFinder applies normalization consistently across both **cache building** and **search queries**. The logic is implemented in `utils/normalizer.py` and driven by a selected **normalization profile**.
+
+```python
+def normalize(text: str, profile: str = DEFAULT_NORMALIZATION_PROFILE) -> str:
+    # Resolve form, accent, and whitespace behavior from profile
+    ...
+    text = unicodedata.normalize(form, text)
+    if strip_accents:
+        text = STRIP_ACCENTS_RE.sub("", text)
+    if strip_whitespace:
+        text = text.strip()
+    return text.upper()
+```
+
+### 🔍 How Normalization Profiles Work
+
+Each profile resolves to a set of options (`form`, `strip_accents`, `strip_whitespace`). These are defined centrally and validated before being applied.
+
+The normalization logic includes the following steps:
+
+1. **Apply Unicode Normalization Form**:
+
+   * For example, `NFKD` decomposes characters like:
+
+     * Ligatures (`ﬁ` → `f` + `i`)
+     * Superscripts (`²` → `2`)
+     * Full-width characters (`Ａ` → `A`)
+     * Accented letters (`é` → `e` + combining acute)
+
+2. **Optional Accent Stripping**:
+
+   * If `strip_accents=True`, all combining marks are removed (Unicode category `Mn`).
+
+3. **Optional Whitespace Trimming**:
+
+   * Controlled by the profile or function argument.
+
+4. **Uppercase Conversion**:
+
+   * All normalized results are uppercased for uniformity.
+
+### 🔐 Centralized & Configurable
+
+* Normalization is centrally handled by `normalize()` in `utils/normalizer.py`.
+* The default normalization profile (`aggressive`) is defined in `DEFAULT_NORMALIZATION_PROFILE` in `constants.py`.
+* This setup ensures consistency, configurability, and testability across all stages of cache building and search.
+
+---
+
+## 7. Why Normalization Matters
 
 Without normalization:
 
@@ -163,167 +201,89 @@ With normalization:
 
 ---
 
-## 7. Real-World Example
+## 8. Real-World Example
 
-| Input Query | Code Points             | Normalized Form (NFKD + upper) | Matches? |
-|-------------|-------------------------|----------------------------------|----------|
-| café        | `U+0063 U+0061 U+0066 U+00E9`        | `CAFÉ`       | ✅       |
-| café       | `U+0063 U+0061 U+0066 U+0065 U+0301` | `CAFÉ`       | ✅       |
-
-
-
-Thanks to NFC normalization and uppercasing, both queries match identically.
+| Input Query | Code Points                          | Normalized (`aggressive`) | Matches? |
+| ----------- | ------------------------------------ | ------------------------- | -------- |
+| café        | `U+0063 U+0061 U+0066 U+00E9`        | `CAFE`                    | ✅        |
+| café       | `U+0063 U+0061 U+0066 U+0065 U+0301` | `CAFE`                    | ✅        |
 
 Other special characters:
 
-| Input Query   | Code Points                            | Normalized Form (NFKD + upper) | Matches? |
-|---------------|----------------------------------------|----------------------------------|----------|
-| ﬁ             | U+FB01                                | FI                               | ✅       |
-| Ⅷ           | U+2167                              | VIII                               | ✅       |
-| full-width A  | U+FF21                                | A                                | ✅       |
-| superscript 2 | U+00B2                                | 2                                | ✅       |
-| ①             | U+2460                                | 1                                | ✅       |
-| Å (angstrom)  | U+212B                                | Å                                | ✅       |
-
-
----
-
-## 8. Summary Table
-
-| Aspect              | Normalization Applied | Notes                           |
-|---------------------|-----------------------|---------------------------------|
-| Character names     | ✅ (during caching)    | Normalized once and persisted   |
-| Alternate names     | ✅ (if available)      | Same treatment as official names |
-| Search query        | ✅ (at runtime)        | Normalized before comparison    |
-| Matching operations | ✅ Always on normalized input | Ensures correct fuzzy scoring  |
+| Input Query   | Code Points | Normalized (`aggressive`) | Matches? |
+| ------------- | ----------- | ------------------------- | -------- |
+| ﬁ             | U+FB01      | FI                        | ✅        |
+| Ⅷ             | U+2167      | VIII                      | ✅        |
+| full-width A  | U+FF21      | A                         | ✅        |
+| superscript 2 | U+00B2      | 2                         | ✅        |
+| ①             | U+2460      | 1                         | ✅        |
+| Å (angstrom)  | U+212B      | Å                        | ✅        |
 
 ---
 
-## 9. Configuration & Extensibility
+## 9. Summary Table
 
-Normalization behavior is internally configurable:
-
-- Default form: via `DEFAULT_NORMALIZATION_FORM` constant.
-- Future roadmap: expose normalization form as CLI flag (e.g., `--norm-form`).
+| Aspect              | Normalization Applied        | Notes                             |
+| ------------------- | ---------------------------- | --------------------------------- |
+| Character names     | ✅ (during caching)           | Based on selected profile         |
+| Alternate names     | ✅ (if available)             | Normalized same as official names |
+| Search query        | ✅ (at runtime)               | Controlled by profile             |
+| Matching operations | ✅ Always on normalized input | Ensures correct fuzzy scoring     |
 
 ---
-## Enhancing Discoverability with Alternate Names (Field 10)
 
-### Problem: What Users Type ≠ Official Unicode Names
+## 10. Configuration & Extensibility
 
-Many users fail to find characters because they search with intuitive or informal terms rather than official Unicode names. For instance:
+Normalization behavior is fully configurable:
+
+* 🔧 `--normalization-profile` (CLI)
+* 🧩 `normalization_profile="..."` (API)
+* 🔄 Profiles are resolved and validated centrally
+* 🧪 Custom profiles may be supported in the future
+
+Supported profile levels:
+
+* `raw`
+* `light`
+* `medium`
+* `aggressive` (default)
+
+---
+
+## 11. Enhancing Discoverability with Alternate Names (Field 10)
+
+*See [docs/caching.md](./caching.md) for full details.*
+
+CharFinder uses alternate names (Field 10 in `UnicodeData.txt`) to improve discoverability of characters not matched by their official name.
+
+Example:
 
 ```bash
-$ charfinder --query underscore
-No matches found for query: 'underscore'
-
-$ charfinder --query period
-No matches found for query: 'period'
+charfinder --query underscore
 ```
 
-This happens because:
+Matches:
 
-* `U+005F` is officially named **"LOW LINE"**, not "underscore"
-* `U+002E` is officially named **"FULL STOP"**, not "period"
-* `U+002F` is officially named **"SOLIDUS"**, not "slash"
-
-Yet "underscore", "period", and "slash" are the most common user terms.
-
-### Solution: Use Unicode Index Field 10 (Alternate Name)
-
-To bridge this gap, CharFinder uses **field 10** of the `UnicodeData.txt` file—an alternate name field rarely used by default tools.
-
-| Character | Codepoint | Official Name | Field 10 (Alternate Name) |
-| --------- | --------- | ------------- | ------------------------- |
-| `.`       | U+002E    | FULL STOP     | PERIOD                    |
-| `/`       | U+002F    | SOLIDUS       | SLASH                     |
-| `_`       | U+005F    | LOW LINE      | SPACING UNDERSCORE        |
-
-With field 10 integrated, CharFinder allows:
-
-* ✅ `--query underscore` → `U+005F`
-* ✅ `--query period` → `U+002E`
-* ✅ `--query slash` → `U+002F`
-
-These alternate names are merged into the name cache used for both exact and fuzzy search.
-
-### Behavior: Loading UnicodeData.txt
-
-CharFinder dynamically loads the alternate names from `UnicodeData.txt`. The logic is as follows:
-
-1. **Attempt to download** from a remote Unicode URL.
-2. If download **succeeds**, the file is **cached locally**.
-3. If download **fails**, CharFinder attempts to **read from the local path**.
-4. If both steps fail, alternate names are not used.
-
-#### Configurable Environment Variables
-
-To support custom paths or offline setups, CharFinder allows injection of two environment variables:
-
-```bash
-# Optional custom settings
-UNICODE_DATA_URL=https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
-UNICODE_DATA_FILE_PATH=data/UnicodeData.txt
-```
-
-* `UNICODE_DATA_URL`: Where to download the Unicode database from (default is the official Unicode URL).
-* `UNICODE_DATA_FILE_PATH`: Where to store or read the file locally.
-
-These values are validated before use. If the URL is invalid or the file is missing, warnings are shown, but the tool continues gracefully.
-
-### Parsing Logic (from unicode\_data\_loader.py)
-
-```python
-fields = line.split(";")
-if len(fields) >= EXPECTED_MIN_FIELDS:
-    alt_name = fields[ALT_NAME_INDEX].strip()
-    if alt_name:
-        char = chr(int(fields[0], 16))
-        alt_names[char] = alt_name
-```
-
-* `ALT_NAME_INDEX = 10`
-* Hex codepoint (Field 0) is converted into a Unicode character.
-* Malformed lines or invalid hex codes are logged and skipped.
-
-### Benefits of Field 10 Support
-
-| Benefit                    | Description                                               |
-| -------------------------- | --------------------------------------------------------- |
-| Enhanced search terms      | Supports common terms like "period" and "underscore"      |
-| Complements official names | Alternate names are additive, not replacements            |
-| Improves discoverability   | Especially useful for punctuation and symbolic characters |
-| Graceful fallback          | Works even when download fails, if local file exists      |
-
-### Reference Links
-
-* [UnicodeData.txt – Unicode.org](https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt)
-* [Fluent Python by Luciano Ramalho](https://www.fluentpython.com)
-* [CharFinder Source – unicode\_data\_loader.py](../../charfinder/core/unicode_data_loader.py)
-
-
----
-
-## 11. Summary
-Normalization is a **foundational mechanism** in CharFinder. It ensures:
-
-- That exact and fuzzy matches behave consistently
-- That queries written in different styles or systems still work
-- That the Unicode universe remains navigable and predictable
-
-Whether you're searching for `é`, `𝔈`, `⅀`, or `🧠` — normalization makes it all work.
-
-> **CharFinder: Unicode-aware, normalized, multilingual.**
-
+| Character | Codepoint | Official Name | Alternate Name     |
+| --------- | --------- | ------------- | ------------------ |
+| `_`       | U+005F    | LOW LINE      | SPACING UNDERSCORE |
 
 ---
 
 ## 12. Further Reading
 
-- 🔤 Python's [`unicodedata.normalize()`](https://docs.python.org/3/library/unicodedata.html#unicodedata.normalize)
-- 📘 [Unicode® Standard Annex #15 — Unicode Normalization Forms](https://unicode.org/reports/tr15/)
-- 📚 [CharFinder documentation: docs/caching.md](./caching.md)
+* 🌤 Python’s [`unicodedata.normalize()`](https://docs.python.org/3/library/unicodedata.html#unicodedata.normalize)
+* 📘 [Unicode® Standard Annex #15 — Unicode Normalization Forms](https://unicode.org/reports/tr15/)
+* 📚 [CharFinder documentation: docs/caching.md](./caching.md)
 
+---
 
+## 13. Final Thoughts
 
+Normalization is a **foundational mechanism** in CharFinder. It ensures:
 
+* That exact and fuzzy matches behave consistently
+* That queries written in different styles or systems still work
+* That the Unicode universe remains navigable and predictable
+
+> **CharFinder: Unicode-aware, normalized, multilingual.**
