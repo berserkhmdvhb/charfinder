@@ -41,8 +41,8 @@ from charfinder.utils.logger_styles import (
     format_error,
     format_info,
     format_settings,
-    format_warning,
     format_success,
+    format_warning,
 )
 from charfinder.validators import resolve_effective_color_mode
 
