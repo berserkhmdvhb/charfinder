@@ -158,7 +158,7 @@ def get_root_dir() -> Path:
     """
     if "CHARFINDER_ROOT_DIR_FOR_TESTS" in os.environ:
         return Path(os.environ["CHARFINDER_ROOT_DIR_FOR_TESTS"]).resolve()
-    return Path(__file__).resolve().parents[2]
+    return Path(__file__).resolve().parents[3]
 
 
 # ---------------------------------------------------------------------

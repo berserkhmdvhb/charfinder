@@ -155,3 +155,4 @@ def test_find_chars_invalid_fuzzy_algo(mock_find_chars_impl: MagicMock) -> None:
     mock_find_chars_impl.assert_called_once()
     args, kwargs = mock_find_chars_impl.call_args
     assert kwargs['config'].fuzzy_algo == DEFAULT_FUZZY_ALGO  # Use the constant directly
+ 

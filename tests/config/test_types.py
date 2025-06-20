@@ -21,26 +21,6 @@ def test_algorithm_fn_type() -> None:
     assert callable(dummy_algo)
 
 
-def test_fuzzy_match_context_fields() -> None:
-    ctx = types.FuzzyMatchContext(
-        threshold=0.8,
-        fuzzy_algo="sequencematcher",
-        match_mode="single",
-        agg_fn="mean",
-        verbose=True,
-        use_color=False,
-        query="test",
-    )
-
-    assert ctx.threshold == 0.8
-    assert ctx.fuzzy_algo == "sequencematcher"
-    assert ctx.match_mode == "single"
-    assert ctx.agg_fn == "mean"
-    assert ctx.verbose is True
-    assert ctx.use_color is False
-    assert ctx.query == "test"
-
-
 def test_search_config_fields() -> None:
     config = types.SearchConfig(
         fuzzy=True,

@@ -238,7 +238,6 @@ class ValidateFuzzyAlgoAction(Action):
             target = values[0]
         else:
             target = values
-
         validated_value = _normalize_and_validate_fuzzy_algo(target)
         setattr(namespace, self.dest, validated_value)
 

@@ -173,7 +173,7 @@ env-debug:
 
 env-clear:
 	@echo "Clearing selected CHARFINDER_* and DOTENV_PATH environment variables..."
-	@$(PYTHON) -c "import os; vars = ['CHARFINDER_ENV', 'CHARFINDER_LOG_MAX_BYTES', 'CHARFINDER_LOG_BACKUP_COUNT', 'CHARFINDER_LOG_LEVEL', 'CHARFINDER_DEBUG_ENV_LOAD', 'DOTENV_PATH', 'UNICODE_DATA_URL', 'UNICODE_DATA_FILE']; [print(f'  Unsetting {v}') or os.environ.pop(v, None) for v in vars if v in os.environ]"
+	@$(PYTHON) -c "import os; vars = ['CHARFINDER_ENV','CHARFINDER_LOG_MAX_BYTES','CHARFINDER_LOG_BACKUP_COUNT','CHARFINDER_LOG_LEVEL','CHARFINDER_DEBUG_ENV_LOAD','CHARFINDER_CACHE_FILE_PATH','CHARFINDER_ROOT_DIR_FOR_TESTS','CHARFINDER_MATCH_THRESHOLD','CHARFINDER_NORMALIZATION_PROFILE','CHARFINDER_COLOR_MODE','CHARFINDER_SHOW_SCORE','DOTENV_PATH','UNICODE_DATA_URL','UNICODE_DATA_FILE_PATH']; [print(f'  Unsetting {v}') or os.environ.pop(v, None) for v in vars if v in os.environ]"
 
 env-show:
 	@echo "Currently set CHARFINDER_* and DOTENV_PATH environment variables:"

@@ -93,8 +93,6 @@ FUZZY_ALGO_ALIASES: dict[str, FuzzyAlgorithm] = {
     "token_sort": "token_sort_ratio",
     "token_sort_ratio": "token_sort_ratio",
     "hybrid": "hybrid_score",
-    "sequencematcher": "sequencematcher",
-    "rapidfuzz": "rapidfuzz",
 }
 
 

@@ -14,8 +14,6 @@ __all__ = [
 
 # Literal-based type aliases
 FuzzyAlgorithm = Literal[
-    "sequencematcher",
-    "rapidfuzz",
     "levenshtein_ratio",
     "simple_ratio",
     "normalized_ratio",
