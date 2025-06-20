@@ -42,6 +42,7 @@ from charfinder.utils.logger_styles import (
     format_info,
     format_settings,
     format_warning,
+    format_success,
 )
 from charfinder.validators import resolve_effective_color_mode
 
@@ -180,7 +181,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
 
         echo(
             f"Processing finished. Query: '{query_str}'",
-            style=lambda m: format_info(m, use_color=use_color),
+            style=lambda m: format_success(m, use_color=use_color),
             show=args.verbose,
             log=True,
             log_method="info",
