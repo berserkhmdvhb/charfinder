@@ -19,6 +19,7 @@ Functions:
     - _resolve_matches(): Runs exact/fuzzy logic and returns results.
     - _log_match_message(): Echoes summary to user and log.
     - build_search_config(): Creates validated SearchConfig.
+    - _normalize_and_build_config():
 """
 
 from __future__ import annotations
@@ -30,7 +31,7 @@ from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import BuildCacheOptions, build_name_cache
 from charfinder.fuzzymatchlib import resolve_algorithm_name
 from charfinder.utils.formatter import echo
-from charfinder.utils.logger_styles import format_info, format_debug
+from charfinder.utils.logger_styles import format_debug, format_info
 from charfinder.utils.normalizer import normalize
 from charfinder.validators import (
     validate_exact_match_mode,
@@ -164,7 +165,7 @@ def _resolve_matches(
             use_color=config.use_color,
             query=norm_query,
         )
-        
+
         raw_fuzzy_results = find_fuzzy_matches(norm_query, name_cache, context)
         fuzzy_matches = [
             MatchTuple(
@@ -179,7 +180,9 @@ def _resolve_matches(
             if tpl.code not in exact_codes
         ]
         removed_count = len(raw_fuzzy_results) - len(fuzzy_matches)
-        message = f"Removed {removed_count} duplicate fuzzy match(es) already present in exact results."
+        message = (
+            f"Removed {removed_count} duplicate fuzzy match(es) already present in exact results."
+        )
         if removed_count > 0 and config.verbose:
             echo(
                 message,
@@ -189,8 +192,7 @@ def _resolve_matches(
                 log_method="debug",
             )
     all_matches = sorted(
-        exact_matches + fuzzy_matches,
-        key=lambda m: (m.is_fuzzy, -(m.score or 0.0))
+        exact_matches + fuzzy_matches, key=lambda m: (m.is_fuzzy, -(m.score or 0.0))
     )
     _log_match_message(all_matches, query, use_color=config.use_color, verbose=config.verbose)
     return all_matches, used_fuzzy
@@ -239,3 +241,54 @@ def build_search_config(
         agg_fn=agg_fn,
         prefer_fuzzy=bool(prefer_fuzzy),
     )
+
+
+def _normalize_and_build_config(
+    query: str,
+    *,
+    fuzzy: bool,
+    threshold: float,
+    name_cache: dict[str, dict[str, str]] | None,
+    verbose: bool,
+    use_color: bool,
+    fuzzy_algo: FuzzyAlgorithm,
+    fuzzy_match_mode: FuzzyMatchMode,
+    exact_match_mode: str,
+    agg_fn: HybridAggFunc,
+    prefer_fuzzy: bool,
+    normalization_profile: Literal["raw", "light", "medium", "aggressive"],
+) -> tuple[str, SearchConfig]:
+    """
+    Normalize the query and return it alongside a validated SearchConfig.
+
+    Args:
+        query (str): Raw search string.
+        fuzzy (bool): Enable fuzzy matching.
+        threshold (float): Similarity threshold for fuzzy scoring.
+        name_cache (dict | None): Cached Unicode name data.
+        verbose (bool): Whether to print logs.
+        use_color (bool): Whether to use ANSI color output.
+        fuzzy_algo (FuzzyAlgorithm): Selected fuzzy algorithm.
+        fuzzy_match_mode (FuzzyMatchMode): 'single' or 'hybrid'.
+        exact_match_mode (str): 'substring' or 'word-subset'.
+        agg_fn (HybridAggFunc): Aggregation method for hybrid mode.
+        prefer_fuzzy (bool): Whether to include fuzzy even with exact match.
+        normalization_profile (Literal): Profile for Unicode normalization.
+
+    Returns:
+        tuple[str, SearchConfig]: Normalized query and validated config.
+    """
+    norm_query = normalize(query, profile=normalization_profile)
+    config = build_search_config(
+        fuzzy=fuzzy,
+        threshold=threshold,
+        name_cache=name_cache,
+        verbose=verbose,
+        use_color=use_color,
+        fuzzy_algo=fuzzy_algo,
+        fuzzy_match_mode=fuzzy_match_mode,
+        exact_match_mode=exact_match_mode,
+        agg_fn=agg_fn,
+        prefer_fuzzy=prefer_fuzzy,
+    )
+    return norm_query, config

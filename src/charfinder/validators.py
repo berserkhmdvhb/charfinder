@@ -44,7 +44,7 @@ and ensure strict consistency for all user- or config-sourced inputs.
 """
 
 import os
-from argparse import Action, ArgumentParser, Namespace
+from argparse import Action, ArgumentParser, ArgumentTypeError, Namespace
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -61,10 +61,12 @@ from charfinder.config.aliases import (
 from charfinder.config.constants import (
     DEFAULT_COLOR_MODE,
     DEFAULT_NORMALIZATION_PROFILE,
+    DEFAULT_SHOW_SCORE,
     DEFAULT_THRESHOLD,
     ENV_COLOR_MODE,
     ENV_MATCH_THRESHOLD,
     ENV_NORMALIZATION_PROFILE,
+    ENV_SHOW_SCORE,
     FUZZY_ALGO_ALIASES,
     VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
@@ -72,6 +74,9 @@ from charfinder.config.constants import (
     VALID_HYBRID_AGG_FUNCS,
     VALID_NORMALIZATION_PROFILES,
     VALID_OUTPUT_FORMATS,
+    VALID_SHOW_SCORES,
+    VALID_SHOW_SCORES_FALSE,
+    VALID_SHOW_SCORES_TRUE,
 )
 from charfinder.config.settings import get_cache_file
 from charfinder.config.types import (
@@ -458,7 +463,7 @@ def validate_fuzzy_match_mode(mode: str) -> FuzzyMatchMode:
     """
     mode = mode.lower()
     if mode not in VALID_FUZZY_MATCH_MODES:
-        message = f"Invalid fuzzy match mode: {mode}. Valid options: {VALID_FUZZY_MATCH_MODES}"
+        message = f"Invalid fuzzy match mode: {mode}. Valid options: {{VALID_FUZZY_MATCH_MODES}}"
         raise ValueError(message)
     return cast("FuzzyMatchMode", mode)
 
@@ -771,3 +776,56 @@ def resolve_effective_normalization_profile(
 
     env_value = os.getenv(ENV_NORMALIZATION_PROFILE)
     return validate_normalization_profile(env_value, source="env")
+
+
+def validate_show_score(value: str) -> bool:
+    """
+    Normalize and convert a show_score value to a boolean.
+
+    Args:
+        value (str): A string representation of a boolean.
+
+    Returns:
+        bool: True if value is in VALID_SHOW_SCORES_TRUE, False if in VALID_SHOW_SCORES_FALSE.
+
+    Raises:
+        ArgumentTypeError: If the value is not recognized.
+    """
+    lowered = value.strip().lower()
+    if lowered in VALID_SHOW_SCORES_TRUE:
+        return True
+    if lowered in VALID_SHOW_SCORES_FALSE:
+        return False
+    message = (
+        f"Invalid value for --show-score: {value}. "
+        f"Valid options: {', '.join(sorted(VALID_SHOW_SCORES))}"
+    )
+    raise ArgumentTypeError(message)
+
+
+def resolve_effective_show_score(*, cli_value: bool | None) -> bool:
+    """
+    Determine whether to show scores based on CLI, environment variable, or default.
+
+    This function checks:
+    1. CLI-supplied value (True/False).
+    2. Environment variable `CHARFINDER_SHOW_SCORE`.
+    3. Fallback to DEFAULT_SHOW_SCORE.
+
+    Args:
+        cli_value (bool | None): The value from the CLI (already a boolean if set).
+
+    Returns:
+        bool: Final resolved value indicating whether to show scores.
+    """
+    if cli_value is not None:
+        return cli_value
+
+    env_value = os.getenv(ENV_SHOW_SCORE)
+    if env_value is not None:
+        try:
+            return validate_show_score(env_value)
+        except (ValueError, ArgumentTypeError):
+            pass  # Fall back to default if env var is invalid
+
+    return DEFAULT_SHOW_SCORE

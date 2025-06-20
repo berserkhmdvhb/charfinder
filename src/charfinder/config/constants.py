@@ -103,14 +103,18 @@ FUZZY_ALGO_ALIASES: dict[str, FuzzyAlgorithm] = {
 # ---------------------------------------------------------------------
 
 VALID_COLOR_MODES = ("auto", "never", "always")
+VALID_FUZZY_ALGO_NAMES: set[str] = set(FUZZY_ALGO_ALIASES.values())
 VALID_FUZZY_MATCH_MODES = ("single", "hybrid")
 VALID_EXACT_MATCH_MODES = ("substring", "word-subset")
 VALID_LOG_METHODS = {"debug", "info", "warning", "error", "exception"}
 VALID_HYBRID_AGG_FUNCS = {"mean", "median", "max", "min"}
-VALID_OUTPUT_FORMATS = {"text", "json"}
 VALID_NORMALIZATION_FORMS = {"NFC", "NFD", "NFKC", "NFKD"}
 VALID_NORMALIZATION_PROFILES = {"raw", "light", "medium", "aggressive"}
-VALID_FUZZY_ALGO_NAMES: set[str] = set(FUZZY_ALGO_ALIASES.values())
+VALID_OUTPUT_FORMATS = {"text", "json"}
+VALID_SHOW_SCORES_TRUE = {"true", "1", "yes"}
+VALID_SHOW_SCORES_FALSE = {"false", "0", "no"}
+VALID_SHOW_SCORES = VALID_SHOW_SCORES_TRUE | VALID_SHOW_SCORES_FALSE
+
 
 LOG_METHODS = SimpleNamespace(
     DEBUG="debug",
@@ -145,15 +149,17 @@ FIELD_WIDTHS = {
 # Default Thresholds and Modes (with correct types)
 # ---------------------------------------------------------------------
 
-DEFAULT_THRESHOLD: float = 0.7
+DEFAULT_COLOR_MODE: ColorMode = "auto"
+DEFAULT_EXACT_MATCH_MODE: ExactMatchMode = "word-subset"
 DEFAULT_FUZZY_ALGO: FuzzyAlgorithm = "token_sort_ratio"
 DEFAULT_FUZZY_MATCH_MODE: FuzzyMatchMode = "single"
-DEFAULT_EXACT_MATCH_MODE: ExactMatchMode = "word-subset"
 DEFAULT_HYBRID_AGG_FUNC: HybridAggFunc = "mean"
-DEFAULT_COLOR_MODE: ColorMode = "auto"
-DEFAULT_OUTPUT_FORMAT: OutputFormat = "text"
 DEFAULT_NORMALIZATION_FORM: NormalizationForm = "NFKD"
 DEFAULT_NORMALIZATION_PROFILE: NormalizationProfile = "aggressive"
+DEFAULT_OUTPUT_FORMAT: OutputFormat = "text"
+DEFAULT_SHOW_SCORE = True
+DEFAULT_THRESHOLD: float = 0.7
+
 # ---------------------------------------------------------------------
 # Hybrid scoring weights for fuzzy match components
 # ---------------------------------------------------------------------
@@ -208,6 +214,7 @@ ENV_DEBUG_ENV_LOAD = "CHARFINDER_DEBUG_ENV_LOAD"
 ENV_MATCH_THRESHOLD = "CHARFINDER_MATCH_THRESHOLD"
 ENV_COLOR_MODE = "CHARFINDER_COLOR_MODE"
 ENV_NORMALIZATION_PROFILE = "CHARFINDER_NORMALIZATION_PROFILE"
+ENV_SHOW_SCORE = "CHARFINDER_SHOW_SCORE"
 
 
 # ------------------------------------------------------------------------

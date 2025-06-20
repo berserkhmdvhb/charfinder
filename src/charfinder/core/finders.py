@@ -53,7 +53,6 @@ def find_chars(query: str, config: SearchConfig) -> Generator[str, None, None]:
         str: CLI-formatted output lines with matched characters.
     """
     matches, _ = _resolve_matches(query, config)
-    has_score = any(m.is_fuzzy for m in matches)
 
     yield from format_result_header()
     for match in matches:

@@ -16,7 +16,6 @@ Functions:
     main(): Primary CLI entry function.
 """
 
-
 # ---------------------------------------------------------------------
 # Imports
 # ---------------------------------------------------------------------
@@ -35,10 +34,10 @@ from charfinder.utils.normalizer import normalize
 from charfinder.validators import (
     apply_fuzzy_defaults,
     resolve_cli_settings,
+    resolve_effective_show_score,
 )
 
 __all__ = ["main"]
-
 
 # ---------------------------------------------------------------------
 # Public API
@@ -58,6 +57,9 @@ def main() -> None:
 
     # Resolve settings: color mode, use_color flag, and threshold (validated inside)
     args.color, use_color, args.threshold = resolve_cli_settings(args)
+
+    # Resolve show_score (CLI > env > default)
+    args.show_score = resolve_effective_show_score(cli_value=args.show_score)
 
     # Query handling: resolve final query string
     raw_query = resolve_final_query(args)

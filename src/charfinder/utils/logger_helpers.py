@@ -33,10 +33,31 @@ __all__ = [
     "EnvironmentFilter",
     "SafeFormatter",
     "StreamFilter",
+    "strip_color_codes",
     "suppress_console_logging",
 ]
 
+# ---------------------------------------------------------------------
+#   Strip ANSI escape sequences (colors)
+# ---------------------------------------------------------------------
+
+
 logger = logging.getLogger("charfinder.logger")
+_ANSI_ESCAPE_PATTERN = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+
+
+def strip_color_codes(text: str) -> str:
+    """
+    Strip ANSI escape sequences (colors) from a string.
+
+    Args:
+        text (str): Text possibly containing ANSI codes.
+
+    Returns:
+        str: Cleaned string without ANSI sequences.
+    """
+    return _ANSI_ESCAPE_PATTERN.sub("", text)
+
 
 # ---------------------------------------------------------------------
 # Console Output Suppression

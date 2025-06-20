@@ -28,6 +28,7 @@ __all__ = [
     "ARG_PREFER_FUZZY",
     "ARG_QUERY",
     "ARG_QUERY_LONG",
+    "ARG_SHOW_SCORE",
     "ARG_THRESHOLD",
     "ARG_VERBOSE",
     "ARG_VERBOSE_LONG",
@@ -67,6 +68,7 @@ ARG_NORMALIZATION_PROFILE = "--normalization-profile"
 
 # Output Options
 ARG_FORMAT = "--format"
+ARG_SHOW_SCORE = "--show-score"
 
 # Miscellaneous
 ARG_VERSION = "--version"

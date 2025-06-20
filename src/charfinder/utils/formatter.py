@@ -19,7 +19,8 @@ Functions:
     format_result_line(): Format a result line for CLI display.
     format_result_header(): Format the result table header and divider.
     format_result_row(): Format a single result row.
-    matchtuple_to_charmatch(): Converts a MatchTuple to a CharMatch dictionary
+    matchtuple_to_charmatch(): Converts a MatchTuple to a CharMatch dictionary.
+    format_all_results(): Formats all result rows with headers and color support.
 
 Note:
     Color constants should be factored out to `logger_styles.py` in the future
@@ -33,7 +34,7 @@ Note:
 from __future__ import annotations
 
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, TextIO
 
 from colorama import Fore, Style, init
@@ -41,11 +42,14 @@ from colorama import Fore, Style, init
 if TYPE_CHECKING:
     from charfinder.config.types import CharMatch, MatchTuple
 
-from charfinder.config.constants import FIELD_WIDTHS, VALID_LOG_METHODS
-from charfinder.utils.logger_helpers import suppress_console_logging
+from charfinder.config.constants import DEFAULT_COLOR_MODE, FIELD_WIDTHS, VALID_LOG_METHODS
+from charfinder.utils.logger_helpers import strip_color_codes, suppress_console_logging
+from charfinder.utils.logger_styles import format_debug
 
 __all__ = [
+    "display_result_lines",
     "echo",
+    "format_all_results",
     "format_result_header",
     "format_result_line",
     "format_result_row",
@@ -54,16 +58,24 @@ __all__ = [
     "should_use_color",
 ]
 
+# ---------------------------------------------------------------------
+# Init & Setup
+# ---------------------------------------------------------------------
 
-# Initialize colorama once
 init(autoreset=True)
 
-# Windows: Ensure terminal handles UTF-8 output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+# Template for result table header with dynamic field widths
+HEADER_FMT = (
+    f"{{:<{FIELD_WIDTHS['code']}}} "
+    f"{{:<{FIELD_WIDTHS['char']}}} "
+    f"{{:<{FIELD_WIDTHS['name']}}} "
+    f"{{:>{FIELD_WIDTHS['score']}}}"
+)
 # ---------------------------------------------------------------------
-# Color support utilities
+# Color Utilities
 # ---------------------------------------------------------------------
 
 
@@ -79,9 +91,7 @@ def _color_wrap(msg: str, color: str, *, use_color: bool) -> str:
     Returns:
         The formatted message.
     """
-    if use_color:
-        return f"{color}{msg}{Style.RESET_ALL}"
-    return msg
+    return f"{color}{msg}{Style.RESET_ALL}" if use_color else msg
 
 
 def should_use_color(mode: str) -> bool:
@@ -98,12 +108,11 @@ def should_use_color(mode: str) -> bool:
         return True
     if mode == "never":
         return False
-    # auto mode — use color if stdout is a tty
     return sys.stdout.isatty()
 
 
 # ---------------------------------------------------------------------
-# Standard message formatters
+# Echo & Log Helpers
 # ---------------------------------------------------------------------
 
 
@@ -130,19 +139,18 @@ def echo(
     Raises:
         ValueError: If log=True but log_method is not provided, or if log_method is invalid.
     """
-    # Lazy import
     from charfinder.utils.logger_setup import get_logger  # noqa: PLC0415
 
     logger = get_logger()
     styled = style(msg)
 
     if log and not log_method:
-        msg_error = "log_method must be provided if log=True"
-        raise ValueError(msg_error)
+        message = "log_method must be provided if log=True"
+        raise ValueError(message)
 
     if log_method and log_method not in VALID_LOG_METHODS:
-        msg_error = f"Invalid log_method: {log_method}"
-        raise ValueError(msg_error)
+        message = f"Invalid log_method: {log_method}"
+        raise ValueError(message)
 
     log_func = getattr(logger, log_method, None) if log_method else None
     if log and callable(log_func):
@@ -173,7 +181,6 @@ def log_optionally_echo(
         style: Optional style function for terminal output.
         stream: Output stream for terminal (default sys.stdout).
     """
-    # Lazy Import
     from charfinder.utils.logger_setup import get_logger  # noqa: PLC0415
 
     logger = get_logger()
@@ -190,7 +197,7 @@ def log_optionally_echo(
 
 
 # ---------------------------------------------------------------------
-# Result table formatters
+# Result Formatters
 # ---------------------------------------------------------------------
 
 
@@ -205,23 +212,33 @@ def format_result_line(line: str, *, use_color: bool = False) -> str:
     Returns:
         str: The formatted result line.
     """
-
     return _color_wrap(line, Fore.YELLOW, use_color=use_color)
 
 
-def format_result_header() -> list[str]:
+def format_result_header(*, show_score: bool = True) -> list[str]:
     """
     Format the result table header and divider.
+
+    Args:
+        show_score (bool): Whether to include the SCORE column.
 
     Returns:
         list[str]: A list of two strings: header line and divider line.
     """
-    header = (
-        f"{'CODE':<{FIELD_WIDTHS['code']}} "
-        f"{'CHAR':<{FIELD_WIDTHS['char']}} "
-        f"{'NAME':<{FIELD_WIDTHS['name']}} "
-        f"{'SCORE':>{FIELD_WIDTHS['score']}}"
-    )
+    if show_score:
+        header = (
+            f"{'CODE':<{FIELD_WIDTHS['code']}} "
+            f"{'CHAR':<{FIELD_WIDTHS['char']}} "
+            f"{'NAME':<{FIELD_WIDTHS['name']}} "
+            f"{'SCORE':>{FIELD_WIDTHS['score']}}"
+        )
+    else:
+        header = (
+            f"{'CODE':<{FIELD_WIDTHS['code']}} "
+            f"{'CHAR':<{FIELD_WIDTHS['char']}} "
+            f"{'NAME':<{FIELD_WIDTHS['name']}}"
+        )
+
     divider = "-" * len(header)
     return [header, divider]
 
@@ -241,49 +258,105 @@ def format_result_row(code: int, char: str, name: str, score: float | None) -> s
     """
     code_str = f"U+{code:04X}"
     name_str = f"{name}  (\\u{code:04x})"
-    score_str = f"{score:>6.3f}"
+    score_str = f"{score:>6.3f}" if score is not None else " " * FIELD_WIDTHS["score"]
 
     return (
         f"{code_str:<{FIELD_WIDTHS['code']}} "
         f"{char:<{FIELD_WIDTHS['char']}} "
         f"{name_str:<{FIELD_WIDTHS['name']}} "
-        f"{score_str:<{FIELD_WIDTHS['score']}} "
+        f"{score_str:<{FIELD_WIDTHS['score']}}"
     )
+
+
+def format_all_results(
+    matches: list[CharMatch],
+    *,
+    use_color: bool = False,
+    show_score: bool = True,
+) -> list[str]:
+    """
+    Format a list of CharMatch dictionaries into styled output lines.
+
+    This builds the result header followed by formatted rows for each result,
+    applying color styling if requested.
+
+    Args:
+        matches (list[CharMatch]): List of character match dictionaries.
+        use_color (bool): Whether to apply color styling to the output lines.
+        show_score (bool): Whether to display the score column.
+
+    Returns:
+        list[str]: List of formatted lines ready for display or logging.
+    """
+    lines = format_result_header(show_score=show_score)
+
+    for match in matches:
+        lines.append(_safe_format_match(match, use_color=use_color, show_score=show_score))
+
+    return lines
+
+
+def _safe_format_match(match: CharMatch, *, use_color: bool, show_score: bool) -> str:
+    """
+    Format a CharMatch safely, returning a colorized or plain line.
+
+    Args:
+        match (CharMatch): A single match result.
+        use_color (bool): Whether to colorize output.
+        show_score (bool): Whether to include the score column.
+
+    Returns:
+        str: Formatted line (with or without color).
+    """
+    try:
+        code = match["code_int"]
+        char = match["char"]
+        name = match["name"]
+        score = match.get("score") if show_score else None
+        row = format_result_row(code, char, name, score)
+        return format_result_line(row, use_color=use_color)
+    except (KeyError, ValueError, TypeError) as exc:
+        error_msg = f"[Error formatting match: {exc!r}] → {match!r}"
+        log_optionally_echo(
+            error_msg,
+            level="debug",
+            show=False,
+            style=lambda m: format_debug(m, use_color=use_color),
+        )
+        return format_result_line(error_msg, use_color=use_color)
 
 
 def matchtuple_to_charmatch(mt: MatchTuple) -> CharMatch:
     """
-    Converts a MatchTuple to a CharMatch dictionary for structured output.
+    Convert a MatchTuple to a display-friendly CharMatch dictionary.
 
     Args:
-        mt (MatchTuple): A match record with optional fuzzy score.
+        mt (MatchTuple): Match tuple containing match metadata.
 
     Returns:
-        CharMatch: A dictionary formatted for JSON/text output.
+        CharMatch: Dictionary with stringified display fields and raw score.
     """
-    result: CharMatch = {
-        "code": f"U+{mt.code:04X}",
+    code_str = f"U+{mt.code:04X}"
+    return {
+        "code": code_str,
+        "code_int": mt.code,
         "char": mt.char,
-        "name": f"{mt.name}  (\\u{mt.code:04x})",
+        "name": mt.name,
+        "score": mt.score,
     }
-    result["score"] = round(mt.score, 3) if mt.score is not None else None
-    result["is_fuzzy"] = mt.is_fuzzy
-    return result
 
 
-# ---------------------------------------------------------------------
-# Output Helpers
-# ---------------------------------------------------------------------
-
-
-def print_result_lines(lines: list[str], *, use_color: bool = False) -> None:
+def display_result_lines(
+    lines: Iterable[str], *, use_color: bool | str = DEFAULT_COLOR_MODE
+) -> None:
     """
-    Print result lines to stdout, with consistent formatting.
+    Display a list of result lines to the terminal without log-style prefixes.
 
     Args:
-        lines (list[str]): The list of result lines to print.
-        use_color (bool, optional): Whether to apply color formatting. Defaults to False.
+        lines (list[str]): The formatted output lines to print.
+        use_color (bool): Whether to allow ANSI color codes.
     """
     for line in lines:
-        output = format_result_line(line, use_color=use_color)
-        sys.stdout.write(output + "\n")
+        # Already formatted (e.g., with color if needed), so direct print
+        sys.stdout.write((line if use_color else strip_color_codes(line)) + "\n")
+        sys.stdout.flush()

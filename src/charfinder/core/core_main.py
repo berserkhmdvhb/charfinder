@@ -41,13 +41,11 @@ from charfinder.core.finders import (
 from charfinder.core.finders import (
     find_chars_with_info as _find_chars_info_impl,
 )
-from charfinder.core.handlers import build_search_config
-from charfinder.utils.formatter import format_result_header, format_result_row
-from charfinder.utils.normalizer import normalize
+from charfinder.core.handlers import _normalize_and_build_config
 
 if TYPE_CHECKING:
     from charfinder.config.aliases import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
-    from charfinder.config.types import CharMatch, SearchConfig
+    from charfinder.config.types import CharMatch
 
 ExactMatchMode = Literal["substring", "word-subset"]
 NormalizationProfile = Literal["raw", "light", "medium", "aggressive"]
@@ -70,9 +68,18 @@ def find_chars(
     prefer_fuzzy: bool = False,
     normalization_profile: NormalizationProfile = DEFAULT_NORMALIZATION_PROFILE,
 ) -> Generator[str, None, None]:
-    norm_query = normalize(query, profile=normalization_profile)
+    """
+    Perform character search and yield CLI-formatted output lines.
 
-    config: SearchConfig = build_search_config(
+    Args:
+        query (str): Input query string.
+        ... (same for all kwargs)
+
+    Returns:
+        Generator[str]: Formatted result rows for terminal display.
+    """
+    norm_query, config = _normalize_and_build_config(
+        query,
         fuzzy=fuzzy,
         threshold=threshold,
         name_cache=name_cache,
@@ -83,6 +90,7 @@ def find_chars(
         exact_match_mode=exact_match_mode,
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
+        normalization_profile=normalization_profile,
     )
     return _find_chars_impl(norm_query, config)
 
@@ -102,9 +110,15 @@ def find_chars_raw(
     prefer_fuzzy: bool = False,
     normalization_profile: NormalizationProfile = DEFAULT_NORMALIZATION_PROFILE,
 ) -> list[CharMatch]:
-    norm_query = normalize(query, profile=normalization_profile)
+    """
+    Perform character search and return raw match result objects.
 
-    config: SearchConfig = build_search_config(
+    Returns:
+        list[CharMatch]:
+            Structured result rows with metadata, suitable for JSON or programmatic use.
+    """
+    norm_query, config = _normalize_and_build_config(
+        query,
         fuzzy=fuzzy,
         threshold=threshold,
         name_cache=name_cache,
@@ -115,6 +129,7 @@ def find_chars_raw(
         exact_match_mode=exact_match_mode,
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
+        normalization_profile=normalization_profile,
     )
     return _find_chars_raw_impl(norm_query, config)
 
@@ -133,10 +148,15 @@ def find_chars_with_info(
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
     normalization_profile: NormalizationProfile = DEFAULT_NORMALIZATION_PROFILE,
-) -> tuple[list[str], bool]:
-    norm_query = normalize(query, profile=normalization_profile)
+) -> tuple[list[CharMatch], bool]:
+    """
+    Perform character search and return raw match results and fuzzy-used flag.
 
-    config: SearchConfig = build_search_config(
+    Returns:
+        tuple[list[CharMatch], bool]: Matches and whether fuzzy matching was used.
+    """
+    norm_query, config = _normalize_and_build_config(
+        query,
         fuzzy=fuzzy,
         threshold=threshold,
         name_cache=name_cache,
@@ -147,21 +167,6 @@ def find_chars_with_info(
         exact_match_mode=exact_match_mode,
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
+        normalization_profile=normalization_profile,
     )
-
-    raw_matches, fuzzy_used = _find_chars_info_impl(norm_query, config)
-
-    lines: list[str] = []
-    if raw_matches:
-        has_score = any(m.get("is_fuzzy") for m in raw_matches)
-        lines.extend(format_result_header())
-        lines.extend(
-            format_result_row(
-                code := int(match["code"].removeprefix("U+"), 16),
-                match["char"],
-                match["name"].removesuffix(f"  (\\u{code:04x})"),
-                match.get("score"),
-            )
-            for match in raw_matches
-        )
-    return lines, fuzzy_used
+    return _find_chars_info_impl(norm_query, config)

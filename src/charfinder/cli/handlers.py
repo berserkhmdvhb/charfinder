@@ -4,7 +4,6 @@ Delegates color formatting to `cli/formatter.py` and avoids using print().
 
 Functions:
     get_version(): Retrieve installed package version.
-    print_result_lines(): Print result lines to stdout.
     handle_find_chars(): Main CLI execution logic.
 """
 
@@ -27,7 +26,7 @@ from charfinder.config.constants import (
 )
 from charfinder.config.types import MatchDiagnosticsInfo, MatchResult
 from charfinder.core.core_main import find_chars_raw, find_chars_with_info
-from charfinder.utils.formatter import echo, print_result_lines
+from charfinder.utils.formatter import display_result_lines, echo, format_all_results
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error, format_warning
 from charfinder.validators import (
@@ -40,7 +39,6 @@ from charfinder.validators import (
 __all__ = [
     "get_version",
     "handle_find_chars",
-    "print_result_lines",
 ]
 
 logger = get_logger()
@@ -141,10 +139,6 @@ def _run_query_and_return(
     """
     Run the character search query and dispatch the results using the appropriate output format.
 
-    This function validates the output format and runs either `find_chars_raw()` for JSON output
-    or `find_chars_with_info()` for styled terminal output. It also assembles the final
-    `MatchResult` with exit code and diagnostics.
-
     Args:
         params (SearchParams): Structured parameters for running the query.
         output_format (str): The desired output format ("json" or "text").
@@ -162,10 +156,16 @@ def _run_query_and_return(
         sys.stdout.flush()
         return build_match_result(args, fuzzy_used=params.fuzzy, exit_code=EXIT_SUCCESS)
 
-    results, fuzzy_used = find_chars_with_info(**params.__dict__)
-    if not results:
+    matches, fuzzy_used = find_chars_with_info(**params.__dict__)
+    if not matches:
         return MatchResult(exit_code=EXIT_NO_RESULTS, match_info=None)
-    print_result_lines(results, use_color=params.use_color)
+
+    formatted_lines = format_all_results(
+        matches,
+        use_color=params.use_color,
+        show_score=args.show_score,
+    )
+    display_result_lines(formatted_lines, use_color=params.use_color)
     return build_match_result(args, fuzzy_used=fuzzy_used, exit_code=EXIT_SUCCESS)
 
 

@@ -109,7 +109,8 @@ class CharMatch(TypedDict):
     code: str
     char: str
     name: str
-    score: NotRequired[float]
+    score: NotRequired[float | None]
+    is_fuzzy: NotRequired[bool]
 ```
 
 ---

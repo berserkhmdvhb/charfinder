@@ -37,6 +37,7 @@ from charfinder.cli.args import (
     ARG_PREFER_FUZZY,
     ARG_QUERY,
     ARG_QUERY_LONG,
+    ARG_SHOW_SCORE,
     ARG_THRESHOLD,
     ARG_VERBOSE,
     ARG_VERBOSE_LONG,
@@ -51,6 +52,7 @@ from charfinder.config.constants import (
     DEFAULT_HYBRID_AGG_FUNC,
     DEFAULT_NORMALIZATION_PROFILE,
     DEFAULT_OUTPUT_FORMAT,
+    DEFAULT_SHOW_SCORE,
     DEFAULT_THRESHOLD,
     VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
@@ -63,6 +65,7 @@ from charfinder.config.constants import (
 from charfinder.validators import (
     ValidateFuzzyAlgoAction,
     threshold_range,
+    validate_show_score,
 )
 
 __all__ = ["create_parser"]
@@ -245,6 +248,17 @@ def create_parser() -> argparse.ArgumentParser:
         argcomplete.autocomplete(parser)
     except ImportError:
         pass
+
+    parser.add_argument(
+        ARG_SHOW_SCORE,
+        type=validate_show_score,
+        default=None,
+        help=(
+            "Whether to show similarity scores for fuzzy matches. "
+            "Accepts: true, false, 1, 0, yes, no (case-insensitive). "
+            f"Default: {DEFAULT_SHOW_SCORE}."
+        ),
+    )
 
     # ---------------------------------------------------------------------
     # Version Option

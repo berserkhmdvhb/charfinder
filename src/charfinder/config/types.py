@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, NamedTuple, Protocol
+from typing import Any, Protocol
 
 from typing_extensions import NotRequired, TypedDict
 
@@ -91,9 +91,9 @@ class CharMatch(TypedDict):
     code: str
     char: str
     name: str
-    score: NotRequired[float]
+    score: NotRequired[float | None]
     is_fuzzy: NotRequired[bool]
-
+    code_int: NotRequired[int]
 
 
 @dataclass
@@ -194,6 +194,7 @@ class MatchTuple:
     name: str
     score: float | None = None
     is_fuzzy: bool = False
+
 
 class NormalizationProfileDict(TypedDict, total=False):
     form: NormalizationForm
