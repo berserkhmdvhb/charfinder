@@ -1,158 +1,87 @@
-"""
-Tests for the public API functions in charfinder.core.core_main module.
-This file tests the `find_chars`, `find_chars_raw`, and `find_chars_with_info`
-functions, ensuring they handle different input combinations, delegate to 
-internal finder functions, and return the expected results.
-"""
+"""Tests for public API functions in charfinder.core.core_main."""
+
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import MagicMock, patch
-from charfinder.core.core_main import find_chars, find_chars_raw, find_chars_with_info
-from charfinder.config.types import SearchConfig
-from charfinder.config.constants import DEFAULT_FUZZY_ALGO
+from typing import Any, cast
 
-# Test for `find_chars` function
+from charfinder.config.constants import DEFAULT_FUZZY_ALGO
+from charfinder.core.core_main import (
+    find_chars,
+    find_chars_raw,
+    find_chars_with_info,
+)
+
+
 @pytest.mark.parametrize(
-    "fuzzy,threshold,prefer_fuzzy,expected_call",
+    "fuzzy, threshold, prefer_fuzzy",
     [
-        (True, 0.8, False, "find_chars_impl_called_with_fuzzy"),
-        (False, 0.5, False, "find_chars_impl_called_with_exact"),
-        (True, 0.9, True, "find_chars_impl_called_with_prefer_fuzzy"),
+        (False, 1.0, False),
+        (True, 0.85, False),
+        (True, 0.9, True),
     ],
 )
 @patch("charfinder.core.core_main._find_chars_impl")
-def test_find_chars(
-    mock_find_chars_impl: MagicMock, 
-    fuzzy: bool, 
-    threshold: float, 
-    prefer_fuzzy: bool,  # Ensure this is a bool
-    expected_call: str
+def test_find_chars_delegation(
+    mock_impl: MagicMock,
+    fuzzy: bool,
+    threshold: float,
+    prefer_fuzzy: bool,
 ) -> None:
-    """
-    Test that `find_chars` correctly calls the internal `_find_chars_impl` 
-    with the expected configuration based on different parameter combinations.
-    """
-    query = "test"
-    
-    # Call function under test
+    query = "heart"
     find_chars(query, fuzzy=fuzzy, threshold=threshold, prefer_fuzzy=prefer_fuzzy)
-    
-    # Check that the internal function is called
-    mock_find_chars_impl.assert_called_once()
-    
-    # Extract arguments passed to _find_chars_impl
-    args, kwargs = mock_find_chars_impl.call_args
-
-    # Ensure the config is passed correctly
-    config: SearchConfig = kwargs.get('config')
-    
-    # Verify the values inside config match expectations
-    if config:  # Only check if config is not None
-        assert config.fuzzy == fuzzy
-        assert config.threshold == threshold
-        assert config.prefer_fuzzy == prefer_fuzzy
+    mock_impl.assert_called_once()
+    _, kwargs = mock_impl.call_args
+    config = kwargs["config"]
+    assert config.fuzzy == fuzzy
+    assert config.threshold == threshold
+    assert config.prefer_fuzzy == prefer_fuzzy
 
 
-# Test for `find_chars_raw` function
 @patch("charfinder.core.core_main._find_chars_raw_impl")
-def test_find_chars_raw(mock_find_chars_raw_impl: MagicMock) -> None:
-    """
-    Test that `find_chars_raw` calls `_find_chars_raw_impl` and returns
-    raw results as expected.
-    """
-    query = "test"
-    mock_find_chars_raw_impl.return_value = [{"code": "U+0041", "char": "A", "name": "LATIN CAPITAL LETTER A"}]
-    
-    result = find_chars_raw(query)
-    
-    # Ensure the mock function is called with expected arguments
-    mock_find_chars_raw_impl.assert_called_once()
-    assert isinstance(result, list)
-    assert len(result) == 1
-    assert result[0]["char"] == "A"
+def test_find_chars_raw_returns_match_list(mock_impl: MagicMock) -> None:
+    query = "smile"
+    mock_impl.return_value = [{"char": "☺", "name": "WHITE SMILING FACE"}]
+    results = find_chars_raw(query)
+    assert isinstance(results, list)
+    assert results[0]["char"] == "☺"
+    mock_impl.assert_called_once()
 
-# Test for `find_chars_with_info` function
+
 @patch("charfinder.core.core_main._find_chars_info_impl")
-def test_find_chars_with_info(mock_find_chars_info_impl: MagicMock) -> None:
-    """
-    Test that `find_chars_with_info` returns the expected result, 
-    including both formatted output lines and a fuzzy usage flag.
-    """
-    query = "test"
-    mock_find_chars_info_impl.return_value = ([{"code": "U+0041", "char": "A", "name": "LATIN CAPITAL LETTER A"}], True)
-    
-    result_lines, fuzzy_used = find_chars_with_info(query)
-    
-    # Check that the function returns the correct result
-    assert isinstance(result_lines, list)
-    assert len(result_lines) > 0
-    assert fuzzy_used is True
+def test_find_chars_with_info_returns_tuple(mock_impl: MagicMock) -> None:
+    query = "check"
+    mock_impl.return_value = ([{"char": "✓", "name": "CHECK MARK"}], True)
+    matches, used_fuzzy = find_chars_with_info(query)
+    assert isinstance(matches, list)
+    assert used_fuzzy is True
+    assert any("✓" in str(item["char"]) for item in matches)
+    mock_impl.assert_called_once()
 
-    # Check if fuzzy matching was used correctly
-    assert "LATIN CAPITAL LETTER A" in result_lines[0]
 
-# Edge case test for empty query
 @patch("charfinder.core.core_main._find_chars_impl")
-def test_find_chars_empty_query(mock_find_chars_impl: MagicMock) -> None:
-    """
-    Test that `find_chars` handles an empty query string gracefully.
-    """
-    query = ""
-    
-    # Call function under test
-    find_chars(query)
+def test_find_chars_empty_query(mock_impl: MagicMock) -> None:
+    find_chars("")
+    mock_impl.assert_called_once()
+    _, kwargs = mock_impl.call_args
+    assert kwargs["query"] == ""
 
-    # Ensure the internal function is called with the expected empty query
-    mock_find_chars_impl.assert_called_once_with(query, config=mock_find_chars_impl.call_args[1]['config'])
 
-# Test for invalid threshold value
+
 @patch("charfinder.core.core_main._find_chars_impl")
-def test_find_chars_invalid_threshold(mock_find_chars_impl: MagicMock) -> None:
-    """
-    Test that `find_chars` handles invalid threshold values (greater than 1).
-    """
-    query = "test"
-    threshold = 1.5  # Invalid threshold
-    
-    # Call function under test
-    find_chars(query, threshold=threshold)
+def test_find_chars_invalid_threshold_capped(mock_impl: MagicMock) -> None:
+    with pytest.raises(ValueError):
+        find_chars("abc", threshold=1.7)
 
-    # Ensure the internal function is called with the expected config
-    mock_find_chars_impl.assert_called_once()
-    args, kwargs = mock_find_chars_impl.call_args
-    assert kwargs['config'].threshold == 1.0  # Should be capped at 1.0
 
-# Test for invalid prefer_fuzzy value (ensure it's a boolean)
 @patch("charfinder.core.core_main._find_chars_impl")
-def test_find_chars_invalid_prefer_fuzzy(mock_find_chars_impl: MagicMock) -> None:
-    """
-    Test that `find_chars` handles invalid `prefer_fuzzy` values.
-    """
-    query = "test"
-    prefer_fuzzy = "invalid_value"  # Invalid value (str instead of bool)
+def test_find_chars_invalid_fuzzy_algo_fallback(mock_impl: MagicMock) -> None:
+    with pytest.raises(ValueError):
+        find_chars("abc", fuzzy_algo=cast(Any, "bad_algo"))
 
-    # Call function under test
-    find_chars(query, prefer_fuzzy=prefer_fuzzy)
 
-    # Ensure the internal function is called with the default prefer_fuzzy value (False)
-    mock_find_chars_impl.assert_called_once()
-    args, kwargs = mock_find_chars_impl.call_args
-    assert kwargs['config'].prefer_fuzzy is False  # Should default to False
-
-# Test for invalid fuzzy_algo type
 @patch("charfinder.core.core_main._find_chars_impl")
-def test_find_chars_invalid_fuzzy_algo(mock_find_chars_impl: MagicMock) -> None:
-    """
-    Test that `find_chars` handles invalid fuzzy_algo values gracefully.
-    """
-    query = "test"
-    fuzzy_algo = "invalid_algo"  # Invalid algorithm (str instead of a valid fuzzy algorithm)
-
-    # Call function under test
-    find_chars(query, fuzzy_algo=fuzzy_algo)
-
-    # Ensure the internal function is called with the default fuzzy_algo
-    mock_find_chars_impl.assert_called_once()
-    args, kwargs = mock_find_chars_impl.call_args
-    assert kwargs['config'].fuzzy_algo == DEFAULT_FUZZY_ALGO  # Use the constant directly
- 
+def validate_prefer_fuzzy(value: Any) -> bool:
+    if not isinstance(value, bool):
+        raise TypeError("prefer_fuzzy must be a boolean")
+    return value

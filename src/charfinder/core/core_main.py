@@ -92,7 +92,7 @@ def find_chars(
         prefer_fuzzy=prefer_fuzzy,
         normalization_profile=normalization_profile,
     )
-    return _find_chars_impl(norm_query, config)
+    return _find_chars_impl(query=norm_query, config=config)
 
 
 def find_chars_raw(
@@ -131,7 +131,7 @@ def find_chars_raw(
         prefer_fuzzy=prefer_fuzzy,
         normalization_profile=normalization_profile,
     )
-    return _find_chars_raw_impl(norm_query, config)
+    return _find_chars_raw_impl(query=norm_query, config=config)
 
 
 def find_chars_with_info(
@@ -169,4 +169,4 @@ def find_chars_with_info(
         prefer_fuzzy=prefer_fuzzy,
         normalization_profile=normalization_profile,
     )
-    return _find_chars_info_impl(norm_query, config)
+    return _find_chars_info_impl(query=norm_query, config=config)

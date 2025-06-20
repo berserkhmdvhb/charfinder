@@ -41,7 +41,7 @@ __all__ = [
 ]
 
 
-def find_chars(query: str, config: SearchConfig) -> Generator[str, None, None]:
+def find_chars(*, query: str, config: SearchConfig) -> Generator[str, None, None]:
     """
     Perform character search and yield formatted output lines.
 
@@ -64,7 +64,7 @@ def find_chars(query: str, config: SearchConfig) -> Generator[str, None, None]:
         )
 
 
-def find_chars_raw(query: str, config: SearchConfig) -> list[CharMatch]:
+def find_chars_raw(*, query: str, config: SearchConfig) -> list[CharMatch]:
     """
     Perform character search and return raw results for JSON output.
 
@@ -79,7 +79,7 @@ def find_chars_raw(query: str, config: SearchConfig) -> list[CharMatch]:
     return [matchtuple_to_charmatch(m) for m in matches]
 
 
-def find_chars_with_info(query: str, config: SearchConfig) -> tuple[list[CharMatch], bool]:
+def find_chars_with_info(*, query: str, config: SearchConfig) -> tuple[list[CharMatch], bool]:
     """
     Perform character search and return results with fuzzy usage flag.
 
