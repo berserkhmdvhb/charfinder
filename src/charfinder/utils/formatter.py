@@ -343,6 +343,7 @@ def matchtuple_to_charmatch(mt: MatchTuple) -> CharMatch:
         "char": mt.char,
         "name": mt.name,
         "score": mt.score,
+        "is_fuzzy": mt.is_fuzzy,
     }
 
 
