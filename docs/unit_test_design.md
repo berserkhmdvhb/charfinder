@@ -82,7 +82,7 @@ From core modules:
 ## 🔹 CLI Integration Tests
 
 * Simulate real CLI usage via subprocesses
-* Use `run_cli` fixture to invoke `myproject` via its installed entry point
+* Use `run_cli` fixture to invoke `charfinder` via its installed entry point
 * Validate:
 
   * Output formatting
@@ -107,13 +107,13 @@ Centralized in `conftest.py`:
 | `patched_settings`       | Override settings via monkeypatch                 |
 | `patch_env`              | Temporarily set environment variables             |
 | `setup_test_root`        | Isolate `logs/` and `.env` in temp folder         |
-| `clean_myproject_logger` | Remove handlers between tests to avoid duplicates |
+| `clean_charfinder_logger` | Remove handlers between tests to avoid duplicates |
 | `debug_logger`           | Pre-configured test logger                        |
 
 ### Fixture Internals
 
 * `load_fresh_settings()` is used to ensure settings are not cached between test runs. Without this, reused `BaseSettings` instances could carry over old `.env` data.
-* `patch_env()` lets you inject `MYPROJECT_` keys without impacting the real environment.
+* `patch_env()` lets you inject `CHARFINDER_` keys without impacting the real environment.
 * `log_stream` is used in tandem with `debug_logger` to assert on actual logs.
 * `setup_test_root()` ensures temp folders are used for `logs/` and `.env` files, to prevent polluting the real project root.
 
@@ -123,7 +123,7 @@ Centralized in `conftest.py`:
 
 * `test_utils_logger.py` ensures logs rotate and respect `.env` size settings
 * `test_settings.py` captures `.env` debug output via `print_dotenv_debug()`
-* Integration tests toggle `MYPROJECT_DEBUG_ENV_LOAD` to simulate debug output
+* Integration tests toggle `CHARFINDER_DEBUG_ENV_LOAD` to simulate debug output
 * `--color=never` ensures ANSI codes are properly skipped
 
 ---
@@ -143,4 +143,4 @@ Centralized in `conftest.py`:
 
 ## ✅ Summary
 
-The `myproject` test suite ensures correctness, coverage, and confidence in changes. It combines fast unit testing with robust CLI integration checks and full logging/diagnostic validation. The test framework is modular, isolated, and CI-friendly.
+The `CHARFINDER` test suite ensures correctness, coverage, and confidence in changes. It combines fast unit testing with robust CLI integration checks and full logging/diagnostic validation. The test framework is modular, isolated, and CI-friendly.
