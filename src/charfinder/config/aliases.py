@@ -1,3 +1,7 @@
+"""
+Aliases for CharFinder.
+"""
+
 from typing import Literal
 
 __all__ = [

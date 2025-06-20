@@ -186,7 +186,7 @@ env-example:
 
 dotenv-debug:
 	@echo "==> Debugging dotenv loading via print_dotenv_debug()"
-	$(PYTHON) -c "import logging; logging.basicConfig(level=logging.INFO); from charfinder.settings import print_dotenv_debug; print_dotenv_debug()"
+	$(PYTHON) -c "import logging; logging.basicConfig(level=logging.INFO); from charfinder.config.settings import print_dotenv_debug; print_dotenv_debug()"
 
 # -------------------------------------------------------------------
 # Security & Dependency Management

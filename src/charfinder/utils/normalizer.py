@@ -68,8 +68,9 @@ def normalize(
             # Step 3: Remove zero-width characters
             text = "".join(c for c in text if c not in {"\u200b", "\u200c", "\u200d", "\ufeff"})
 
-            # Step 4: Remove diacritics
-            text = "".join(c for c in text if not unicodedata.combining(c))
+            # Step 4: Remove diacritics (force NFKD first)
+            decomposed = unicodedata.normalize("NFKD", text)
+            text = "".join(c for c in decomposed if not unicodedata.combining(c))
 
         # Step 5: Convert to uppercase
         return text.upper()

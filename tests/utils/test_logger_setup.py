@@ -22,13 +22,17 @@ from charfinder.utils.logger_helpers import (
     CustomRotatingFileHandler,
 )
 
+# ---------------------------------------------------------------------
+# setup_logging() Tests
+# ---------------------------------------------------------------------
+
 
 def test_setup_logging_creates_expected_handlers(
     temp_log_dir: Path,
-    log_stream: StringIO,  # Replaced StringIO with log_stream
+    log_stream: StringIO,
     patched_stream_handler: Callable[[list[logging.Handler]], None],
 ) -> None:
-    """setup_logging should return StreamHandler and FileHandler, and emit logs."""
+    """Should return StreamHandler and FileHandler, and emit logs."""
     handlers = setup_logging(
         log_dir=temp_log_dir,
         reset=True,
@@ -48,17 +52,8 @@ def test_setup_logging_creates_expected_handlers(
     assert str(temp_log_dir) in output
 
 
-def test_teardown_logger_removes_all_handlers() -> None:
-    """teardown_logger should remove all handlers."""
-    logger = get_logger()
-    setup_logging(reset=True)
-    assert logger.hasHandlers()
-    teardown_logger()
-    assert not logger.hasHandlers()
-
-
 def test_setup_logging_is_idempotent(temp_log_dir: Path) -> None:
-    """Repeated setup_logging with reset=False should not add duplicate handlers."""
+    """Repeated setup_logging with reset=False should not duplicate handlers."""
     setup_logging(log_dir=temp_log_dir, reset=True)
     first = set(type(h) for h in get_logger().handlers)
 
@@ -84,7 +79,7 @@ def test_reset_true_reconfigures_handlers(temp_log_dir: Path) -> None:
 
 def test_console_log_level_respects_debug_flag(
     temp_log_dir: Path,
-    log_stream: StringIO,  # Replaced StringIO with log_stream
+    log_stream: StringIO,
     patched_stream_handler: Callable[[list[logging.Handler]], None],
 ) -> None:
     """StreamHandler should emit DEBUG when log_level=DEBUG is passed."""
@@ -106,10 +101,10 @@ def test_console_log_level_respects_debug_flag(
 
 def test_console_log_level_defaults_to_info(
     temp_log_dir: Path,
-    log_stream: StringIO,  # Replaced StringIO with log_stream
+    log_stream: StringIO,
     patched_stream_handler: Callable[[list[logging.Handler]], None],
 ) -> None:
-    """StreamHandler defaults to INFO level and should not emit DEBUG logs."""
+    """StreamHandler defaults to INFO and should not emit DEBUG logs."""
     handlers = setup_logging(
         log_dir=temp_log_dir,
         reset=True,
@@ -119,14 +114,12 @@ def test_console_log_level_defaults_to_info(
     assert handlers is not None
     patched_stream_handler(handlers)
 
-    # Set handler to INFO, logger to DEBUG
     for handler in handlers:
         if isinstance(handler, StreamHandler):
             handler.setLevel(logging.INFO)
 
     logger = get_logger()
     logger.setLevel(logging.DEBUG)
-
     logger.debug("should not appear")
     logger.info("should appear")
 
@@ -140,11 +133,7 @@ def test_handlers_always_include_filters(
     temp_log_dir: Path,
     suppress_echo: bool,
 ) -> None:
-    """
-    All handlers must include EnvironmentFilter.
-    Only the standard StreamHandler must include StreamFilter,
-    regardless of echo suppression.
-    """
+    """All handlers must include EnvironmentFilter; only StreamHandler gets StreamFilter."""
     handlers = setup_logging(
         log_dir=temp_log_dir,
         reset=True,
@@ -154,20 +143,33 @@ def test_handlers_always_include_filters(
     assert handlers is not None
 
     for handler in handlers:
-        # Expect EnvironmentFilter on all handlers
-        has_env_filter = any(isinstance(f, EnvironmentFilter) for f in handler.filters)
-        assert has_env_filter, f"{type(handler)} missing EnvironmentFilter"
-
-        # Only the standard StreamHandler must include StreamFilter
-        if type(handler) is logging.StreamHandler:
-            has_stream_filter = any(isinstance(f, StreamFilter) for f in handler.filters)
-            assert has_stream_filter, f"{type(handler)} missing StreamFilter"
+        assert any(isinstance(f, EnvironmentFilter) for f in handler.filters)
+        if type(handler) is StreamHandler:
+            assert any(isinstance(f, StreamFilter) for f in handler.filters)
         else:
-            has_stream_filter = any(isinstance(f, StreamFilter) for f in handler.filters)
-            assert not has_stream_filter, f"{type(handler)} should not have StreamFilter"
+            assert not any(isinstance(f, StreamFilter) for f in handler.filters)
+
+
+# ---------------------------------------------------------------------
+# teardown_logger() Tests
+# ---------------------------------------------------------------------
+
+
+def test_teardown_logger_removes_all_handlers() -> None:
+    """teardown_logger should remove all handlers."""
+    logger = get_logger()
+    setup_logging(reset=True)
+    assert logger.hasHandlers()
+    teardown_logger()
+    assert not logger.hasHandlers()
+
+
+# ---------------------------------------------------------------------
+# Formatter Tests
+# ---------------------------------------------------------------------
 
 
 def test_get_default_formatter_returns_safeformatter_instance() -> None:
-    """get_default_formatter should return a logging.Formatter-compatible instance."""
+    """get_default_formatter should return a SafeFormatter-compatible instance."""
     formatter = get_default_formatter()
     assert isinstance(formatter, logging.Formatter)

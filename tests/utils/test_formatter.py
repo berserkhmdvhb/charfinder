@@ -14,8 +14,7 @@ import pytest
 from colorama import Fore, Style
 
 from charfinder.utils import formatter as F
-from charfinder.config.types import EchoFunc
-
+from charfinder.config.constants import VALID_COLOR_MODES
 
 # ---------------------------------------------------------------------
 # Fixtures
@@ -26,6 +25,7 @@ def init_colorama() -> None:
     """Ensure colorama is initialized cleanly before each test (resets ANSI)."""
     from colorama import init
     init(autoreset=True)
+
 
 
 # ---------------------------------------------------------------------
@@ -49,22 +49,21 @@ def test_color_wrap_without_color() -> None:
 # should_use_color
 # ---------------------------------------------------------------------
 
-def test_should_use_color_always() -> None:
-    """'always' mode forces color usage."""
-    assert F.should_use_color("always") is True
 
 
-def test_should_use_color_never() -> None:
-    """'never' mode disables color usage."""
-    assert F.should_use_color("never") is False
 
-
-def test_should_use_color_auto(monkeypatch: pytest.MonkeyPatch) -> None:
-    """'auto' mode reflects sys.stdout.isatty()."""
-    monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
-    assert F.should_use_color("auto") is True
-    monkeypatch.setattr(sys.stdout, "isatty", lambda: False)
-    assert F.should_use_color("auto") is False
+@pytest.mark.parametrize("color_mode", VALID_COLOR_MODES)
+def test_should_use_color_behavior(monkeypatch: pytest.MonkeyPatch, color_mode: str) -> None:
+    """Test should_use_color behavior for each color mode."""
+    if color_mode == "auto":
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
+        assert F.should_use_color("auto") is True
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: False)
+        assert F.should_use_color("auto") is False
+    elif color_mode == "always":
+        assert F.should_use_color(color_mode) is True
+    elif color_mode == "never":
+        assert F.should_use_color(color_mode) is False
 
 
 # ---------------------------------------------------------------------
@@ -92,14 +91,14 @@ def test_format_result_line_plain() -> None:
 
 def test_format_result_header_with_score() -> None:
     """Header and divider line when score column is shown."""
-    header, divider = F.format_result_header()
+    header, divider = F.format_result_header(show_score=True)
     assert "CODE" in header and "SCORE" in header
     assert len(divider) == len(header)
 
 
 def test_format_result_header_without_score() -> None:
     """Header and divider when score column is hidden."""
-    header, divider = F.format_result_header()
+    header, divider = F.format_result_header(show_score=False)
     assert "CODE" in header and "SCORE" not in header
     assert len(divider) == len(header)
 

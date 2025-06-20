@@ -4,8 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from typing import Any, cast
-
-from charfinder.config.constants import DEFAULT_FUZZY_ALGO
 from charfinder.core.core_main import (
     find_chars,
     find_chars_raw,

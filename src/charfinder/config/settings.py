@@ -24,7 +24,9 @@ Functions:
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
+from typing import TextIO
 
 from dotenv import load_dotenv
 
@@ -166,7 +168,7 @@ def get_root_dir() -> Path:
 # ---------------------------------------------------------------------
 
 
-def resolve_dotenv_path() -> Path | None:
+def resolve_dotenv_path(stream: TextIO = sys.stdout) -> Path | None:
     """
     Determine which .env file to load.
 
@@ -181,7 +183,14 @@ def resolve_dotenv_path() -> Path | None:
         custom_path = Path(custom)
         if not custom_path.exists() and os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
             message = f'DOTENV_PATH is set to "{custom_path}" but the file does not exist.'
-            echo(msg=message, style=format_warning, show=True, log=False, log_method="warning")
+            echo(
+                msg=message,
+                style=format_warning,
+                stream=stream,
+                show=True,
+                log=False,
+                log_method="warning",
+            )
         return custom_path
 
     default_env = root_dir / ".env"

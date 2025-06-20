@@ -95,7 +95,7 @@ class LoadFreshSettings(Protocol):
 
 @pytest.fixture
 def load_fresh_settings(monkeypatch: MonkeyPatch) -> LoadFreshSettings:
-    """Reload `charfinder.settings` with optional DOTENV_PATH and ROOT override."""
+    """Reload `charfinder.config.settings` with optional DOTENV_PATH and ROOT override."""
     def _load(dotenv_path: Path | None = None, root_dir: Path | None = None) -> ModuleType:
         if dotenv_path:
             monkeypatch.setenv("DOTENV_PATH", str(dotenv_path.resolve()))
@@ -148,7 +148,7 @@ def temp_log_dir(monkeypatch: MonkeyPatch) -> Generator[Path, None, None]:
 
         import charfinder.config.settings as sett
         importlib.reload(sett)
-        monkeypatch.setattr("charfinder.settings.get_log_dir", lambda: tmp_path)
+        monkeypatch.setattr("charfinder.config.settings.get_log_dir", lambda: tmp_path)
 
         yield tmp_path
         teardown_logger(logging.getLogger(LOGGER_NAME))
@@ -203,43 +203,6 @@ def configured_logger(
 # ---------------------------------------------------------------------
 # Echo and CLI Fixtures
 # ---------------------------------------------------------------------
-
-@pytest.fixture
-def patched_echo(monkeypatch: pytest.MonkeyPatch) -> StringIO:
-    """Monkeypatch formatter.echo to capture output in StringIO."""
-    from charfinder.utils import formatter
-
-    stream = StringIO()
-
-    def _patched_echo(
-        msg: str,
-        style: Callable[[str], str],
-        *,
-        stream_: StringIO = stream,
-        show: bool = True,
-        log: bool = False,
-        log_method: str | None = None,
-    ) -> None:
-        return formatter.echo(
-            msg=msg,
-            style=style,
-            stream=stream_,
-            show=show,
-            log=log,
-            log_method=log_method,
-        )
-
-    monkeypatch.setattr(formatter, "echo", _patched_echo)
-    return stream
-
-@pytest.fixture
-def echo_output(capsys: pytest.CaptureFixture[str]) -> Callable[[], str]:
-    """Return combined stdout + stderr output from formatter.echo or CLI."""
-    def _get_output() -> str:
-        captured = capsys.readouterr()
-        return captured.out + captured.err
-    return _get_output
-
 @pytest.fixture
 def run_cli(tmp_path: Path) -> Callable[..., tuple[str, str, int]]:
     """Run CLI command in subprocess with tmp_path isolation."""

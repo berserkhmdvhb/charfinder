@@ -1,123 +1,190 @@
-import pytest
-from charfinder.utils.normalizer import normalize
-from charfinder.config.constants import DEFAULT_NORMALIZATION_FORM
+"""Tests for charfinder.utils.normalizer module."""
 
-# Define the normalization forms matrix with multiple characters
-test_characters = {
-    'é': {'NFC': 'É', 'NFD': 'É', 'NFKC': 'É', 'NFKD': 'É'},
-    'è': {'NFC': 'È', 'NFD': 'È', 'NFKC': 'È', 'NFKD': 'È'},
-    'ü': {'NFC': 'Ü', 'NFD': 'Ü', 'NFKC': 'Ü', 'NFKD': 'Ü'},
-    'ç': {'NFC': 'Ç', 'NFD': 'Ç', 'NFKC': 'Ç', 'NFKD': 'Ç'},
-    'ö': {'NFC': 'Ö', 'NFD': 'Ö', 'NFKC': 'Ö', 'NFKD': 'Ö'},
-    'œ': {'NFC': 'Œ', 'NFD': 'Œ', 'NFKC': 'Œ', 'NFKD': 'Œ'},
-    'æ': {'NFC': 'Æ', 'NFD': 'Æ', 'NFKC': 'Æ', 'NFKD': 'Æ'},
-    'é': {'NFC': 'É', 'NFD': 'É', 'NFKC': 'É', 'NFKD': 'É'},
-    'á': {'NFC': 'Á', 'NFD': 'Á', 'NFKC': 'Á', 'NFKD': 'Á'},
-    'à': {'NFC': 'À', 'NFD': 'À', 'NFKC': 'À', 'NFKD': 'À'},
-    'ñ': {'NFC': 'Ñ', 'NFD': 'Ñ', 'NFKC': 'Ñ', 'NFKD': 'Ñ'},
-    'ø': {'NFC': 'Ø', 'NFD': 'Ø', 'NFKC': 'Ø', 'NFKD': 'Ø'}
-}
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
+
+import pytest
+from typing import cast, NoReturn
+
+import charfinder.utils.normalizer as normalizer_module
+from charfinder.config.constants import (
+    VALID_NORMALIZATION_FORMS,
+    VALID_NORMALIZATION_PROFILES,
+)
+from charfinder.config.aliases import NormalizationForm, NormalizationProfile
+
+
+# ---------------------------------------------------------------------
+# Matrix 1: Unicode Normalization Forms (NFC, NFD, NFKC, NFKD)
+# ---------------------------------------------------------------------
 
 @pytest.mark.parametrize(
-    "input_text, expected_normalized_text",
+    "input_text, expected_by_form",
     [
-        # Test all characters with their expected normalized values
-        (char, expected) for char, expected in test_characters.items()
-    ]
+        ("é", {  # decomposed 'e' + acute
+            "NFC": "É",
+            "NFD": "É",  # Still decomposed
+            "NFKC": "É",
+            "NFKD": "É",
+        }),
+        ("ﬁ", {  # ligature 'fi'
+            "NFC": "FI",
+            "NFD": "FI",
+            "NFKC": "FI",  # Compatibility decomposition
+            "NFKD": "FI",
+        }),
+        ("⅓", {  # vulgar fraction 1/3
+            "NFC": "⅓",
+            "NFD": "⅓",
+            "NFKC": "1⁄3",  # Expanded fraction
+            "NFKD": "1⁄3",
+        }),
+        ("œ", {  # ligature 'oe'
+            "NFC": "Œ",
+            "NFD": "Œ",
+            "NFKC": "Œ",  # Compatibility decomposition
+            "NFKD": "Œ",
+        }),
+        ("æ", {  # ligature 'ae'
+            "NFC": "Æ",
+            "NFD": "Æ",
+            "NFKC": "Æ",  # Compatibility decomposition
+            "NFKD": "Æ",
+        }),
+        ("ñ", {  # 'n' + combining tilde
+            "NFC": "Ñ",     # Precomposed
+            "NFD": "Ñ",     # Decomposed (N + ◌̃)
+            "NFKC": "Ñ",
+            "NFKD": "Ñ",
+        }),
+    ],
 )
-def test_normalization_matrix(input_text: str, expected_normalized_text: dict[str, str], monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test normalization for all Unicode normalization methods."""
-    
-    # Loop through all normalization forms and assert the correct normalization
-    for norm_form, expected in expected_normalized_text.items():
-        # Temporarily mock the normalization form for this test case
-        monkeypatch.setattr("charfinder.constants.DEFAULT_NORMALIZATION_FORM", norm_form)
-        
-        normalized_text = normalize(input_text)
+@pytest.mark.parametrize("form", sorted(VALID_NORMALIZATION_FORMS))
+def test_unicode_normalization_forms(
+    input_text: str,
+    expected_by_form: dict[NormalizationForm, str],
+    form: NormalizationForm,
+) -> None:
+    """Test normalization behavior across all Unicode normalization forms."""
+    result = normalizer_module.normalize(input_text, profile="medium", form=form)
+    expected = expected_by_form[form].upper()
 
-        # Debug output
-        print(f"Input: {input_text}, Norm Method: {norm_form}, Expected: {expected}, Normalized: {normalized_text}")
+    # Debug output
+    print("\n" + "-" * 40)
+    print(f"Input text           : {repr(input_text)}")
+    print(f"Normalization form   : {form}")
+    print(f"Expected (normalized): {repr(expected)}")
+    print(f"Actual result        : {repr(result)}")
+    print("-" * 40)
 
-        assert normalized_text == expected
+    assert result == expected
 
 
 # ---------------------------------------------------------------------
-# Basic normalization tests
+# Matrix 2: Normalization Profiles (raw, light, medium, aggressive)
 # ---------------------------------------------------------------------
 
-def test_normalize_basic() -> None:
-    """Test that text is normalized and converted to uppercase."""
-    input_text = "café"
-    expected = "CAFÉ"
-    normalized_text = normalize(input_text)
-    assert normalized_text == expected
+@pytest.mark.parametrize(
+    "input_text, expected_by_profile",
+    [
+        ("  café  ", {
+            "raw": "  café  ",
+            "light": "CAFÉ",
+            "medium": "CAFÉ",
+            "aggressive": "CAFE",
+        }),
+        ("Z\u200bE\u200cR\u200dO", {
+            "raw": "Z\u200bE\u200cR\u200dO",
+            "light": "Z\u200bE\u200cR\u200dO".strip().upper(),
+            "medium": "Z\u200bE\u200cR\u200dO".strip().upper(),
+            "aggressive": "ZERO",
+        }),
+        ("fiançée", {
+            "raw": "fiançée",
+            "light": "FIANÇÉE",
+            "medium": "FIANÇÉE",
+            "aggressive": "FIANCEE",
+        }),
+        ("  élève  ", {
+            "raw": "  élève  ",
+            "light": "ÉLÈVE",
+            "medium": "ÉLÈVE",
+            "aggressive": "ELEVE",
+        }),
+    ],
+)
+@pytest.mark.parametrize("profile", sorted(VALID_NORMALIZATION_PROFILES))
+def test_normalization_profiles(
+    input_text: str,
+    expected_by_profile: dict[NormalizationProfile, str],
+    profile: NormalizationProfile,
+) -> None:
+    """Test normalization behavior across all defined profiles."""
+    result = normalizer_module.normalize(input_text, profile=profile, form="NFC")
+    # Debug output
+    print("\n" + "-" * 40)
+    print(f"Input text       : {repr(input_text)}")
+    print(f"Profile          : {profile}")
+    print(f"Expected result  : {repr(expected_by_profile[profile])}")
+    print(f"Actual result    : {repr(result)}")
+    print("-" * 40)
 
+    assert result == expected_by_profile[profile]
+
+
+# ---------------------------------------------------------------------
+# Edge Case Tests
+# ---------------------------------------------------------------------
 
 def test_normalize_empty_string() -> None:
-    """Test that an empty string returns an empty string."""
-    input_text = ""
-    expected = ""
-    normalized_text = normalize(input_text)
-    assert normalized_text == expected
+    """An empty string should return an empty string under any profile."""
+    for profile in sorted(VALID_NORMALIZATION_PROFILES):
+        assert normalizer_module.normalize("", profile=cast(NormalizationProfile, profile)) == ""
 
 
-def test_normalize_already_normalized() -> None:
-    """Test that already normalized text is not modified."""
-    input_text = "HELLO"
-    expected = "HELLO"
-    normalized_text = normalize(input_text)
-    assert normalized_text == expected
+def test_normalize_already_normalized_text() -> None:
+    """Already normalized input should remain unchanged when using 'raw'."""
+    assert normalizer_module.normalize("HELLO WORLD", profile="raw") == "HELLO WORLD"
 
 
-def test_normalize_mixed_case() -> None:
-    """Test that text is converted to uppercase during normalization."""
-    input_text = "Hello World"
-    expected = "HELLO WORLD"
-    normalized_text = normalize(input_text)
-    assert normalized_text == expected
+def test_normalize_whitespace_handling() -> None:
+    """Whitespace should be trimmed and collapsed in 'light' and higher."""
+    input_text = "  foo   bar\tbaz \n"
+    expected = "FOO BAR BAZ"
+    for profile in ("light", "medium", "aggressive"):
+        assert normalizer_module.normalize(input_text, profile=profile) == expected
 
 
 # ---------------------------------------------------------------------
-# Unicode normalization tests
+# Error Handling
 # ---------------------------------------------------------------------
 
-def test_normalize_unicode_composition() -> None:
-    """Test that composed Unicode characters are normalized to NFC."""
-    input_text = "é"  # Composed 'e' with acute accent
-    expected = "É"  # Composed 'E' with acute accent (uppercased)
-    normalized_text = normalize(input_text)
-    # Ensure that normalization uses NFC and then uppercases
-    assert normalized_text == expected
+
+def test_normalize_raises_and_logs(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Simulate internal normalization error in our function only."""
+    monkeypatch.setattr(normalizer_module, "unicodedata", BrokenUnicodeData())
+
+    with pytest.raises(RuntimeError, match="Normalization failed!"):
+        normalizer_module.normalize("crash", profile="medium", form="NFC")
 
 
-def test_normalize_unicode_decomposition() -> None:
-    """Test that decomposed Unicode characters are normalized to NFKD."""
-    input_text = "é"  # Decomposed 'e' + acute accent
-    expected = "É"  # Uppercased
-    normalized_text = normalize(input_text)
-    assert normalized_text == expected
-
-
+class BrokenUnicodeData:
+    def normalize(self, *_args: object, **_kwargs: object) -> NoReturn:
+        raise RuntimeError("Normalization failed!")
 # ---------------------------------------------------------------------
-# Test with special characters
+# Diacritic and Zero-width Tests (Aggressive)
 # ---------------------------------------------------------------------
 
-def test_normalize_special_characters() -> None:
-    """Test that special characters are normalized correctly."""
-    input_text = "noël"
-    expected = "NOËL"
-    normalized_text = normalize(input_text)
-    assert normalized_text == expected
+def test_diacritic_removal_aggressive() -> None:
+    """Aggressive profile should strip all diacritics."""
+    input_text = "voilà naïve fiancé"
+    result = normalizer_module.normalize(input_text, profile="aggressive")
+    assert result == "VOILA NAIVE FIANCE"
 
 
-@pytest.mark.parametrize("input_text, expected", [
-    ("à", "À"),
-    ("ö", "Ö"),
-    ("ü", "Ü"),
-    ("ç", "Ç"),
-    ("ñ", "Ñ"),
-])
-def test_normalize_various_unicode(input_text: str, expected: str) -> None:
-    """Test normalization of various Unicode characters."""
-    normalized_text = normalize(input_text)
-    assert normalized_text == expected
+def test_zero_width_removal_aggressive() -> None:
+    """Aggressive profile should remove all zero-width characters."""
+    input_text = "Z\u200bE\u200cR\u200dO\ufeff"
+    result = normalizer_module.normalize(input_text, profile="aggressive")
+    assert result == "ZERO"

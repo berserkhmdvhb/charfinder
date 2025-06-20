@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import pytest
+from collections.abc import Callable
+from colorama import Style
 
 from charfinder.utils.logger_styles import (
     format_debug,
@@ -12,10 +14,12 @@ from charfinder.utils.logger_styles import (
     format_success,
     format_warning,
 )
-from collections.abc import Callable
-from colorama import Style
 from charfinder.config.types import FormatterFunc
 
+
+# ---------------------------------------------------------------------
+# Format Function Tests
+# ---------------------------------------------------------------------
 
 @pytest.mark.parametrize(
     "func,text,expected_prefix_colored,expected_prefix_plain",
@@ -29,7 +33,7 @@ from charfinder.config.types import FormatterFunc
     ],
 )
 def test_format_functions_with_and_without_color(
-    func: FormatterFunc,  # Updated to use FormatterFunc
+    func: FormatterFunc,
     text: str,
     expected_prefix_colored: str,
     expected_prefix_plain: str,
@@ -44,11 +48,14 @@ def test_format_functions_with_and_without_color(
     assert "\033[" in colored_output  # ANSI color check
 
 
+# ---------------------------------------------------------------------
+# Color Constant Tests
+# ---------------------------------------------------------------------
+
 def test_color_constants_are_ansi_sequences() -> None:
     """Color constants should be valid ANSI escape sequences."""
     from charfinder.utils import logger_styles as ls
 
-    # Check all color constants
     color_constants = [
         ls.COLOR_HEADER,
         ls.COLOR_CODELINE,
@@ -60,8 +67,10 @@ def test_color_constants_are_ansi_sequences() -> None:
         ls.COLOR_SETTINGS,
         ls.RESET,
     ]
-    
+
     for color in color_constants:
         assert isinstance(color, str)
-        assert color.startswith("\033[")  # Ensure it's an ANSI escape sequence
-        assert color.endswith(Style.RESET_ALL) or color.endswith("m")  # Ensure it ends with a reset or valid ANSI m sequence
+        # Ensure it's an ANSI escape sequence
+        assert color.startswith("\033[")
+        # Ensure it ends with a reset or valid ANSI m sequence
+        assert color.endswith("m") or color.endswith(Style.RESET_ALL)
