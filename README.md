@@ -585,7 +585,7 @@ The system is structured into clearly defined layers:
   * `types.py` — shared types and protocols for core and CLI usage
   * `aliases.py` — fuzzy algorithm aliases and canonical name resolution
 
-  📚 See [`config_constants.md`](docs/config_constants.md), [`config_environment.md`](docs/config_environment.md),  [`config_types_protocols.md`](docs/config_types_protocols.md), [`config_env_log_scenarios.md`](docs/config_env_log_scenarios.md)
+  📚 See [`config_constants.md`](docs/config_constants.md), [`config_environment.md`](docs/config_environment.md),  [`config_types_protocols.md`](docs/config_types_protocols.md)
 
 #### 7. **Validation Layer** (`validators.py`)
 
@@ -849,8 +849,7 @@ The following documents are located in the [`docs/`](docs/) directory:
 | [`caching.md`](docs/caching.md)                             | Explanation of cache layers: Unicode name cache, `cached_normalize()`, performance considerations.                  |
 | [`cli_architecture.md`](docs/cli_architecture.md)           | Overview of CLI modules, their flow, entry points, and command routing logic.                                       |
 | [`config_constants.md`](docs/config_constants.md)       |Centralized constants used across the project: default values, valid input sets, exit codes, environment variable names, normalization profiles, hybrid scoring weights, and logging defaults.                         |
-| [`config_environment.md`](docs/config_environment.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities.                             |
-| [`config_env_log_scenarios.md`](docs/config_env_log_scenarios.md) | End-to-end `.env` and logging scenarios, edge cases, fallback resolution.                                     |
+| [`config_environment.md`](docs/config_environment.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities and scenarios                |
 | [`config_types_protocols.md`](docs/config_types_protocols.md) | Project-wide types, `Protocol` interfaces, and their role in extensibility and static typing.                     |
 | [`core_logic.md`](docs/core_logic.md)                       | Core logic and library API (`find_chars`, `find_chars_raw`): processing rules, transformations, architecture.       |
 | [`debug_diagnostics.md`](docs/debug_diagnostics.md)         | Debug and diagnostic output systems: `--debug`, `CHARFINDER_DEBUG_ENV_LOAD`, dotenv introspection.                  |
