@@ -203,3 +203,29 @@ def _use_isolated_root(setup_test_root: Callable[[], Path]) -> None:
     setup_test_root()
 ```
 
+#### Test Isolation Itself
+
+To test if log directory is isolated add following test to your test file:
+
+```python
+def test_log_dir_isolation(temp_log_dir: Path) -> None:
+    """Confirm logs are created only in temp_log_dir and not in project root."""
+    from charfinder.utils.logger_setup import setup_logging
+
+    log_file = temp_log_dir / "charfinder.log"
+    project_log_path = Path.cwd() / "logs"
+
+    # Trigger logging
+    setup_logging(log_level=logging.INFO)
+    logger = logging.getLogger("charfinder")
+    logger.info("Log trigger test")
+
+    print(f"[DEBUG] Log file should exist: {log_file}")
+    print(f"[DEBUG] Does log file exist? {log_file.exists()}")
+    print(f"[DEBUG] Project log dir should not exist: {project_log_path}")
+    print(f"[DEBUG] Does project log dir exist? {project_log_path.exists()}")
+
+    assert not project_log_path.exists(), f"Unexpected logs in project root: {project_log_path}"
+    assert log_file.exists(), f"Expected log file missing in temp_log_dir: {log_file}"
+```
+
