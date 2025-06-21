@@ -92,6 +92,7 @@ from charfinder.utils.logger_styles import format_warning
 
 ERROR_INVALID_THRESHOLD = "Invalid threshold used."
 ERROR_INVALID_THRESHOLD_TYPE = "Threshold must be a float or int."
+ERROR_INVALID_COLOR_MODE = f"Invalid color mode. Must be one of: {', '.join(VALID_COLOR_MODES)}."
 ERROR_INVALID_CACHE_PATH = "Cache file path does not exist"
 ERROR_INVALID_NAME = "Normalized name must be a non-empty string"
 ERROR_EXPECTED_BOOL = "Expected a boolean value"
@@ -405,21 +406,24 @@ def validate_color_mode(
     """
     Validate and normalize a color mode string.
 
-    If the color mode is valid, it is cast to the appropriate ColorMode type.
-    If not provided or invalid, the default color mode is returned.
-
     Args:
         color_mode (str | None): The color mode string to validate.
-        source (Literal["cli", "core"]): The context of invocation.
-            "cli" assumes argparse has already validated the value.
+        source (Literal["cli", "core"]): Context of invocation.
 
     Returns:
         ColorMode: The validated and normalized color mode.
+
+    Raises:
+        ValueError: If color_mode is invalid and source is "core".
     """
     if source == "cli" and color_mode in VALID_COLOR_MODES:
         return cast_color_mode(color_mode)
     if color_mode in VALID_COLOR_MODES:
         return cast_color_mode(color_mode)
+
+    if source == "core":
+        message = f"{ERROR_INVALID_COLOR_MODE} Got: {color_mode}"
+        raise ValueError(message)
     return DEFAULT_COLOR_MODE
 
 

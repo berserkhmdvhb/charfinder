@@ -1,5 +1,6 @@
 """Tests for validators.py – validation and resolution logic for config values."""
 
+import argparse
 import pytest
 
 from charfinder.config import constants as C
@@ -100,7 +101,7 @@ def test_validate_color_mode_valid(color: str) -> None:
 
 def test_validate_color_mode_invalid() -> None:
     """Should raise for unknown color mode."""
-    with pytest.raises(ValueError, match="Invalid color mode:"):
+    with pytest.raises(ValueError, match="Invalid color mode"):
         V.validate_color_mode("blackandwhite")
 
 
@@ -116,7 +117,7 @@ def test_validate_output_format_valid(fmt: str) -> None:
 
 def test_validate_output_format_invalid() -> None:
     """Should raise for unsupported output format."""
-    with pytest.raises(ValueError, match="Invalid output format:"):
+    with pytest.raises(ValueError, match="Invalid output format"):
         V.validate_output_format("xml")
 
 
@@ -138,7 +139,7 @@ def test_validate_show_score_falsy(val: str) -> None:
 
 def test_validate_show_score_invalid() -> None:
     """Should raise for unknown show score values."""
-    with pytest.raises(ValueError, match="Invalid value for show_score:"):
+    with pytest.raises(argparse.ArgumentTypeError, match="Invalid value for --show-score"):
         V.validate_show_score("maybe")
 
 
@@ -204,10 +205,11 @@ def test_resolve_effective_color_mode_env_invalid(monkeypatch: pytest.MonkeyPatc
     assert V.resolve_effective_color_mode(None) == C.DEFAULT_COLOR_MODE
 
 
-def test_resolve_effective_color_mode_cli_invalid_raises() -> None:
-    """Passing an invalid CLI value should raise ValueError."""
-    with pytest.raises(ValueError):
-        V.resolve_effective_color_mode("invalid_cli_mode")
+def test_resolve_effective_color_mode_cli_invalid_fallbacks_to_default() -> None:
+    """Invalid CLI color mode should fall back to default without raising."""
+    result = V.resolve_effective_color_mode("blackandwhite")
+    assert result == C.DEFAULT_COLOR_MODE
+
 
 
 # Show Score Validators
