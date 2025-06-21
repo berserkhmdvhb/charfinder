@@ -167,9 +167,15 @@ def test_do_rollover_opens_new_stream(tmp_path: Path) -> None:
     handler.stream.close()
 
 
+# tests/utils/test_logger_helpers.py
+
+# ---------------------------------------------------------------------
+# Rollover Behavior
+# ---------------------------------------------------------------------
+
 def test_do_rollover_warns_on_unlink_fail(
     tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
     fail_unlink_for: Callable[[Path], ContextManager[None]],
 ) -> None:
     """do_rollover logs a warning if a file cannot be deleted."""
@@ -182,8 +188,7 @@ def test_do_rollover_warns_on_unlink_fail(
 
     with patch.object(handler, "get_files_to_delete", return_value=[failing_file]):
         with fail_unlink_for(failing_file):
-            caplog.set_level(logging.WARNING)
             handler.do_rollover()
 
-    expected = f"Failed to delete old log file: {failing_file}"
-    assert any(expected in r.message for r in caplog.records)
+    err = capsys.readouterr().err
+    assert f"Failed to delete old log file: {failing_file}" in err
