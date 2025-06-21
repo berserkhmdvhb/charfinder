@@ -462,7 +462,7 @@ def validate_fuzzy_match_mode(mode: str) -> FuzzyMatchMode:
     """
     mode = mode.lower()
     if mode not in VALID_FUZZY_MATCH_MODES:
-        message = f"Invalid fuzzy match mode: {mode}. Valid options: {{VALID_FUZZY_MATCH_MODES}}"
+        message = f"Invalid fuzzy match mode: {mode}. Valid options: {VALID_FUZZY_MATCH_MODES}"
         raise ValueError(message)
     return cast("FuzzyMatchMode", mode)
 

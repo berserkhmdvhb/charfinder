@@ -206,11 +206,17 @@ def configured_logger(
 # ---------------------------------------------------------------------
 @pytest.fixture
 def run_cli(tmp_path: Path) -> Callable[..., tuple[str, str, int]]:
-    """Run CLI command in subprocess with tmp_path isolation."""
-    def _run(*args: str, env: dict[str, str] | None = None) -> tuple[str, str, int]:
-        return invoke_cli(args, tmp_path=tmp_path, env=env)
-    return _run
+    """
+    Fixture to run the CLI tool in an isolated subprocess environment.
 
+    Returns:
+        A callable that runs the CLI with given arguments and returns
+        (stdout, stderr, returncode).
+    """
+    def _run(*args: str, env: dict[str, str] | None = None) -> tuple[str, str, int]:
+        return invoke_cli(list(args), tmp_path=tmp_path, env=env)
+
+    return _run
 # ---------------------------------------------------------------------
 # Filesystem Failure Simulation
 # ---------------------------------------------------------------------

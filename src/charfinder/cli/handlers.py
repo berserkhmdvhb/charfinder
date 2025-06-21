@@ -26,7 +26,12 @@ from charfinder.config.constants import (
 )
 from charfinder.config.types import MatchDiagnosticsInfo, MatchResult
 from charfinder.core.core_main import find_chars_raw, find_chars_with_info
-from charfinder.utils.formatter import display_result_lines, echo, format_all_results
+from charfinder.utils.formatter import (
+    display_result_lines,
+    echo,
+    format_all_results,
+    log_optionally_echo,
+)
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error, format_warning
 from charfinder.validators import (
@@ -128,6 +133,22 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
 
     except KeyboardInterrupt:
         return handle_keyboard_interrupt(verbose=args.verbose, use_color=use_color)
+
+    except Exception as exc:
+        if isinstance(exc, (SystemExit, KeyboardInterrupt, GeneratorExit)):
+            raise
+        # Use echo or log_optionally_echo for error reporting with color and logging support
+        error_msg = f"An unexpected error occurred: {exc}. See logs for details."
+        # Show error immediately and also log it if enabled
+        log_optionally_echo(
+            msg=error_msg,
+            level="error",
+            show=True,
+            style=lambda m: format_error(
+                message=m, use_color=args.use_color if hasattr(args, "use_color") else False
+            ),
+        )
+        return MatchResult(exit_code=EXIT_INVALID_USAGE, match_info=None)
 
 
 def _run_query_and_return(

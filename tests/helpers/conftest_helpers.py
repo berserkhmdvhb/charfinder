@@ -34,23 +34,23 @@ def invoke_cli(
     env: dict[str, str] | None = None,
 ) -> tuple[str, str, int]:
     """
-    Invoke the CLI tool in subprocess for integration testing.
+    Invoke the CLI tool in a subprocess for integration testing.
 
     Args:
-        args: Command-line arguments to pass (e.g. ["--query", "hello"])
-        tmp_path: Temporary directory used for DOTENV_PATH and isolation
-        env: Optional dictionary of environment variables to inject
+        args: Command-line arguments to pass (e.g., ["--query", "hello"]).
+        tmp_path: Temporary directory used for DOTENV_PATH and isolation.
+        env: Optional dictionary of environment variables to inject.
 
     Returns:
-        A tuple of (stdout, stderr, returncode)
+        A tuple of (stdout, stderr, returncode).
     """
     cmd = [sys.executable, "-m", "charfinder", *args]
 
-    # Force --color=never if not already specified to avoid ANSI noise
+    # Avoid ANSI color codes unless explicitly enabled
     if not any(a.startswith("--color") for a in args):
         cmd.append("--color=never")
 
-    # Combine test environment with overrides
+    # Prepare test-safe environment variables
     full_env = {
         **os.environ,
         "CHARFINDER_LOG_MAX_BYTES": "10000",
@@ -59,7 +59,7 @@ def invoke_cli(
         **(env or {}),
     }
 
-    # Provide an empty .env file to force dotenv parsing behavior
+    # Dummy .env file to force test dotenv behavior
     dummy_env = tmp_path / ".env"
     dummy_env.write_text("")
     full_env["DOTENV_PATH"] = str(dummy_env.resolve())
@@ -74,7 +74,6 @@ def invoke_cli(
         check=False,
     )
     return result.stdout.strip(), result.stderr.strip(), result.returncode
-
 
 # ---------------------------------------------------------------------
 # Safe dummy handler (for teardown tests)
