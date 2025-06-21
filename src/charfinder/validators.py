@@ -560,23 +560,26 @@ def validate_normalized_name(name: str) -> str:
 
 def validate_unicode_data_url(url: str) -> bool:
     """
-    Validate that a given string is a well-formed URL.
+    Validate that a given string is a well-formed URL with HTTP or HTTPS scheme.
 
     This function checks whether the provided string has both a scheme and a netloc,
-    ensuring it represents a valid URL for accessing remote Unicode data.
+    and ensures it uses either the HTTP or HTTPS scheme, suitable for remote Unicode data access.
 
     Args:
         url (str): The URL string to validate.
 
     Raises:
-        ValueError: If the string is not a valid URL.
+        ValueError: If the string is not a valid HTTP/HTTPS URL.
 
     Returns:
-        bool: True if the URL is valid.
+        bool: True if the URL is valid and uses an accepted scheme.
     """
     parsed_url = urlparse(url)
     if not parsed_url.scheme or not parsed_url.netloc:
         message = f"Invalid URL: {url}"
+        raise ValueError(message)
+    if parsed_url.scheme.lower() not in {"http", "https"}:
+        message = f"Unsupported URL scheme '{parsed_url.scheme}' in: {url}"
         raise ValueError(message)
     return True
 
