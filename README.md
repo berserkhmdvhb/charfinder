@@ -119,7 +119,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
   * Log directory changes by environment
   * Test mode activates `.env.test`
 
-📚 See [`config_environment.md`](docs/config_environment.md)
+📚 See [`config_environment.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/config_environment.md)
 
 ### 💻 CLI Features
 
@@ -146,7 +146,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 
 * Detailed CLI help with examples
 
-📚 See [`cli_architecture.md`](docs/cli_architecture.md) and for examples see the subsection [demo](#demo)
+📚 See [`cli_architecture.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/cli_architecture.md) and for examples see the subsection [demo](#demo)
 
 ### 🐍 Python Library Usage
 
@@ -157,7 +157,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 * Fully type-annotated
 * CLI dependencies are not required for library usage
 
-📚 See [`core_logic.md`](docs/core_logic.md)
+📚 See [`core_logic.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/core_logic.md)
 
 ### 🧪 Testability & Quality
 
@@ -169,7 +169,7 @@ CharFinder is a **feature-rich Unicode character search tool**, designed for bot
 * Modular `conftest.py` with reusable fixtures
 * Clean `pytest` + `coverage` + `pre-commit` workflow
 
-📚 See [`unit_test_design.md`](docs/unit_test_design.md)
+📚 See [`unit_test_design.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/unit_test_design.md)
 
 ### 📑 Modern Packaging & Tooling
 
@@ -268,11 +268,11 @@ CharFinder implements a **layered architecture** with clear boundaries:
 
 📚 See section [Internals and Architecture](#7--internals-and-architecture), and following documentatoins:
 
-* [docs/cli\_architecture.md](docs/cli_architecture.md)
-* [docs/core\_logic.md](docs/core_logic.md)
-* [docs/environment\_config.md](docs/config_environment.md)
-* [docs/logging\_system.md](docs/logging_system.md)
-* [docs/caching.md](docs/caching.md)
+* [docs/cli\_architecture.md](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/cli_architecture.md)
+* [docs/core\_logic.md](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/core_logic.md)
+* [docs/environment\_config.md](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/config_environment.md)
+* [docs/logging\_system.md](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/logging_system.md)
+* [docs/caching.md](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/caching.md)
 
 ---
 ## 4. 🌐 Unicode & Normalization
@@ -331,7 +331,7 @@ CharFinder correctly matches Unicode emoji and symbols. For example:
 
 > Note: Composite emoji like `👩‍💻` (woman technologist) are grapheme clusters, not individual Unicode code points, and are not listed in `UnicodeData.txt`. CharFinder focuses on official single-codepoint characters.
 
-📚 See [`unicode_normalization.md`](docs/unicode_normalization.md)
+📚 See [`unicode_normalization.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/unicode_normalization.md)
 
 
 ---
@@ -347,7 +347,7 @@ Fuzzy matching can use a **single algorithm** (like `token_sort_ratio`) or a **h
 - Normalization is by default applied, but the intensity and level can be tweaked by `--normalization-profile`.
 - Matching logic is configurable via CLI flags like `--fuzzy`, `--prefer-fuzzy`, `--fuzzy-algo`, etc.
 
-📚 See [`matching.md`](docs/matching.md).
+📚 See [`matching.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/matching.md).
 
 ---
 
@@ -468,7 +468,7 @@ charfinder --help
 
 
 
-📚 See [`cli_architecture.md`](docs/cli_architecture.md).
+📚 See [`cli_architecture.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/cli_architecture.md).
 
 ---
 
@@ -513,7 +513,7 @@ for item in results:
     print(item)
 ```
 
-📚 See [`core_logic.md`](docs/core_logic.md).
+📚 See [`core_logic.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/core_logic.md).
 
 ---
 
@@ -537,7 +537,7 @@ The system is structured into clearly defined layers:
   * `unicode_data_loader.py` — parses and validates `UnicodeData.txt` and alternate names
 
 
-📚 See [`core_logic.md`](docs/core_logic.md), [`matching.md`](docs/matching.md)
+📚 See [`core_logic.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/core_logic.md), [`matching.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/matching.md)
 
 #### 2. **Finder API Layer** (`core/core_main.py`)
 
@@ -552,7 +552,7 @@ The system is structured into clearly defined layers:
 * Output formatting (`formatter.py`, `utils_runner.py`)
 * Fully testable and modular CLI engine
 
-📚 See [`cli_architecture.md`](docs/cli_architecture.md)
+📚 See [`cli_architecture.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/cli_architecture.md)
 
 #### 4. **Diagnostics Layer** (`cli/diagnostics.py`, `cli/diagnostics_match.py`)
 
@@ -561,7 +561,7 @@ The system is structured into clearly defined layers:
   * Matching decisions, fallback logic, algorithm insights
 * Activated via `--debug` or `CHARFINDER_DEBUG_ENV_LOAD=1`
 
-📚 See [`debug_diagnostics.md`](docs/debug_diagnostics.md)
+📚 See [`debug_diagnostics.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/debug_diagnostics.md)
 
 #### 5. **Utilities Layer** (`utils/`)
 
@@ -580,7 +580,7 @@ The system is structured into clearly defined layers:
   * `types.py` — shared types and protocols for core and CLI usage
   * `aliases.py` — fuzzy algorithm aliases and canonical name resolution
 
-  📚 See [`config_constants.md`](docs/config_constants.md), [`config_environment.md`](docs/config_environment.md),  [`config_types_protocols.md`](docs/config_types_protocols.md)
+  📚 See [`config_constants.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/config_constants.md), [`config_environment.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/config_environment.md),  [`config_types_protocols.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/config_types_protocols.md)
 
 #### 7. **Validation Layer** (`validators.py`)
 
@@ -590,7 +590,7 @@ The system is structured into clearly defined layers:
   * Fuzzy algorithm names, match modes, thresholds, color modes
   * CLI/environment/default priority resolution
 
-📚 See [`validators.md`](docs/validators.md)
+📚 See [`validators.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/validators.md)
 
 ---
 
@@ -609,7 +609,7 @@ CharFinder uses layered caching:
   * `unicode_name_cache.json` stores normalized character name mappings
   * Auto-rebuilt from `UnicodeData.txt` + alternates if missing or outdated
 
-📚 See [`caching.md`](docs/caching.md)
+📚 See [`caching.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/caching.md)
 
 ---
 
@@ -626,7 +626,7 @@ Supports predictable, override-friendly config loading:
 
 → Enable `CHARFINDER_DEBUG_ENV_LOAD=1` for detailed trace
 
-📚 See [`config_environment.md`](docs/config_environment.md)
+📚 See [`config_environment.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/config_environment.md)
 
 ---
 
@@ -639,7 +639,7 @@ Flexible logging system supports development, testing, and production:
 * **Color detection** adjusts automatically for terminals and scripts
 * Logging setup via `setup_logging()` in `logger_setup.py`
 
-📚 See [`logging_system.md`](docs/logging_system.md)
+📚 See [`logging_system.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/logging_system.md)
 
 ---
 
@@ -737,7 +737,7 @@ mypy src/ tests/
 * **Logging tests:** test rotating logging, suppression, environment filtering
 * **Settings tests:** test different `.env` and environment variable scenarios
 
-📚 See [`unit_test_design.md`](docs/unit_test_design.md)
+📚 See [`unit_test_design.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/unit_test_design.md)
 
 ---
 ### 👨‍💻 9. Developer Guide
@@ -821,13 +821,13 @@ make develop
 
 ### ⚡ 10. Performance
 
-📚 See [`performance.md`](docs/performance.md)
+📚 See [`performance.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/performance.md)
 
 ---
 
 ## 🚧 11. Limitations and Known Issues
 
-📚 See [`limitations_issues.md`](docs/limitations_issues.md)
+📚 See [`limitations_issues.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/limitations_issues.md)
 
 
 ---
@@ -836,23 +836,23 @@ make develop
 
 This project includes detailed internal documentation to help both developers and advanced users understand its design, architecture, and internals.
 
-The following documents are located in the [`docs/`](docs/) directory:
+The following documents are located in the [`docs/`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/) directory:
 
 | Document                                                    | Description                                                                                                         |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| [`caching.md`](docs/caching.md)                             | Explanation of cache layers: Unicode name cache, `cached_normalize()`, performance considerations.                  |
-| [`cli_architecture.md`](docs/cli_architecture.md)           | Overview of CLI modules, their flow, entry points, and command routing logic.                                       |
-| [`config_constants.md`](docs/config_constants.md)       |Centralized constants used across the project: default values, valid input sets, exit codes, environment variable names, normalization profiles, hybrid scoring weights, and logging defaults.                         |
-| [`config_environment.md`](docs/config_environment.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities and scenarios                |
-| [`config_types_protocols.md`](docs/config_types_protocols.md) | Project-wide types, `Protocol` interfaces, and their role in extensibility and static typing.                     |
-| [`core_logic.md`](docs/core_logic.md)                       | Core logic and library API (`find_chars`, `find_chars_raw`): processing rules, transformations, architecture.       |
-| [`debug_diagnostics.md`](docs/debug_diagnostics.md)         | Debug and diagnostic output systems: `--debug`, `CHARFINDER_DEBUG_ENV_LOAD`, dotenv introspection.                  |
-| [`logging_system.md`](docs/logging_system.md)               | Logging architecture: setup, structured logging, rotating files, and environment-based folders.                     |
-| [`matching.md`](docs/matching.md)                           | Detailed explanation of exact and fuzzy matching algorithms and options. Includes mode combinations and flowcharts. |
+| [`caching.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/caching.md)                             | Explanation of cache layers: Unicode name cache, `cached_normalize()`, performance considerations.                  |
+| [`cli_architecture.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/cli_architecture.md)           | Overview of CLI modules, their flow, entry points, and command routing logic.                                       |
+| [`config_constants.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/config_constants.md)       |Centralized constants used across the project: default values, valid input sets, exit codes, environment variable names, normalization profiles, hybrid scoring weights, and logging defaults.                         |
+| [`config_environment.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/config_environment.md)       | Detailed explanation of environment variable handling and `.env` resolution priorities and scenarios                |
+| [`config_types_protocols.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/config_types_protocols.md) | Project-wide types, `Protocol` interfaces, and their role in extensibility and static typing.                     |
+| [`core_logic.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/core_logic.md)                       | Core logic and library API (`find_chars`, `find_chars_raw`): processing rules, transformations, architecture.       |
+| [`debug_diagnostics.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/debug_diagnostics.md)         | Debug and diagnostic output systems: `--debug`, `CHARFINDER_DEBUG_ENV_LOAD`, dotenv introspection.                  |
+| [`logging_system.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/logging_system.md)               | Logging architecture: setup, structured logging, rotating files, and environment-based folders.                     |
+| [`matching.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/matching.md)                           | Detailed explanation of exact and fuzzy matching algorithms and options. Includes mode combinations and flowcharts. |
 | [`unicode_normalization.md`](docs/unicode_normalization.md) | Unicode normalization explained: what is used (`NFC`), why, and implications for search.                            |
-| [`packaging.md`](docs/packaging.md)                         | Packaging and publishing: `pyproject.toml`, build tools, versioning strategy, and PyPI release process.             |
-| [`unit_test_design.md`](docs/unit_test_design.md)           | Testing layers: unit tests, CLI integration tests, coverage strategy.                                               |
-| [`validators.md`](docs/validators.md)                       | Centralized validation logic shared across CLI and core. Type safety, fallbacks, source-aware behavior.             |
+| [`packaging.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/packaging.md)                         | Packaging and publishing: `pyproject.toml`, build tools, versioning strategy, and PyPI release process.             |
+| [`unit_test_design.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/unit_test_design.md)           | Testing layers: unit tests, CLI integration tests, coverage strategy.                                               |
+| [`validators.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/validators.md)                       | Centralized validation logic shared across CLI and core. Type safety, fallbacks, source-aware behavior.             |
 
 > These documents serve both as **developer onboarding** materials and **technical audit** references.
 
