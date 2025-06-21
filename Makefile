@@ -73,7 +73,7 @@ help::
 	@echo "  clean-all              Remove all build, test, cache, and log artifacts"
 	@echo ""
 	@echo "  build                  Build package for distribution"
-	@echo "  publish-test           Validate upload to TestPyPI (dry run)"
+	@echo "  publish-test           Upload to TestPyPI"
 	@echo "  publish                Upload to PyPI"
 	@echo "  upload-coverage        Upload coverage report to Coveralls"
 
