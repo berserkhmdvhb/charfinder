@@ -169,7 +169,8 @@ def test_handle_cli_workflow_success(
 
 ### Isolate Test Directory
 
-To isolate test directory, use fixture `setup_test_root`:
+
+To isolate test directory, use fixture `setup_test_root` to make sure logs are created in `root/logs/TEST`:
 
 
 First in input of test function use like this:
@@ -201,5 +202,69 @@ To apply this at file level, use the wrapper fixture `_use_isolated_root` by put
 def _use_isolated_root(setup_test_root: Callable[[], Path]) -> None:
     """Ensure CHARFINDER_ROOT_DIR_FOR_TESTS is isolated for all tests."""
     setup_test_root()
+```
+
+In case you want total isolation, meaning that even `logs` folder is not created in `root` during tests and rather in some kind of temp directory, adding this fixture helps in globally setting that:
+
+```python
+@pytest.fixture(autouse=True)
+def patch_setup_logging(temp_log_dir: Path) -> None:
+    """
+    Patch `setup_logging` to force use of temp_log_dir during tests.
+
+    This ensures no logs are created in the project root, regardless of which
+    module or CLI command uses setup_logging.
+    """
+    import charfinder.utils.logger_setup as logger_setup
+
+    # Force reload to ensure setup_logging is patched before any use
+    importlib.reload(logger_setup)
+    real_setup_logging = logger_setup.setup_logging
+
+    def patched_setup_logging(
+        log_dir: Path | None = None,
+        log_level: int | None = None,
+        *,
+        reset: bool = False,
+        return_handlers: bool = False,
+        suppress_echo: bool = False,
+        use_color: bool = True,
+    ) -> list[logging.Handler] | None:
+        return real_setup_logging(
+            log_dir=temp_log_dir,
+            log_level=log_level,
+            reset=reset,
+            return_handlers=return_handlers,
+            suppress_echo=suppress_echo,
+            use_color=use_color,
+        )
+
+    logger_setup.setup_logging = patched_setup_logging
+```
+
+#### Test Isolation Itself
+
+To test if log directory is isolated add following test to your test file:
+
+```python
+def test_log_dir_isolation(temp_log_dir: Path) -> None:
+    """Confirm logs are created only in temp_log_dir and not in project root."""
+    from charfinder.utils.logger_setup import setup_logging
+
+    log_file = temp_log_dir / "charfinder.log"
+    project_log_path = Path.cwd() / "logs"
+
+    # Trigger logging
+    setup_logging(log_level=logging.INFO)
+    logger = logging.getLogger("charfinder")
+    logger.info("Log trigger test")
+
+    print(f"[DEBUG] Log file should exist: {log_file}")
+    print(f"[DEBUG] Does log file exist? {log_file.exists()}")
+    print(f"[DEBUG] Project log dir should not exist: {project_log_path}")
+    print(f"[DEBUG] Does project log dir exist? {project_log_path.exists()}")
+
+    assert not project_log_path.exists(), f"Unexpected logs in project root: {project_log_path}"
+    assert log_file.exists(), f"Expected log file missing in temp_log_dir: {log_file}"
 ```
 
