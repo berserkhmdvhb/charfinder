@@ -428,7 +428,7 @@ charfinder --help
 | `--fuzzy`                | Enable fuzzy search if no exact matches are found                                                     |
 | `--prefer-fuzzy`         | Include fuzzy results even if exact matches are found (hybrid mode)                                   |
 | `--threshold`            | Set fuzzy match threshold (0.0 to 1.0); applies to all algorithms                                     |
-| `--fuzzy-algo`           | Select fuzzy algorithm: `token_sort_ratio` (default), `levenshtein`, `normalized_ratio`               |
+| `--fuzzy-algo`           | Select fuzzy algorithm: `token_sort_ratio` (default), `simple_ratio`, `normalized_ratio`,  `levenshtein`|
 | `--fuzzy-match-mode`     | Fuzzy match mode: `single` (default), `hybrid`                                                        |
 | `--hybrid-agg-fn`        | Aggregation function for hybrid mode: `mean` (default), `median`, `max`, `min`                        |
 | `--exact-match-mode`     | Exact match strategy: `word-subset` (default), `substring`                                            |
