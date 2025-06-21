@@ -532,12 +532,12 @@ The system is structured into clearly defined layers:
 * Key modules:
 
   * `finders.py` — main search orchestrator
-  * `matching.py` — scoring logic for fuzzy and exact matches
+  * `matching.py` — scoring logic for fuzzy and exact matches, uses matching library `fuzzymatchlib.py`
   * `name_cache.py` — Unicode name caching, loading, and saving
   * `unicode_data_loader.py` — parses and validates `UnicodeData.txt` and alternate names
 
 
-📚 See [`core_logic.md`](docs/core_logic.md)
+📚 See [`core_logic.md`](docs/core_logic.md), [`matching.md`](docs/matching.md)
 
 #### 2. **Finder API Layer** (`core/core_main.py`)
 
