@@ -812,7 +812,6 @@ make develop
 | `make clean-all`                            | Remove all build, test, cache, and log artifacts             |
 | `make build`                                | Build package for distribution                               |
 | `make publish-test`                         | Upload to TestPyPI                                           |
-| `make publish-dryrun`                       | Validate and simulate TestPyPI upload (dry run)              |
 | `make publish`                              | Upload to PyPI                                               |
 | `make upload-coverage`                      | Upload coverage report to Coveralls                          |
 
