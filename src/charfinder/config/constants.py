@@ -102,6 +102,7 @@ FUZZY_ALGO_ALIASES: dict[str, FuzzyAlgorithm] = {
 
 VALID_COLOR_MODES = ("auto", "never", "always")
 VALID_FUZZY_ALGO_NAMES: set[str] = set(FUZZY_ALGO_ALIASES.values())
+VALID_FUZZY_ALGO_ALIASES: set[str] = set(FUZZY_ALGO_ALIASES.keys())
 VALID_FUZZY_MATCH_MODES = ("single", "hybrid")
 VALID_EXACT_MATCH_MODES = ("substring", "word-subset")
 VALID_LOG_METHODS = {"debug", "info", "warning", "error", "exception"}

@@ -56,6 +56,7 @@ from charfinder.config.constants import (
     DEFAULT_THRESHOLD,
     VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
+    VALID_FUZZY_ALGO_ALIASES,
     VALID_FUZZY_ALGO_NAMES,
     VALID_FUZZY_MATCH_MODES,
     VALID_HYBRID_AGG_FUNCS,
@@ -181,9 +182,9 @@ def create_parser() -> argparse.ArgumentParser:
         choices=VALID_EXACT_MATCH_MODES,
         default=DEFAULT_EXACT_MATCH_MODE,
         help=(
-            "How to perform exact matching when --fuzzy is not enabled. "
-            "substring: Match query string as a substring of the character name. "
-            "word-subset (default): Match if all words in the query appear "
+            "How to perform exact matching when --fuzzy is not enabled.\n"
+            "\t substring: Match query string as a substring of the character name.\n"
+            "\t word-subset (default): Match if all words in the query appear "
             "in the character name order-independent."
         ),
     )
@@ -194,8 +195,9 @@ def create_parser() -> argparse.ArgumentParser:
         action=ValidateFuzzyAlgoAction,
         default=DEFAULT_FUZZY_ALGO,
         help=(
-            "Fuzzy matching algorithm to use (case-insensitive). "
-            f"Options: {', '.join(sorted(VALID_FUZZY_ALGO_NAMES))}."
+            "Fuzzy matching algorithm to use (case-insensitive).\n"
+            f"\t Options: {', '.join(sorted(VALID_FUZZY_ALGO_NAMES))}.\n"
+            f"\t Aliases: {', '.join(sorted(VALID_FUZZY_ALGO_ALIASES))}."
         ),
     )
 
@@ -221,9 +223,9 @@ def create_parser() -> argparse.ArgumentParser:
         choices=VALID_NORMALIZATION_PROFILES,
         default=None,
         help=(
-            "Character normalization profile to apply before matching. "
-            "Options: raw, light, medium, aggressive. "
-            f"Default: {DEFAULT_NORMALIZATION_PROFILE}."
+            "Character normalization profile to apply before matching.\n"
+            "\t Options: raw, light, medium, aggressive. "
+            f"\t Default: {DEFAULT_NORMALIZATION_PROFILE}."
         ),
     )
 
@@ -236,7 +238,7 @@ def create_parser() -> argparse.ArgumentParser:
         choices=VALID_OUTPUT_FORMATS,
         default=DEFAULT_OUTPUT_FORMAT,
         help=(
-            "Output format: "
+            "Output format:\n"
             "'text' for human-friendly table (default), 'json' for structured output."
         ),
     )
@@ -254,9 +256,9 @@ def create_parser() -> argparse.ArgumentParser:
         type=validate_show_score,
         default=None,
         help=(
-            "Whether to show similarity scores for fuzzy matches. "
-            "Accepts: true, false, 1, 0, yes, no (case-insensitive). "
-            f"Default: {DEFAULT_SHOW_SCORE}."
+            "Whether to show similarity scores for fuzzy matches.\n"
+            "\t Accepts: true, false, 1, 0, yes, no (case-insensitive).\n"
+            f"\t Default: {DEFAULT_SHOW_SCORE}."
         ),
     )
 
