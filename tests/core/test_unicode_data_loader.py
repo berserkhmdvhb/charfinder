@@ -11,6 +11,7 @@ from typing import Any
 from urllib.error import URLError
 from _pytest.monkeypatch import MonkeyPatch
 from unittest.mock import MagicMock
+
 from charfinder.core.unicode_data_loader import (
     load_alternate_names,
     validate_files_and_url,
@@ -22,6 +23,16 @@ from charfinder.config.constants import (
     ALT_NAME_INDEX,
     EXPECTED_MIN_FIELDS,
 )
+from charfinder.config.settings import get_root_dir
+
+# ---------------------------------------------------------------------
+# Autouse fixture: isolate root for this test module
+# ---------------------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def _use_isolated_root(setup_test_root: Callable[[], Path]) -> None:
+    """Ensure CHARFINDER_ROOT_DIR_FOR_TESTS is isolated for all tests."""
+    setup_test_root()
 
 
 # ---------------------------------------------------------------------
@@ -116,7 +127,6 @@ def test_load_unicode_data_from_file_failure(tmp_path: Path) -> None:
 # parse_unicode_data
 # ---------------------------------------------------------------------
 
-
 def test_parse_unicode_data_valid() -> None:
     """It should return a dictionary mapping character to alternate name."""
     code_point = "0041"
@@ -132,24 +142,22 @@ def test_parse_unicode_data_valid() -> None:
     expected = {chr(int(code_point, 16)): name}
     assert result == expected, f"Expected {expected}, got {result}"
 
+
 # ---------------------------------------------------------------------
 # load_alternate_names (integration-style)
 # ---------------------------------------------------------------------
 
 def test_load_alternate_names_local(
     monkeypatch: MonkeyPatch,
-    setup_test_root: Callable[[], Path],
     load_fresh_settings: None,
 ) -> None:
     """It should return parsed dict if local file exists."""
-    # 10 fields
     fields = [""] * 19
     fields[0] = "0041"
     fields[10] = "LATIN CAPITAL LETTER A"
     test_data = ";".join(fields) + "\n"
-    print(test_data.count(";"))
-    root = setup_test_root()
-    unicode_file = root / "UnicodeData.txt"
+
+    unicode_file = get_root_dir() / "UnicodeData.txt"
     unicode_file.write_text(test_data)
 
     monkeypatch.setattr("charfinder.core.unicode_data_loader.get_unicode_data_file", lambda: unicode_file)

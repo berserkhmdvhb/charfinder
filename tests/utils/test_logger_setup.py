@@ -23,6 +23,17 @@ from charfinder.utils.logger_helpers import (
 )
 
 # ---------------------------------------------------------------------
+# Autouse Fixture: Isolate CHARFINDER_ROOT_DIR_FOR_TESTS for this module
+# ---------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _use_isolated_root(setup_test_root: Callable[[], Path]) -> None:
+    """Ensure CHARFINDER_ROOT_DIR_FOR_TESTS is isolated for all tests."""
+    setup_test_root()
+
+
+# ---------------------------------------------------------------------
 # setup_logging() Tests
 # ---------------------------------------------------------------------
 
@@ -155,10 +166,10 @@ def test_handlers_always_include_filters(
 # ---------------------------------------------------------------------
 
 
-def test_teardown_logger_removes_all_handlers() -> None:
+def test_teardown_logger_removes_all_handlers(temp_log_dir: Path) -> None:
     """teardown_logger should remove all handlers."""
     logger = get_logger()
-    setup_logging(reset=True)
+    setup_logging(log_dir=temp_log_dir, reset=True)
     assert logger.hasHandlers()
     teardown_logger()
     assert not logger.hasHandlers()

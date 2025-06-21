@@ -3,6 +3,7 @@
 import json
 import sys
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any, IO
 from unittest.mock import patch
 
@@ -12,8 +13,19 @@ from charfinder.core.name_cache import (
     BuildCacheOptions,
     CacheIOOptions,
     build_name_cache,
-    _save_cache_with_retries
+    _save_cache_with_retries,
 )
+
+# ---------------------------------------------------------------------
+# Root Isolation
+# ---------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _use_isolated_root(setup_test_root: Callable[[], Path]) -> None:
+    """Ensure CHARFINDER_ROOT_DIR_FOR_TESTS is isolated for all tests."""
+    setup_test_root()
+
 
 # ---------------------------------------------------------------------
 # Fixtures
@@ -67,8 +79,6 @@ def test_load_existing_cache_invalid_json(dummy_cache_path: Path) -> None:
 
 
 def test_save_cache_success(tmp_path: Path) -> None:
-    from charfinder.core.name_cache import _save_cache_with_retries
-
     path = tmp_path / "save_test.json"
     options = CacheIOOptions(use_color=False, show=False, retry_attempts=2, retry_delay=0)
     data = {"✔": {"original": "HEAVY CHECK MARK", "normalized": "heavy check mark"}}
@@ -79,7 +89,6 @@ def test_save_cache_success(tmp_path: Path) -> None:
     assert saved == data
 
 
-
 def test_save_cache_with_retries(tmp_path: Path) -> None:
     """Test that _save_cache_with_retries retries and raises if writing fails."""
     path = tmp_path / "retry.json"
@@ -88,9 +97,14 @@ def test_save_cache_with_retries(tmp_path: Path) -> None:
 
     original_open = Path.open
 
-    def flaky_open(self: Path, mode: str = "r", buffering: int = -1,
-                   encoding: str | None = None, errors: str | None = None,
-                   newline: str | None = None) -> IO[str]:
+    def flaky_open(
+        self: Path,
+        mode: str = "r",
+        buffering: int = -1,
+        encoding: str | None = None,
+        errors: str | None = None,
+        newline: str | None = None,
+    ) -> IO[str]:
         if "w" in mode:
             raise OSError("Simulated write failure")
         return original_open(self, mode, buffering, encoding, errors, newline)
@@ -98,6 +112,7 @@ def test_save_cache_with_retries(tmp_path: Path) -> None:
     with patch("pathlib.Path.open", new=flaky_open):
         with pytest.raises(OSError, match="Failed to write cache to"):
             _save_cache_with_retries(data, path, options=options)
+
 
 # ---------------------------------------------------------------------
 # build_name_cache() Tests

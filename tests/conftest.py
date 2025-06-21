@@ -37,6 +37,7 @@ __all__ = [
     "clear_charfinder_env",
     "load_fresh_settings",
     "setup_test_root",
+    "use_isolated_test_root",
     "patch_env",
     "temp_log_dir",
     "log_stream",
