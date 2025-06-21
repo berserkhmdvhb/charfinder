@@ -260,7 +260,7 @@ charfinder/
 │
 └── tests/                           # Unit and integration tests
     ├── cli/                         # CLI test modules
-    ├── config/                       # Config/settings/types tests
+    ├── config/                      # Config/settings/types tests
     ├── core/                        # Core logic tests
     ├── logger/                      # Logging-related tests
     ├── conftest.py                  # Shared test fixtures and utilities
