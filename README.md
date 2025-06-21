@@ -260,9 +260,9 @@ charfinder/
 │
 └── tests/                           # Unit and integration tests
     ├── cli/                         # CLI test modules
+    ├── config/                       # Config/settings/types tests
     ├── core/                        # Core logic tests
     ├── logger/                      # Logging-related tests
-    ├── test_settings.py             # Config/settings tests
     ├── conftest.py                  # Shared test fixtures and utilities
     └── manual/demo.ipynb            # Manual usage and demo notebook
 ```
