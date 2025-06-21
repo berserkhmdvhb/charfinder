@@ -21,7 +21,7 @@ Designed for both technical and non-technical users, CharFinder enables reliable
    * [3.1 📂 Structure](#31--structure)
    * [3.2 🧱 Architecture](#32--architecture)
 4. [🌐 Unicode and Normalization](#4--unicode--normalization)
-5. [🎯 Exact and Fuzzy Match](#-5-exact-and-fuzzy-match)
+5. [🎯 Matching Engine (Exact & Fuzzy)](#5--matching-engine-exact--fuzzy)
 
    * [Matching Modes Overview](#matching-modes-overview)
    * [Available Fuzzy Algorithms](#available-fuzzy-algorithms)
