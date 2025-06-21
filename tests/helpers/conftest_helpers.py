@@ -27,7 +27,6 @@ __all__ = [
     "invoke_cli",
 ]
 
-
 def invoke_cli(
     args: Sequence[str],
     tmp_path: Path,
@@ -56,6 +55,7 @@ def invoke_cli(
         "CHARFINDER_LOG_MAX_BYTES": "10000",
         "CHARFINDER_LOG_BACKUP_COUNT": "2",
         "CHARFINDER_DEBUG_ENV_LOAD": "0",
+        "CHARFINDER_ROOT_DIR_FOR_TESTS": str(tmp_path.resolve()),
         **(env or {}),
     }
 
@@ -74,6 +74,7 @@ def invoke_cli(
         check=False,
     )
     return result.stdout.strip(), result.stderr.strip(), result.returncode
+
 
 # ---------------------------------------------------------------------
 # Safe dummy handler (for teardown tests)

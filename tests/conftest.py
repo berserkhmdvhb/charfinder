@@ -119,6 +119,7 @@ def setup_test_root(monkeypatch: MonkeyPatch, tmp_path: Path) -> Callable[[], Pa
     """Patch project root to tmp_path and reload settings."""
     def _setup() -> Path:
         monkeypatch.setenv("CHARFINDER_ROOT_DIR_FOR_TESTS", str(tmp_path.resolve()))
+        monkeypatch.setenv("CHARFINDER_ENV", "TEST")
         import charfinder.config.settings as sett
         importlib.reload(sett)
         sett.load_settings()
@@ -245,3 +246,4 @@ def fail_unlink_for() -> Callable[[Path], ContextManager[None]]:
 
         return _context()
     return _mock
+
