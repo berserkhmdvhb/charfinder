@@ -173,12 +173,16 @@ To isolate test directory, use fixture `setup_test_root`:
 
 
 First in input of test function use like this:
-`setup_test_root: Callable[[], Path]`
+```python
+setup_test_root: Callable[[], Path]
+```
 
 Then call it like this:
 
-`root = setup_test_root()`
-`unicode_file = root / "UnicodeData.txt"`
+```python
+root = setup_test_root()
+unicode_file = root / "UnicodeData.txt"
+```
 
 For logging, it is set like this:
 
