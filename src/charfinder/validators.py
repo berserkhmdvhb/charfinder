@@ -91,6 +91,7 @@ from charfinder.utils.logger_styles import format_warning
 # ------------------------------------------------------------------------
 
 ERROR_INVALID_THRESHOLD = "Invalid threshold used."
+ERROR_INVALID_THRESHOLD_TYPE = "Threshold must be a float or int."
 ERROR_INVALID_CACHE_PATH = "Cache file path does not exist"
 ERROR_INVALID_NAME = "Normalized name must be a non-empty string"
 ERROR_EXPECTED_BOOL = "Expected a boolean value"
@@ -280,11 +281,14 @@ def _validate_threshold_internal(threshold: float) -> float:
         float: The validated threshold.
 
     Raises:
+        TypeError: If the input is not a float or int.
         ValueError: If the threshold is outside the range [0.0, 1.0].
     """
+    if not isinstance(threshold, (float, int)):
+        raise TypeError(ERROR_INVALID_THRESHOLD_TYPE)
     if threshold < 0.0 or threshold > 1.0:
         raise ValueError(ERROR_INVALID_THRESHOLD)
-    return threshold
+    return float(threshold)
 
 
 def threshold_range(value: str) -> float:
