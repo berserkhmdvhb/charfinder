@@ -10,6 +10,7 @@ Covers:
 
 from __future__ import annotations
 
+from io import StringIO
 import logging
 import time
 from collections.abc import Callable, Generator
@@ -61,11 +62,11 @@ def test_suppress_console_logging_restores_state() -> None:
 # EnvironmentFilter Tests
 # ---------------------------------------------------------------------
 
-def test_environment_filter_adds_env(patch_env: Callable[[str], None]) -> None:
+def test_environment_filter_adds_env(patch_env_name: Callable[[str], None]) -> None:
     """EnvironmentFilter adds the environment field to log records."""
     record = logging.LogRecord("x", logging.INFO, "", 0, "msg", None, None)
     env_filter = lh.EnvironmentFilter()
-    patch_env("DEV_TEST")
+    patch_env_name("DEV_TEST")
     assert env_filter.filter(record)
     assert getattr(record, "env", None) == "DEV_TEST"
 
@@ -175,8 +176,9 @@ def test_do_rollover_opens_new_stream(tmp_path: Path) -> None:
 
 def test_do_rollover_warns_on_unlink_fail(
     tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
     fail_unlink_for: Callable[[Path], ContextManager[None]],
+    debug_logger: logging.Logger,
+    log_stream: StringIO,
 ) -> None:
     """do_rollover logs a warning if a file cannot be deleted."""
     base_file = tmp_path / "charfinder.log"
@@ -190,5 +192,6 @@ def test_do_rollover_warns_on_unlink_fail(
         with fail_unlink_for(failing_file):
             handler.do_rollover()
 
-    err = capsys.readouterr().err
-    assert f"Failed to delete old log file: {failing_file}" in err
+    logs = log_stream.getvalue()
+    assert "Failed to delete old log file" in logs
+    assert str(failing_file) in logs

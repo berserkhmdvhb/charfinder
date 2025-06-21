@@ -17,6 +17,11 @@ from charfinder.config.constants import EXIT_CANCELLED, EXIT_ERROR, EXIT_SUCCESS
 from charfinder.config.types import FuzzyConfig, MatchResult
 
 
+# ---------------------------------------------------------------------
+# Autouse Fixture: Isolate CHARFINDER_ROOT_DIR_FOR_TESTS for this module
+# ---------------------------------------------------------------------
+
+
 @pytest.fixture(autouse=True)
 def _use_isolated_root(setup_test_root: Callable[[], Path]) -> None:
     """Ensure CHARFINDER_ROOT_DIR_FOR_TESTS is isolated for all tests."""
@@ -139,7 +144,7 @@ def test_handle_cli_workflow_keyboard_interrupt(
     print("----------------------")
     assert any("interrupted by user" in msg for msg in called_msgs)
 
-
+    
 @patch("charfinder.cli.utils_runner.get_logger")
 @patch("charfinder.cli.utils_runner.teardown_logger")
 @patch("charfinder.cli.utils_runner.handle_find_chars", side_effect=RuntimeError("BOOM"))
@@ -150,16 +155,17 @@ def test_handle_cli_workflow_unhandled_exception_debug_on(
     mock_teardown: MagicMock,
     mock_logger: MagicMock,
     capsys: pytest.CaptureFixture[str],
+    set_env: Callable[[str, str], None],
+    setup_test_root: Callable[[], Path],
 ) -> None:
     """Handles unexpected errors and prints full traceback when debug=True."""
+    tmp_root = setup_test_root()
+    set_env("CHARFINDER_ROOT_DIR_FOR_TESTS", str(tmp_root))
+
     args = Namespace(verbose=True, debug=True, color="auto", threshold=0.75)
 
     exit_code = utils_runner.handle_cli_workflow(args, query_str="fail", use_color=True)
     captured = capsys.readouterr()
-
-    print("---- STDERR ----")
-    print(captured.err)
-    print("---- END STDERR ----")
 
     assert exit_code == EXIT_ERROR
     assert "Unhandled error during CLI execution" in captured.err

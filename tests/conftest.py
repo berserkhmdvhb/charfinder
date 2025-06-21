@@ -130,12 +130,18 @@ def setup_test_root(monkeypatch: MonkeyPatch, tmp_path: Path) -> Callable[[], Pa
 # ---------------------------------------------------------------------
 
 @pytest.fixture
-def patch_env(monkeypatch: MonkeyPatch) -> Callable[[str], None]:
+def patch_env_name(monkeypatch: MonkeyPatch) -> Callable[[str], None]:
     """Patch CHARFINDER_ENV dynamically (e.g., to 'UAT', 'PROD')."""
     def _patch(env_name: str) -> None:
         monkeypatch.setenv("CHARFINDER_ENV", env_name)
     return _patch
 
+@pytest.fixture
+def set_env(monkeypatch: MonkeyPatch) -> Callable[[str, str], None]:
+    """Set any environment variable key/value pair."""
+    def _set(key: str, value: str) -> None:
+        monkeypatch.setenv(key, value)
+    return _set
 # ---------------------------------------------------------------------
 # Logging Fixtures
 # ---------------------------------------------------------------------

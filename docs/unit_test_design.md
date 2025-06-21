@@ -113,7 +113,7 @@ Centralized in `conftest.py`:
 ### Fixture Internals
 
 * `load_fresh_settings()` is used to ensure settings are not cached between test runs. Without this, reused `BaseSettings` instances could carry over old `.env` data.
-* `patch_env()` lets you inject `CHARFINDER_` keys without impacting the real environment.
+* `patch_env_name()` lets you inject `CHARFINDER_` keys without impacting the real environment.
 * `log_stream` is used in tandem with `debug_logger` to assert on actual logs.
 * `setup_test_root()` ensures temp folders are used for `logs/` and `.env` files, to prevent polluting the real project root.
 

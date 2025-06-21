@@ -43,9 +43,9 @@ def test_get_environment(monkeypatch: pytest.MonkeyPatch, env_value: str | None,
     assert settings.get_environment() == expected
 
 
-def test_env_helpers(patch_env: Callable[[str], None], monkeypatch: pytest.MonkeyPatch) -> None:
+def test_env_helpers(patch_env_name: Callable[[str], None], monkeypatch: pytest.MonkeyPatch) -> None:
     # DEV case – unset PYTEST_CURRENT_TEST to allow is_test() to be False
-    patch_env("DEV")
+    patch_env_name("DEV")
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
     assert settings.is_dev()
     assert not settings.is_uat()
@@ -54,15 +54,15 @@ def test_env_helpers(patch_env: Callable[[str], None], monkeypatch: pytest.Monke
     assert not settings.is_test()
 
     # UAT
-    patch_env("UAT")
+    patch_env_name("UAT")
     assert settings.is_uat()
 
     # PROD
-    patch_env("PROD")
+    patch_env_name("PROD")
     assert settings.is_prod()
 
     # TEST
-    patch_env("TEST")
+    patch_env_name("TEST")
     assert settings.is_test_mode()
     assert settings.is_test()
 
