@@ -7,7 +7,7 @@
         env-check env-debug env-clear env-show dotenv-debug env-example \
         safety check-updates check-toml \
         clean clean-logs clean-cache clean-coverage clean-build clean-pyc clean-all \
-        build publish publish-test publish-dryrun upload-coverage
+        build publish publish-test upload-coverage
 
 
 # -------------------------------------------------------------------
@@ -73,8 +73,7 @@ help::
 	@echo "  clean-all              Remove all build, test, cache, and log artifacts"
 	@echo ""
 	@echo "  build                  Build package for distribution"
-	@echo "  publish-test           Upload to TestPyPI"
-	@echo "  publish-dryrun         Validate and simulate TestPyPI upload (dry run)"
+	@echo "  publish-test           Validate upload to TestPyPI (dry run)"
 	@echo "  publish                Upload to PyPI"
 	@echo "  upload-coverage        Upload coverage report to Coveralls"
 
@@ -237,7 +236,7 @@ clean-all: clean-logs clean-cache clean-coverage clean-build clean-pyc
 build:
 	$(PYTHON) -m build
 
-publish-dryrun:
+publish-test:
 	twine check dist/*
 	twine upload --repository testpypi --skip-existing --non-interactive dist/*
 
