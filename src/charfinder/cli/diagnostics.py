@@ -27,11 +27,13 @@ from charfinder.config.messages import (
     MSG_DEBUG_DOTENV_END,
     MSG_DEBUG_DOTENV_LOADED_FILES,
     MSG_DEBUG_DOTENV_READ_ERROR,
+    MSG_DEBUG_DOTENV_SELECTED,
     MSG_DEBUG_DOTENV_START,
     MSG_DEBUG_ENV_VAR,
     MSG_DEBUG_NO_DOTENV_FOUND,
     MSG_DEBUG_PARSED_ARGS,
     MSG_DEBUG_SECTION_END,
+    MSG_DEBUG_SECTION_START,
 )
 from charfinder.config.settings import resolve_dotenv_path
 from charfinder.config.types import MatchDiagnosticsInfo
@@ -85,7 +87,7 @@ def print_debug_diagnostics(
         use_color: Whether to apply ANSI formatting
         show: If True, print to terminal; always logged.
     """
-    _debug_echo(msg=MSG_DEBUG_DOTENV_START, use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_SECTION_START, use_color=use_color, show=show)
 
     _debug_echo(msg=MSG_DEBUG_PARSED_ARGS, use_color=use_color, show=show)
     for key, value in sorted(vars(args).items()):
@@ -144,7 +146,7 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
         return
 
     _debug_echo(
-        msg=MSG_DEBUG_NO_DOTENV_FOUND.format(path=dotenv_path), use_color=use_color, show=show
+        msg=MSG_DEBUG_DOTENV_SELECTED.format(path=dotenv_path), use_color=use_color, show=show
     )
 
     try:

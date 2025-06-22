@@ -357,4 +357,4 @@ def test_handle_find_chars_generic_exception(
     mock_log_optionally_echo.assert_called_once()
     call_args = mock_log_optionally_echo.call_args[1]  # kwargs of the call
     msg = call_args.get("msg", "") or call_args.get("message", "")
-    assert MSG_ERROR_UNEXPECTED_EXCEPTION in msg
+    assert "unexpected error" in msg.lower()

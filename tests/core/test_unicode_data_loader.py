@@ -11,6 +11,7 @@ Covers download fallback, file loading, and parsing logic for UnicodeData.txt.
 import pytest
 from collections.abc import Callable
 from pathlib import Path
+import re
 from typing import Any
 from urllib.error import URLError
 from _pytest.monkeypatch import MonkeyPatch
@@ -22,11 +23,14 @@ from charfinder.core.unicode_data_loader import (
     load_unicode_data_from_file,
     parse_unicode_data,
 )
+from charfinder.config.settings import get_root_dir
 from charfinder.config.constants import (
     ALT_NAME_INDEX,
     EXPECTED_MIN_FIELDS,
 )
-from charfinder.config.settings import get_root_dir
+from charfinder.config.messages import(
+    MSG_ERROR_UNSUPPORTED_URL_SCHEME,
+)
 
 # ---------------------------------------------------------------------
 # Autouse fixture: isolate root for this test module
@@ -76,7 +80,8 @@ def test_download_and_cache_unicode_data_failure(monkeypatch: MonkeyPatch, tmp_p
 def test_download_and_cache_unicode_data_invalid_scheme(tmp_path: Path) -> None:
     """It should raise ValueError on invalid URL scheme."""
     file_path = tmp_path / "UnicodeData.txt"
-    with pytest.raises(ValueError, match=r"Invalid URL scheme.*Only HTTP/HTTPS are allowed"):
+    expected_pattern = MSG_ERROR_UNSUPPORTED_URL_SCHEME.split("{")[0]
+    with pytest.raises(ValueError, match=rf"{re.escape(expected_pattern)}.*Only HTTP/HTTPS are allowed"):
         download_and_cache_unicode_data("ftp://example.com/file", file_path)
 
 # ---------------------------------------------------------------------

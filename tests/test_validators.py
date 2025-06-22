@@ -7,6 +7,7 @@ import re
 from charfinder.config import constants as C
 from charfinder.config import messages as M
 from charfinder import validators as V
+from charfinder.fuzzymatchlib import FUZZY_ALGORITHM_REGISTRY
 
 # ---------------------------------------------------------------------
 # Fuzzy Algorithm Validation
@@ -20,8 +21,14 @@ def test_validate_fuzzy_algo_accepts_valid(algo: str) -> None:
 
 def test_validate_fuzzy_algo_rejects_invalid() -> None:
     """Should raise ValueError for unsupported algorithms."""
-    with pytest.raises(ValueError, match="Unknown or unsupported fuzzy algorithm"):
-        V.validate_fuzzy_algo("notarealalgo")
+    invalid_algo = "notarealalgo"
+    valid_options = sorted(set(C.FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
+    expected_msg = M.MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(
+        name=invalid_algo,
+        valid_options=", ".join(valid_options),
+    )
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        V.validate_fuzzy_algo(invalid_algo)
 
 
 # ---------------------------------------------------------------------

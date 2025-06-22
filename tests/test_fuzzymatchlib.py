@@ -108,8 +108,9 @@ def test_resolve_algorithm_name_invalid() -> None:
     valid_options = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
     expected_msg = MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(
         name=invalid_name,
-        valid_options=valid_options,
+        valid_options=", ".join(valid_options),
     )
+    print(f"[TEST expected message: {expected_msg}] ")
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
         resolve_algorithm_name(invalid_name)
 # ---------------------------------------------------------------------
@@ -140,6 +141,10 @@ def test_compute_similarity_with_invalid_mode() -> None:
 def test_compute_similarity_with_unregistered_algorithm() -> None:
     """It should raise ValueError if the algorithm is not in the registry."""
     algorithm = "unknown"
-    expected_msg = MSG_ERROR_ALGO_NOT_FOUND.format(algorithm=algorithm)
+    valid_options = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
+    expected_msg = MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(
+        name=algorithm,
+        valid_options=", ".join(valid_options),
+    )
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
         compute_similarity("a", "b", algorithm=algorithm)  # type: ignore

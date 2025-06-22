@@ -221,9 +221,9 @@ def resolve_algorithm_name(name: str) -> FuzzyAlgorithm:
     if normalized in FUZZY_ALGORITHM_REGISTRY:
         return cast("FuzzyAlgorithm", normalized)
 
-    valid_inputs = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
+    valid_options = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
     raise ValueError(
-        MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(name=name, valid_options=", ".join(valid_inputs))
+        MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(name=name, valid_options=", ".join(valid_options))
     )
 
 

@@ -138,8 +138,8 @@ def test_build_name_cache_valid(tmp_path: Path) -> None:
 
 
 def test_build_name_cache_invalid_path_type() -> None:
-    bad_options = BuildCacheOptions(cache_file_path="not_a_path")  # type: ignore[arg-type]
-    with pytest.raises(ValueError, match="cache_file_path must be a valid Path object"):
+    bad_options = BuildCacheOptions(cache_file_path=12345)  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="cache_file_path must be a valid Path object"):
         build_name_cache(options=bad_options)
 
 

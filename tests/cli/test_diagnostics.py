@@ -18,6 +18,14 @@ from charfinder.config.messages import (
     MSG_DEBUG_DOTENV_SELECTED,
     MSG_DEBUG_DOTENV_ITEM,
     MSG_DEBUG_OS_ENV_ONLY,
+    MSG_DEBUG_SECTION_START,
+    MSG_DEBUG_PARSED_ARGS,
+    MSG_DEBUG_ARG_ITEM,
+    MSG_DEBUG_DOTENV_LOADED_FILES,
+    MSG_DEBUG_EXACT_EXECUTED,
+    MSG_DEBUG_DOTENV_START,
+    MSG_DEBUG_SECTION_END,
+    MSG_DEBUG_EXACT_MODE,
 )
 
 @pytest.fixture()
@@ -53,12 +61,12 @@ def test_print_debug_diagnostics_outputs_expected(monkeypatch: MonkeyPatch, mock
     diagnostics.print_debug_diagnostics(args, match_info=None, use_color=False, show=True)
 
     joined = "\n".join(mock_echo)
-    assert "=== DEBUG DIAGNOSTICS ===" in joined
-    assert "Parsed args:" in joined
-    assert "CHARFINDER_DEBUG_ENV_LOAD = 1" in joined
-    assert "Loaded .env file(s):" in joined
-    assert "=== DOTENV DEBUG ===" in joined
-    assert "=== END DEBUG DIAGNOSTICS ===" in joined
+    assert MSG_DEBUG_SECTION_START in joined
+    assert MSG_DEBUG_PARSED_ARGS in joined
+    assert MSG_DEBUG_ARG_ITEM.format(key="CHARFINDER_DEBUG_ENV_LOAD", value="1") in joined
+    assert MSG_DEBUG_DOTENV_LOADED_FILES in joined
+    assert MSG_DEBUG_DOTENV_START in joined
+    assert MSG_DEBUG_SECTION_END in joined
 
 
 def test_print_debug_diagnostics_with_match_info(mock_echo: List[str]) -> None:
@@ -76,8 +84,8 @@ def test_print_debug_diagnostics_with_match_info(mock_echo: List[str]) -> None:
     )
     diagnostics.print_debug_diagnostics(args, match_info=info, use_color=False, show=True)
 
-    assert "Exact match strategy executed." in mock_echo
-    assert "Exact match mode: 'prefix'" in mock_echo
+    assert MSG_DEBUG_EXACT_EXECUTED in mock_echo
+    assert MSG_DEBUG_EXACT_MODE.format(mode="prefix") in mock_echo
 
 
 # ---------------------------------------------------------------------
@@ -92,7 +100,7 @@ def test_print_dotenv_debug_with_existing_file(tmp_path: Path, monkeypatch: Monk
 
     monkeypatch.setenv("DOTENV_PATH", str(dotenv_path))
     diagnostics.print_dotenv_debug(use_color=False, show=True)
-
+    print(f"[TEST:] {mock_echo}")
     assert MSG_DEBUG_DOTENV_SELECTED.format(path=dotenv_path) in mock_echo
     assert MSG_DEBUG_DOTENV_ITEM.format(key="CHARFINDER_LOG_MAX_BYTES", value="123456") in mock_echo
     assert MSG_DEBUG_DOTENV_ITEM.format(key="CHARFINDER_ENV", value="UAT") in mock_echo
@@ -122,14 +130,14 @@ def test_print_dotenv_debug_file_missing(monkeypatch: MonkeyPatch, mock_echo: Li
     assert MSG_DEBUG_NO_DOTENV_FOUND in joined
     assert MSG_DEBUG_OS_ENV_ONLY in joined
 
-
 def test_print_dotenv_debug_invalid_encoding(tmp_path: Path, monkeypatch: MonkeyPatch, mock_echo: List[str]) -> None:
     """Should catch UnicodeDecodeError gracefully."""
     path = tmp_path / ".env"
-    path.write_bytes(b"\xff\xfe\xfd")
+    path.write_bytes(b"\xff\xfe\xfd")  # invalid UTF-8
 
     monkeypatch.setenv("DOTENV_PATH", str(path))
     diagnostics.print_dotenv_debug(use_color=False, show=True)
 
-    joined = "\n".join(mock_echo)
-    assert MSG_DEBUG_DOTENV_READ_ERROR in joined
+    # Check that the error was reported
+    assert any("Failed to read .env file:" in line for line in mock_echo)
+    assert MSG_DEBUG_DOTENV_END in mock_echo

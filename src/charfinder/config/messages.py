@@ -26,7 +26,7 @@ MSG_ERROR_EXCEPTION_DETAIL = "Error: {error}"
 MSG_DEBUG_SECTION_START = "=== DEBUG DIAGNOSTICS ==="
 MSG_DEBUG_SECTION_END = "=== END DEBUG DIAGNOSTICS ==="
 MSG_DEBUG_PARSED_ARGS = "Parsed args:"
-MSG_DEBUG_ARG_ITEM = "\t{key:<20} = {value}"
+MSG_DEBUG_ARG_ITEM = "{key:<20} = {value}"
 MSG_DEBUG_ENV_VAR = "\t{env_var} = {value}"
 MSG_DEBUG_DOTENV_LOADED_FILES = "Loaded .env file(s):"
 
@@ -37,7 +37,7 @@ MSG_DEBUG_OS_ENV_ONLY = "Environment variables may only be coming from the OS."
 MSG_DEBUG_DOTENV_SELECTED = "Selected .env file: {path}"
 MSG_DEBUG_DOTENV_EMPTY = ".env file exists but is empty or contains no key-value pairs."
 MSG_DEBUG_DOTENV_READ_ERROR = "Failed to read .env file: {error}"
-MSG_DEBUG_DOTENV_ITEM = "\t{key} = {value}"
+MSG_DEBUG_DOTENV_ITEM = "{key:<20} = {value}"
 
 
 # diagnostics_match.py
@@ -53,7 +53,7 @@ MSG_DEBUG_FUZZY_MODE = "Fuzzy match mode: {mode!r}"
 MSG_DEBUG_FUZZY_ALGO = "Fuzzy algorithm: {algo!r}"
 MSG_DEBUG_HYBRID_AGG_FN = "Aggregation function: {agg_fn!r}"
 MSG_DEBUG_HYBRID_ALGOS_HEADER = "Fuzzy algorithms used:"
-MSG_DEBUG_HYBRID_ALGO_WEIGHT = "\t{algo:<22} (weight={weight})"
+MSG_DEBUG_HYBRID_ALGO_WEIGHT = "{algo:<22} (weight={weight})"
 
 MSG_DEBUG_FUZZY_NOT_REQUESTED = "Fuzzy matching was not requested."
 MSG_DEBUG_PREFER_FUZZY_USED_EXACT = "Fuzzy was preferred but exact match was used."
@@ -117,7 +117,7 @@ MSG_WARNING_WRITE_RETRY = (
 MSG_ERROR_VALIDATION_FAILED = "Validation failed: {error!s}"
 MSG_ERROR_INVALID_URL = "Invalid URL: {url}"
 MSG_ERROR_UNSUPPORTED_URL_SCHEME = (
-    "Unsupported URL scheme '{scheme}' in: {url}. Only HTTP/HTTPS are allowed."
+    "Invalid URL scheme '{scheme}' in: {url}. Only HTTP/HTTPS are allowed."
 )
 MSG_INFO_DOWNLOAD_SUCCESS = 'Downloaded and cached "UnicodeData.txt" from {url}'
 MSG_WARNING_DOWNLOAD_FAILED = (

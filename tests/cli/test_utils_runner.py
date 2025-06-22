@@ -130,10 +130,8 @@ def test_handle_cli_workflow_success(
 
     exit_code = utils_runner.handle_cli_workflow(args, query_str="✓", use_color=True)
     assert exit_code == EXIT_SUCCESS
-
-    # Ensure startup echo message includes version
-    called_msgs = [call.args[0] for call in mock_echo.call_args_list]
-    assert any("CharFinder TEST_VERSION CLI started" in msg for msg in called_msgs)
+    called_msgs = [call.kwargs.get("msg") for call in mock_echo.call_args_list]
+    assert any(isinstance(msg, str) and "CharFinder TEST_VERSION CLI started" in msg for msg in called_msgs)
 
 
 @patch("charfinder.cli.utils_runner.echo")
@@ -154,8 +152,8 @@ def test_handle_cli_workflow_keyboard_interrupt(
     assert exit_code == EXIT_CANCELLED
 
     # Validate echo was called with a message mentioning interruption
-    called_msgs = [call.args[0] for call in mock_echo.call_args_list]
-    assert any(MSG_WARNING_INTERRUPTED in msg for msg in called_msgs)
+    called_msgs = [call.kwargs.get("msg") for call in mock_echo.call_args_list]
+    assert any(isinstance(msg, str) and MSG_WARNING_INTERRUPTED in msg for msg in called_msgs)
 
 
 @patch("charfinder.cli.utils_runner.get_logger")
