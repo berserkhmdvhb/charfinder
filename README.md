@@ -48,11 +48,6 @@ Designed for both technical and non-technical users, CharFinder enables reliable
    * [🔧 Makefile Commands](#-makefile-commands)
    * [🗒️ Onboarding Tips](#-onboarding-tips)
 10. [⚡ Performance](#-10-performance)
-
-    * [Key Optimizations](#key-optimizations)
-    * [Benchmarks (Informal)](#benchmarks-informal)
-    * [Profiling Tips](#profiling-tips)
-    * [Future Improvements](#future-improvements)
 11. [🚧 Limitations and Known Issues](#-11-limitations-and-known-issues)
 12. [📖 Documentation](#-12-documentation)
 13. [🧾 License](#-13-license)
