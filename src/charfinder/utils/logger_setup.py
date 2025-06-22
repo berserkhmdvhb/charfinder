@@ -34,6 +34,7 @@ import logging
 from pathlib import Path
 
 from charfinder.config import constants as const
+from charfinder.config.messages import MSG_INFO_LOGGING_INITIALIZED
 from charfinder.config.settings import (
     get_log_backup_count,
     get_log_dir,
@@ -173,12 +174,10 @@ def setup_logging(  # noqa: PLR0913
 
     # Final confirmation log after all handlers are attached
     if not suppress_echo:
-        message = (
-            f'Logging initialized. Log file: "{log_file_path}" '
-            f"(maxBytes={max_bytes}, backupCount={backup_count})"
-        )
         echo(
-            msg=message,
+            msg=MSG_INFO_LOGGING_INITIALIZED.format(
+                path=log_file_path, max_bytes=max_bytes, backup_count=backup_count
+            ),
             style=lambda m: format_settings(m, use_color=use_color),
             show=True,
             log=False,

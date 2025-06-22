@@ -7,7 +7,19 @@ import pytest
 
 from charfinder.cli import diagnostics_match
 from charfinder.config.types import MatchDiagnosticsInfo
-
+from charfinder.config.messages import (
+    MSG_DEBUG_MATCH_SECTION_START,
+    MSG_DEBUG_EXACT_EXECUTED,
+    MSG_DEBUG_EXACT_MODE,
+    MSG_DEBUG_MATCH_SECTION_END,
+    MSG_DEBUG_FUZZY_EXECUTED,
+    MSG_DEBUG_HYBRID_ALGOS_HEADER,
+    MSG_DEBUG_HYBRID_AGG_FN,
+    MSG_DEBUG_MATCH_SECTION_END,
+    MSG_DEBUG_FUZZY_ALGO,
+    MSG_DEBUG_PREFER_FUZZY_USED_EXACT,
+    MSG_DEBUG_FUZZY_SKIPPED_DUE_TO_EXACT,
+)
 
 # ---------------------------------------------------------------------
 # Fixtures and Helpers
@@ -44,10 +56,10 @@ def test_print_exact_match_diagnostics_outputs_expected_lines(mock_echo: List[st
     diagnostics_match.print_exact_match_diagnostics(args, use_color=True, show=True)
 
     expected_lines = [
-        "=== MATCH STRATEGY ===",
-        "Exact match strategy executed.",
-        "Exact match mode: 'prefix'",
-        "=== END MATCH STRATEGY ===",
+        MSG_DEBUG_MATCH_SECTION_START,
+        MSG_DEBUG_EXACT_EXECUTED,
+        MSG_DEBUG_EXACT_MODE.format(mode="prefix"),
+        MSG_DEBUG_MATCH_SECTION_END,
     ]
     assert mock_echo == expected_lines
 
@@ -71,7 +83,7 @@ def test_print_fuzzy_match_diagnostics_non_hybrid(mock_echo: List[str]) -> None:
     )
     diagnostics_match.print_fuzzy_match_diagnostics(info, use_color=True, show=True)
 
-    assert "Fuzzy algorithm: 'token_sort_ratio'" in mock_echo
+    assert MSG_DEBUG_FUZZY_ALGO.format(algo="token_sort_ratio") in mock_echo
 
 
 def test_print_fuzzy_match_diagnostics_hybrid(mock_echo: List[str]) -> None:
@@ -88,10 +100,10 @@ def test_print_fuzzy_match_diagnostics_hybrid(mock_echo: List[str]) -> None:
     )
     diagnostics_match.print_fuzzy_match_diagnostics(info, use_color=False, show=True)
 
-    assert "Fuzzy match strategy executed." in mock_echo
-    assert "Fuzzy algorithms used:" in mock_echo
-    assert "Aggregation function: 'weighted_avg'" in mock_echo
-    assert "=== END MATCH STRATEGY ===" in mock_echo
+    assert MSG_DEBUG_FUZZY_EXECUTED in mock_echo
+    assert MSG_DEBUG_HYBRID_ALGOS_HEADER in mock_echo
+    assert MSG_DEBUG_HYBRID_AGG_FN.format(agg_fn='weighted_avg') in mock_echo
+    assert MSG_DEBUG_MATCH_SECTION_END in mock_echo
 
 
 # ---------------------------------------------------------------------
@@ -121,7 +133,7 @@ def test_print_match_diagnostics_exact_used(mock_echo: List[str]) -> None:
     args = Namespace(exact_match_mode="strict")
     diagnostics_match.print_match_diagnostics(args, info, use_color=True, show=True)
 
-    assert "Exact match strategy executed." in mock_echo
+    assert MSG_DEBUG_EXACT_EXECUTED in mock_echo
 
 
 def test_print_match_diagnostics_fuzzy_used(mock_echo: List[str]) -> None:
@@ -139,7 +151,7 @@ def test_print_match_diagnostics_fuzzy_used(mock_echo: List[str]) -> None:
     args = Namespace(exact_match_mode="any")
     diagnostics_match.print_match_diagnostics(args, info, use_color=True, show=True)
 
-    assert "Fuzzy match strategy executed." in mock_echo
+    assert MSG_DEBUG_FUZZY_EXECUTED in mock_echo
 
 
 def test_print_match_diagnostics_fuzzy_skipped_but_preferred(mock_echo: List[str]) -> None:
@@ -157,7 +169,7 @@ def test_print_match_diagnostics_fuzzy_skipped_but_preferred(mock_echo: List[str
     args = Namespace(exact_match_mode="any")
     diagnostics_match.print_match_diagnostics(args, info, use_color=False, show=True)
 
-    assert "Fuzzy was preferred but exact match was used." in mock_echo
+    assert MSG_DEBUG_PREFER_FUZZY_USED_EXACT in mock_echo
 
 
 def test_print_match_diagnostics_fuzzy_skipped_not_preferred(mock_echo: List[str]) -> None:
@@ -175,4 +187,4 @@ def test_print_match_diagnostics_fuzzy_skipped_not_preferred(mock_echo: List[str
     args = Namespace(exact_match_mode="any")
     diagnostics_match.print_match_diagnostics(args, info, use_color=False, show=True)
 
-    assert "Fuzzy requested but skipped due to exact match success." in mock_echo
+    assert MSG_DEBUG_FUZZY_SKIPPED_DUE_TO_EXACT in mock_echo

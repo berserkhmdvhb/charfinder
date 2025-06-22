@@ -16,6 +16,7 @@ import unicodedata
 from typing import Literal
 
 from charfinder.config.constants import DEFAULT_NORMALIZATION_FORM, DEFAULT_NORMALIZATION_PROFILE
+from charfinder.config.messages import MSG_ERROR_NORMALIZATION_FAILED
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error
@@ -75,10 +76,9 @@ def normalize(
         # Step 5: Convert to uppercase
         return text.upper()
 
-    except Exception as e:
-        message = f"Error normalizing text: {e}"
+    except Exception as exc:
         echo(
-            message,
+            MSG_ERROR_NORMALIZATION_FAILED.format(error=exc),
             style=lambda m: format_error(m, use_color=True),
             show=True,
             log=False,

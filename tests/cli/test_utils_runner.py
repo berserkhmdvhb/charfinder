@@ -6,12 +6,13 @@ including workflow execution and logging configuration.
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 from argparse import Namespace
 from typing import Callable
 import pytest
+
+from charfinder.config.messages import MSG_WARNING_INTERRUPTED
 
 # ---------------------------------------------------------------------
 # Imports (after env and fixtures are active)
@@ -153,8 +154,8 @@ def test_handle_cli_workflow_keyboard_interrupt(
     assert exit_code == EXIT_CANCELLED
 
     # Validate echo was called with a message mentioning interruption
-    called_msgs = [call.args[0].lower() for call in mock_echo.call_args_list]
-    assert any("interrupted by user" in msg for msg in called_msgs)
+    called_msgs = [call.args[0] for call in mock_echo.call_args_list]
+    assert any(MSG_WARNING_INTERRUPTED in msg for msg in called_msgs)
 
 
 @patch("charfinder.cli.utils_runner.get_logger")

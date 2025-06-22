@@ -20,6 +20,21 @@ from argparse import Namespace
 from typing import TYPE_CHECKING
 
 from charfinder.config.constants import FUZZY_HYBRID_WEIGHTS
+from charfinder.config.messages import (
+    MSG_DEBUG_EXACT_EXECUTED,
+    MSG_DEBUG_EXACT_MODE,
+    MSG_DEBUG_FUZZY_ALGO,
+    MSG_DEBUG_FUZZY_EXECUTED,
+    MSG_DEBUG_FUZZY_MODE,
+    MSG_DEBUG_FUZZY_NOT_REQUESTED,
+    MSG_DEBUG_FUZZY_SKIPPED_DUE_TO_EXACT,
+    MSG_DEBUG_HYBRID_AGG_FN,
+    MSG_DEBUG_HYBRID_ALGO_WEIGHT,
+    MSG_DEBUG_HYBRID_ALGOS_HEADER,
+    MSG_DEBUG_MATCH_SECTION_END,
+    MSG_DEBUG_MATCH_SECTION_START,
+    MSG_DEBUG_PREFER_FUZZY_USED_EXACT,
+)
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_debug
 
@@ -72,7 +87,7 @@ def print_match_diagnostics(
         return
 
     if not match_info.fuzzy:
-        _debug_echo("Fuzzy matching was not requested.", use_color=use_color, show=show)
+        _debug_echo(msg=MSG_DEBUG_FUZZY_NOT_REQUESTED, use_color=use_color, show=show)
         print_exact_match_diagnostics(args, use_color=use_color, show=show)
         return
 
@@ -81,13 +96,13 @@ def print_match_diagnostics(
     else:
         if match_info.prefer_fuzzy:
             _debug_echo(
-                "Fuzzy was preferred but exact match was used.",
+                msg=MSG_DEBUG_PREFER_FUZZY_USED_EXACT,
                 use_color=use_color,
                 show=show,
             )
         else:
             _debug_echo(
-                "Fuzzy requested but skipped due to exact match success.",
+                msg=MSG_DEBUG_FUZZY_SKIPPED_DUE_TO_EXACT,
                 use_color=use_color,
                 show=show,
             )
@@ -113,14 +128,14 @@ def print_exact_match_diagnostics(
         use_color: ANSI formatting toggle
         show: Terminal output toggle
     """
-    _debug_echo("=== MATCH STRATEGY ===", use_color=use_color, show=show)
-    _debug_echo("Exact match strategy executed.", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_MATCH_SECTION_START, use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_EXACT_EXECUTED, use_color=use_color, show=show)
     _debug_echo(
-        f"Exact match mode: {args.exact_match_mode!r}",
+        msg=MSG_DEBUG_EXACT_MODE.format(mode=args.exact_match_mode),
         use_color=use_color,
         show=show,
     )
-    _debug_echo("=== END MATCH STRATEGY ===", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_MATCH_SECTION_END, use_color=use_color, show=show)
 
 
 # ---------------------------------------------------------------------
@@ -142,32 +157,32 @@ def print_fuzzy_match_diagnostics(
         use_color: ANSI formatting toggle
         show: Terminal output toggle
     """
-    _debug_echo("=== MATCH STRATEGY ===", use_color=use_color, show=show)
-    _debug_echo("Fuzzy match strategy executed.", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_MATCH_SECTION_START, use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_FUZZY_EXECUTED, use_color=use_color, show=show)
     _debug_echo(
-        f"Fuzzy match mode: {match_info.fuzzy_match_mode!r}",
+        msg=MSG_DEBUG_FUZZY_MODE.format(mode=match_info.fuzzy_match_mode),
         use_color=use_color,
         show=show,
     )
 
     if match_info.fuzzy_match_mode == "hybrid":
         _debug_echo(
-            f"Aggregation function: {match_info.hybrid_agg_fn!r}",
+            msg=MSG_DEBUG_HYBRID_AGG_FN.format(agg_fn=match_info.hybrid_agg_fn),
             use_color=use_color,
             show=show,
         )
-        _debug_echo("Fuzzy algorithms used:", use_color=use_color, show=show)
+        _debug_echo(msg=MSG_DEBUG_HYBRID_ALGOS_HEADER, use_color=use_color, show=show)
         for algo, weight in FUZZY_HYBRID_WEIGHTS.items():
             _debug_echo(
-                f"  {algo:<22} (weight={weight})",
+                msg=MSG_DEBUG_HYBRID_ALGO_WEIGHT.format(algo=algo, weight=weight),
                 use_color=use_color,
                 show=show,
             )
     else:
         _debug_echo(
-            f"Fuzzy algorithm: {match_info.fuzzy_algo!r}",
+            msg=MSG_DEBUG_FUZZY_ALGO.format(algo=match_info.fuzzy_algo),
             use_color=use_color,
             show=show,
         )
 
-    _debug_echo("=== END MATCH STRATEGY ===", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_MATCH_SECTION_END, use_color=use_color, show=show)

@@ -30,6 +30,15 @@ from charfinder.config.constants import (
     EXIT_CANCELLED,
     EXIT_ERROR,
 )
+from charfinder.config.messages import (
+    MSG_ERROR_EXCEPTION_DETAIL,
+    MSG_ERROR_UNHANDLED_EXCEPTION,
+    MSG_INFO_CLI_STARTED,
+    MSG_INFO_ENVIRONMENT,
+    MSG_INFO_QUERY_FINISHED,
+    MSG_WARNING_INTERRUPTED,
+    MSG_WARNING_PROD_ENV,
+)
 from charfinder.config.settings import get_environment, is_prod, load_settings
 from charfinder.config.types import (
     FuzzyConfig,
@@ -144,7 +153,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
 
     try:
         echo(
-            f"Using environment: {get_environment()}",
+            msg=MSG_INFO_ENVIRONMENT.format(env=get_environment()),
             style=lambda m: format_settings(m, use_color=use_color),
             show=args.verbose,
             log=True,
@@ -153,7 +162,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
 
         if is_prod():
             echo(
-                "You are running in PROD environment!",
+                msg=MSG_WARNING_PROD_ENV,
                 style=lambda m: format_warning(m, use_color=use_color),
                 stream=sys.stderr,
                 show=True,
@@ -162,7 +171,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
             )
 
         echo(
-            f"CharFinder {get_version()} CLI started",
+            msg=MSG_INFO_CLI_STARTED.format(version=get_version()),
             style=lambda m: format_info(m, use_color=use_color),
             show=args.verbose,
             log=True,
@@ -180,7 +189,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
             )
 
         echo(
-            f"Processing finished. Query: '{query_str}'",
+            msg=MSG_INFO_QUERY_FINISHED.format(query=query_str),
             style=lambda m: format_success(m, use_color=use_color),
             show=args.verbose,
             log=True,
@@ -189,7 +198,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
 
     except KeyboardInterrupt:
         echo(
-            "Execution interrupted by user.",
+            msg=MSG_WARNING_INTERRUPTED,
             style=lambda msg: format_warning(msg, use_color=use_color),
             stream=sys.stderr,
             show=True,
@@ -200,7 +209,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
 
     except Exception as exc:  # noqa: BLE001
         echo(
-            "Unhandled error during CLI execution",
+            msg=MSG_ERROR_UNHANDLED_EXCEPTION,
             style=lambda msg: format_error(msg, use_color=use_color),
             stream=sys.stderr,
             show=True,
@@ -208,7 +217,7 @@ def handle_cli_workflow(args: Namespace, query_str: str, *, use_color: bool) -> 
             log_method="exception",
         )
         echo(
-            f"Error: {exc}",
+            msg=MSG_ERROR_EXCEPTION_DETAIL.format(error=exc),
             style=lambda msg: format_error(msg, use_color=use_color),
             stream=sys.stderr,
             show=True,

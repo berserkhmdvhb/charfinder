@@ -24,6 +24,12 @@ from charfinder.config.constants import (
     EXIT_NO_RESULTS,
     EXIT_SUCCESS,
 )
+from charfinder.config.messages import (
+    MSG_ERROR_EMPTY_QUERY,
+    MSG_ERROR_UNEXPECTED_EXCEPTION,
+    MSG_ERROR_UNKNOWN_VERSION,
+    MSG_INFO_SEARCH_CANCELLED,
+)
 from charfinder.config.types import MatchDiagnosticsInfo, MatchResult
 from charfinder.core.core_main import find_chars_raw, find_chars_with_info
 from charfinder.utils.formatter import (
@@ -83,7 +89,7 @@ def get_version() -> str:
     try:
         return version("charfinder")
     except PackageNotFoundError:
-        return "unknown (not installed)"
+        return MSG_ERROR_UNKNOWN_VERSION
 
 
 # ---------------------------------------------------------------------
@@ -137,11 +143,8 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
     except Exception as exc:
         if isinstance(exc, (SystemExit, KeyboardInterrupt, GeneratorExit)):
             raise
-        # Use echo or log_optionally_echo for error reporting with color and logging support
-        error_msg = f"An unexpected error occurred: {exc}. See logs for details."
-        # Show error immediately and also log it if enabled
         log_optionally_echo(
-            msg=error_msg,
+            msg=MSG_ERROR_UNEXPECTED_EXCEPTION.format(error=exc),
             level="error",
             show=True,
             style=lambda m: format_error(
@@ -200,9 +203,8 @@ def handle_empty_query(*, use_color: bool) -> MatchResult:
     Returns:
         MatchResult: Exit code and no diagnostic info.
     """
-    message = "Query must not be empty."
     echo(
-        message,
+        MSG_ERROR_EMPTY_QUERY,
         style=lambda m: format_error(m, use_color=use_color),
         show=True,
         log=False,
@@ -223,9 +225,8 @@ def handle_keyboard_interrupt(*, verbose: bool, use_color: bool) -> MatchResult:
         MatchResult: Exit code indicating cancellation and no diagnostics.
     """
     if verbose:
-        message = "Search cancelled by user."
         echo(
-            message,
+            MSG_INFO_SEARCH_CANCELLED,
             style=lambda m: format_warning(m, use_color=use_color),
             show=True,
             log=False,

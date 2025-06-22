@@ -13,6 +13,14 @@ Functions:
 # Imports
 # ---------------------------------------------------------------------
 
+from charfinder.config.messages import (
+    MSG_EXACT_CHECKING,
+    MSG_FUZZY_SETTINGS,
+    MSG_FUZZY_START,
+    MSG_NO_SCORE_COMPUTED,
+    MSG_SUBSET_CHECKING,
+    MSG_UNKNOWN_EXACT_MODE,
+)
 from charfinder.config.types import FuzzyMatchContext, MatchTuple
 from charfinder.fuzzymatchlib import compute_similarity
 from charfinder.utils.formatter import echo, log_optionally_echo
@@ -30,18 +38,6 @@ __all__ = ["find_exact_matches", "find_fuzzy_matches"]
 
 logger = get_logger()
 
-# ---------------------------------------------------------------------
-# Message Constants
-# ---------------------------------------------------------------------
-
-MSG_UNKNOWN_EXACT_MODE = "Unknown exact match mode: {mode}"
-MSG_NO_SCORE_COMPUTED = "Skipped char '{char}' (U+{code:04X}) — no valid score computed."
-MSG_FUZZY_START = "No exact match found for '{query}', trying fuzzy..."
-MSG_FUZZY_SETTINGS = "[FUZZY] settings: threshold={threshold}, agg_fn={agg_fn}"
-MSG_EXACT_CHECKING = "[EXACT] Checking char U+{code:04X}: norm_name='{name}' alt_norm='{alt}'"
-MSG_EXACT_MATCH = "[EXACT] query='{query}' matched in {field} for char '{char}'"
-MSG_SUBSET_CHECKING = "[EXACT] Checking subset: query_words={query} name_words={name}"
-MSG_SUBSET_MATCH = "[EXACT] (subset) for char '{char}'"
 
 # ---------------------------------------------------------------------
 # Internal Helpers
@@ -95,9 +91,8 @@ def find_exact_matches(
         alt_norm = names.get("alternate_normalized")
 
         if verbose:
-            message = f"[EXACT] Checking char U+{code_point:04X}: norm_name='{norm_name}', "
             log_optionally_echo(
-                message,
+                msg=MSG_EXACT_CHECKING.format(code=code_point, name=norm_name, alt=alt_norm or ""),
                 level="debug",
                 show=True,
                 style=lambda m: format_debug(message=m, use_color=use_color),
@@ -113,9 +108,8 @@ def find_exact_matches(
                 name_words |= set(alt_norm.split())
 
             if verbose:
-                message = f"[EXACT] query_words={query_words}, name_words={name_words}"
                 log_optionally_echo(
-                    message,
+                    msg=MSG_SUBSET_CHECKING.format(query=query_words, name=name_words),
                     level="debug",
                     show=True,
                     style=lambda m: format_debug(message=m, use_color=use_color),
@@ -165,14 +159,14 @@ def find_fuzzy_matches(
 
     if context.verbose:
         echo(
-            MSG_FUZZY_START.format(query=context.query),
+            msg=MSG_FUZZY_START.format(query=context.query),
             style=lambda m: format_info(m, use_color=context.use_color),
             show=True,
             log=True,
             log_method="info",
         )
         echo(
-            MSG_FUZZY_SETTINGS.format(threshold=context.threshold, agg_fn=context.agg_fn),
+            msg=MSG_FUZZY_SETTINGS.format(threshold=context.threshold, agg_fn=context.agg_fn),
             style=lambda m: format_info(m, use_color=context.use_color),
             show=True,
             log=True,
@@ -210,7 +204,7 @@ def find_fuzzy_matches(
         if score is None:
             if context.verbose:
                 echo(
-                    MSG_NO_SCORE_COMPUTED.format(char=char, code=ord(char)),
+                    msg=MSG_NO_SCORE_COMPUTED.format(char=char, code=ord(char)),
                     style=lambda m: format_debug(m, use_color=context.use_color),
                     show=True,
                     log=True,

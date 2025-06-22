@@ -54,6 +54,11 @@ from charfinder.config.constants import (
     FUZZY_ALGO_ALIASES,
     FUZZY_HYBRID_WEIGHTS,
 )
+from charfinder.config.messages import (
+    MSG_ERROR_AGG_FN_UNEXPECTED,
+    MSG_ERROR_ALGO_NOT_FOUND,
+    MSG_ERROR_UNSUPPORTED_ALGO_INPUT,
+)
 from charfinder.validators import (
     validate_fuzzy_algo,
     validate_fuzzy_match_mode,
@@ -69,9 +74,6 @@ if TYPE_CHECKING:
     )
     from charfinder.config.types import AlgorithmFn
 
-ERROR_UNKNOWN_ALGO = (
-    "Invalid fuzzy algorithm. Expected one of the supported algorithms or their aliases."
-)
 
 __all__ = ["compute_similarity"]
 
@@ -183,8 +185,7 @@ def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC
         return min(scores)
 
     # This should be unreachable due to validation
-    message = f"Unexpected aggregation function: {agg_fn!r}"
-    raise RuntimeError(message)
+    raise RuntimeError(MSG_ERROR_AGG_FN_UNEXPECTED.format(agg_fn=agg_fn))
 
 
 # ---------------------------------------------------------------------
@@ -221,8 +222,9 @@ def resolve_algorithm_name(name: str) -> FuzzyAlgorithm:
         return cast("FuzzyAlgorithm", normalized)
 
     valid_inputs = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
-    message = f"{ERROR_UNKNOWN_ALGO} Supported values: {', '.join(valid_inputs)}. Got: '{name}'"
-    raise ValueError(message)
+    raise ValueError(
+        MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(name=name, valid_options=", ".join(valid_inputs))
+    )
 
 
 # ---------------------------------------------------------------------
@@ -274,7 +276,6 @@ def compute_similarity(
 
     resolved_algo = FUZZY_ALGORITHM_REGISTRY.get(algorithm)
     if not resolved_algo:
-        message = f"{ERROR_UNKNOWN_ALGO} Got: {algorithm}"
-        raise ValueError(message)
+        raise ValueError(MSG_ERROR_ALGO_NOT_FOUND.format(algorithm=algorithm))
 
     return resolved_algo(s1, s2)

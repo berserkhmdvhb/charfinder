@@ -1,8 +1,12 @@
 """
 Tests for charfinder.core.unicode_data_loader.
 
-Covers validation, download fallback, file loading, and parsing logic for UnicodeData.txt.
+Covers download fallback, file loading, and parsing logic for UnicodeData.txt.
 """
+
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
 
 import pytest
 from collections.abc import Callable
@@ -14,7 +18,6 @@ from unittest.mock import MagicMock
 
 from charfinder.core.unicode_data_loader import (
     load_alternate_names,
-    validate_files_and_url,
     download_and_cache_unicode_data,
     load_unicode_data_from_file,
     parse_unicode_data,
@@ -34,37 +37,12 @@ def _use_isolated_root(setup_test_root: Callable[[], Path]) -> None:
     """Ensure CHARFINDER_ROOT_DIR_FOR_TESTS is isolated for all tests."""
     setup_test_root()
 
-
 # ---------------------------------------------------------------------
-# validate_files_and_url
-# ---------------------------------------------------------------------
-
-def test_validate_files_and_url_valid(tmp_path: Path) -> None:
-    """It should return None when URL and path are valid."""
-    url = "https://example.com/unicode.txt"
-    file_path = tmp_path / "file.txt"
-    file_path.touch()
-    result = validate_files_and_url(url, file_path, show=False)
-    assert result is None
-
-
-def test_validate_files_and_url_invalid_url(tmp_path: Path) -> None:
-    """It should return a message if the URL is invalid or has a bad scheme."""
-    url = "ftp://invalid.com"  # Disallowed scheme
-    file_path = tmp_path / "file.txt"
-    file_path.touch()
-    result = validate_files_and_url(url, file_path, show=False)
-    assert result is not None
-    assert "Validation failed" in result or "Unsupported URL scheme" in result
-
-
-# ---------------------------------------------------------------------
-# download_and_cache_unicode_data
+# Tests for download_and_cache_unicode_data
 # ---------------------------------------------------------------------
 
 def test_download_and_cache_unicode_data_success(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     """It should download, write, and return True on success."""
-
     mock_response = MagicMock()
     mock_response.read.return_value = b"0041;LATIN CAPITAL LETTER A;;;;"
     mock_response.__enter__.return_value = mock_response
@@ -82,7 +60,6 @@ def test_download_and_cache_unicode_data_success(monkeypatch: MonkeyPatch, tmp_p
 
 def test_download_and_cache_unicode_data_failure(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     """It should return False on URLError or IOError."""
-
     def fake_urlopen_fail(url: str, timeout: int = 5) -> Any:
         raise URLError("Simulated failure")
 
@@ -102,9 +79,8 @@ def test_download_and_cache_unicode_data_invalid_scheme(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match=r"Invalid URL scheme.*Only HTTP/HTTPS are allowed"):
         download_and_cache_unicode_data("ftp://example.com/file", file_path)
 
-
 # ---------------------------------------------------------------------
-# load_unicode_data_from_file
+# Tests for load_unicode_data_from_file
 # ---------------------------------------------------------------------
 
 def test_load_unicode_data_from_file_success(tmp_path: Path) -> None:
@@ -122,9 +98,8 @@ def test_load_unicode_data_from_file_failure(tmp_path: Path) -> None:
     result = load_unicode_data_from_file(file_path, show=False)
     assert result is None
 
-
 # ---------------------------------------------------------------------
-# parse_unicode_data
+# Tests for parse_unicode_data
 # ---------------------------------------------------------------------
 
 def test_parse_unicode_data_valid() -> None:
@@ -132,7 +107,6 @@ def test_parse_unicode_data_valid() -> None:
     code_point = "0041"
     name = "LATIN CAPITAL LETTER A"
 
-    # Create the field list with enough fields and name at the correct index
     fields = [""] * max(EXPECTED_MIN_FIELDS, ALT_NAME_INDEX + 1)
     fields[0] = code_point
     fields[ALT_NAME_INDEX] = name
@@ -140,11 +114,27 @@ def test_parse_unicode_data_valid() -> None:
 
     result = parse_unicode_data(line, show=False)
     expected = {chr(int(code_point, 16)): name}
-    assert result == expected, f"Expected {expected}, got {result}"
+    assert result == expected
 
+def test_parse_unicode_data_malformed_line(caplog: pytest.LogCaptureFixture) -> None:
+    """It should skip lines with too few fields."""
+    malformed_line = "0041;LATIN CAPITAL LETTER A"
+    result = parse_unicode_data(malformed_line, show=False)
+    assert result == {}
+
+def test_parse_unicode_data_invalid_code(caplog: pytest.LogCaptureFixture) -> None:
+    """It should skip lines with invalid hex codes."""
+    code_point = "ZZZZ"
+    name = "INVALID CODE"
+    fields = [""] * max(EXPECTED_MIN_FIELDS, ALT_NAME_INDEX + 1)
+    fields[0] = code_point
+    fields[ALT_NAME_INDEX] = name
+    line = ";".join(fields)
+    result = parse_unicode_data(line, show=False)
+    assert result == {}
 
 # ---------------------------------------------------------------------
-# load_alternate_names (integration-style)
+# Tests for load_alternate_names (integration)
 # ---------------------------------------------------------------------
 
 def test_load_alternate_names_local(

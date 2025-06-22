@@ -21,6 +21,18 @@ from dotenv import dotenv_values
 
 from charfinder.cli.diagnostics_match import print_match_diagnostics
 from charfinder.config.constants import ENV_DEBUG_ENV_LOAD
+from charfinder.config.messages import (
+    MSG_DEBUG_ARG_ITEM,
+    MSG_DEBUG_DOTENV_EMPTY,
+    MSG_DEBUG_DOTENV_END,
+    MSG_DEBUG_DOTENV_LOADED_FILES,
+    MSG_DEBUG_DOTENV_READ_ERROR,
+    MSG_DEBUG_DOTENV_START,
+    MSG_DEBUG_ENV_VAR,
+    MSG_DEBUG_NO_DOTENV_FOUND,
+    MSG_DEBUG_PARSED_ARGS,
+    MSG_DEBUG_SECTION_END,
+)
 from charfinder.config.settings import resolve_dotenv_path
 from charfinder.config.types import MatchDiagnosticsInfo
 from charfinder.utils.formatter import echo
@@ -73,14 +85,18 @@ def print_debug_diagnostics(
         use_color: Whether to apply ANSI formatting
         show: If True, print to terminal; always logged.
     """
-    _debug_echo("=== DEBUG DIAGNOSTICS ===", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_DOTENV_START, use_color=use_color, show=show)
 
-    _debug_echo("Parsed args:", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_PARSED_ARGS, use_color=use_color, show=show)
     for key, value in sorted(vars(args).items()):
-        _debug_echo(f"  {key:<20} = {value}", use_color=use_color, show=show)
+        _debug_echo(
+            msg=MSG_DEBUG_ARG_ITEM.format(key=key, value=value), use_color=use_color, show=show
+        )
 
     _debug_echo(
-        f"{ENV_DEBUG_ENV_LOAD} = {os.getenv(ENV_DEBUG_ENV_LOAD, '0')}",
+        msg=MSG_DEBUG_ENV_VAR.format(
+            env_var=ENV_DEBUG_ENV_LOAD, value=os.getenv(ENV_DEBUG_ENV_LOAD, "0")
+        ),
         use_color=use_color,
         show=show,
     )
@@ -93,10 +109,10 @@ def print_debug_diagnostics(
             show=show,
         )
 
-    _debug_echo("Loaded .env file(s):", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_DOTENV_LOADED_FILES, use_color=use_color, show=show)
     print_dotenv_debug(use_color=use_color, show=show)
 
-    _debug_echo("=== END DEBUG DIAGNOSTICS ===", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_SECTION_END, use_color=use_color, show=show)
 
 
 def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
@@ -115,34 +131,42 @@ def print_dotenv_debug(*, use_color: bool = False, show: bool = True) -> None:
     """
     dotenv_path = resolve_dotenv_path()
 
-    _debug_echo("=== DOTENV DEBUG ===", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_DOTENV_START, use_color=use_color, show=show)
 
     if not dotenv_path:
-        _debug_echo("No .env file found or resolved.", use_color=use_color, show=show)
+        _debug_echo(msg=MSG_DEBUG_NO_DOTENV_FOUND, use_color=use_color, show=show)
         _debug_echo(
             "Environment variables may only be coming from the OS.",
             use_color=use_color,
             show=show,
         )
-        _debug_echo("=== END DOTENV DEBUG ===", use_color=use_color, show=show)
+        _debug_echo(msg=MSG_DEBUG_DOTENV_END, use_color=use_color, show=show)
         return
 
-    _debug_echo(f"Selected .env file: {dotenv_path}", use_color=use_color, show=show)
+    _debug_echo(
+        msg=MSG_DEBUG_NO_DOTENV_FOUND.format(path=dotenv_path), use_color=use_color, show=show
+    )
 
     try:
         values = dotenv_values(dotenv_path=dotenv_path)
 
         if not values:
             _debug_echo(
-                ".env file exists but is empty or contains no key-value pairs.",
+                msg=MSG_DEBUG_DOTENV_EMPTY,
                 use_color=use_color,
                 show=show,
             )
         else:
             for key, value in values.items():
-                _debug_echo(f"  {key} = {value}", use_color=use_color, show=show)
+                _debug_echo(
+                    msg=MSG_DEBUG_ARG_ITEM.format(key=key, value=value),
+                    use_color=use_color,
+                    show=show,
+                )
 
     except (OSError, UnicodeDecodeError) as exc:
-        _debug_echo(f"Failed to read .env file: {exc}", use_color=use_color, show=show)
+        _debug_echo(
+            msg=MSG_DEBUG_DOTENV_READ_ERROR.format(error=exc), use_color=use_color, show=show
+        )
 
-    _debug_echo("=== END DOTENV DEBUG ===", use_color=use_color, show=show)
+    _debug_echo(msg=MSG_DEBUG_DOTENV_END, use_color=use_color, show=show)

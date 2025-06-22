@@ -10,6 +10,7 @@ from io import StringIO
 from unittest.mock import patch, MagicMock
 import pytest
 
+from charfinder.config.types import MatchDiagnosticsInfo, MatchResult
 from charfinder.cli.handlers import (
     get_version,
     handle_empty_query,
@@ -25,8 +26,11 @@ from charfinder.config.constants import (
     EXIT_NO_RESULTS,
     EXIT_SUCCESS,
 )
-from charfinder.config.types import MatchDiagnosticsInfo, MatchResult
-
+from charfinder.config.messages import (
+    MSG_ERROR_EMPTY_QUERY,
+    MSG_INFO_SEARCH_CANCELLED,
+    MSG_ERROR_UNEXPECTED_EXCEPTION
+)
 
 @pytest.fixture(autouse=True)
 def _use_isolated_root(setup_test_root: Callable[[], Path]) -> None:
@@ -65,7 +69,7 @@ def test_handle_empty_query_logs_error() -> None:
 
         mock_echo.assert_called_once()
         called_msg = mock_echo.call_args[0][0]
-        assert "query must not be empty" in called_msg.lower()
+        assert MSG_ERROR_EMPTY_QUERY in called_msg
 
 # ---------------------------------------------------------------------
 # handle_keyboard_interrupt
@@ -77,7 +81,7 @@ def test_handle_keyboard_interrupt_verbose() -> None:
         assert result.exit_code == EXIT_CANCELLED
         mock_echo.assert_called_once()
         called_msg = mock_echo.call_args[0][0]
-        assert "cancelled" in called_msg.lower()
+        assert MSG_INFO_SEARCH_CANCELLED in called_msg
 
 def test_handle_keyboard_interrupt_silent(log_stream: StringIO) -> None:
     result = handle_keyboard_interrupt(verbose=False, use_color=False)
@@ -353,4 +357,4 @@ def test_handle_find_chars_generic_exception(
     mock_log_optionally_echo.assert_called_once()
     call_args = mock_log_optionally_echo.call_args[1]  # kwargs of the call
     msg = call_args.get("msg", "") or call_args.get("message", "")
-    assert "unexpected error" in msg.lower()
+    assert MSG_ERROR_UNEXPECTED_EXCEPTION in msg

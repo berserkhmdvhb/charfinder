@@ -36,6 +36,11 @@ from charfinder.config.constants import (
     ENV_LOG_BACKUP_COUNT,
     ENV_LOG_MAX_BYTES,
 )
+from charfinder.config.messages import (
+    MSG_INFO_NO_DOTENV_LOADED,
+    MSG_WARNING_DOTENV_PATH_MISSING,
+    MSG_WARNING_INVALID_ENV_INT,
+)
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_error, format_settings, format_warning
 
@@ -129,8 +134,13 @@ def safe_int(env_var: str, default: int) -> int:
         try:
             return int(val)
         except ValueError:
-            message = f"Invalid int for {env_var!r} = {val!r}; using default {default}"
-            echo(msg=message, style=format_error, show=True, log=False, log_method="warning")
+            echo(
+                msg=MSG_WARNING_INVALID_ENV_INT.format(env_var=env_var, value=val, default=default),
+                style=format_error,
+                show=True,
+                log=False,
+                log_method="warning",
+            )
     return default
 
 
@@ -182,9 +192,8 @@ def resolve_dotenv_path(stream: TextIO = sys.stdout) -> Path | None:
     if custom := os.getenv("DOTENV_PATH"):
         custom_path = Path(custom)
         if not custom_path.exists() and os.getenv("CHARFINDER_DEBUG_ENV_LOAD") == "1":
-            message = f'DOTENV_PATH is set to "{custom_path}" but the file does not exist.'
             echo(
-                msg=message,
+                msg=MSG_WARNING_DOTENV_PATH_MISSING.format(path=custom_path),
                 style=format_warning,
                 stream=stream,
                 show=True,
@@ -224,8 +233,13 @@ def load_settings(
         loaded.append(dotenv_path)
 
     if not loaded:
-        message = "No .env file loaded — using system env or defaults."
-        echo(msg=message, style=format_settings, show=debug or verbose, log=True, log_method="info")
+        echo(
+            msg=MSG_INFO_NO_DOTENV_LOADED,
+            style=format_settings,
+            show=debug or verbose,
+            log=True,
+            log_method="info",
+        )
     return loaded
 
 

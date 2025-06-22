@@ -39,12 +39,17 @@ from typing import TYPE_CHECKING, TextIO
 
 from colorama import Fore, Style, init
 
-if TYPE_CHECKING:
-    from charfinder.config.types import CharMatch, MatchTuple
-
 from charfinder.config.constants import DEFAULT_COLOR_MODE, FIELD_WIDTHS, VALID_LOG_METHODS
+from charfinder.config.messages import (
+    MSG_DEBUG_FORMAT_MATCH_ERROR,
+    MSG_ERROR_ECHO_INVALID_LOG_METHOD,
+    MSG_ERROR_ECHO_LOG_METHOD_REQUIRED,
+)
 from charfinder.utils.logger_helpers import strip_color_codes, suppress_console_logging
 from charfinder.utils.logger_styles import format_debug
+
+if TYPE_CHECKING:
+    from charfinder.config.types import CharMatch, MatchTuple
 
 __all__ = [
     "display_result_lines",
@@ -145,12 +150,14 @@ def echo(
     styled = style(msg)
 
     if log and not log_method:
-        message = "log_method must be provided if log=True"
-        raise ValueError(message)
+        raise ValueError(MSG_ERROR_ECHO_LOG_METHOD_REQUIRED)
 
     if log_method and log_method not in VALID_LOG_METHODS:
-        message = f"Invalid log_method: {log_method}"
-        raise ValueError(message)
+        raise ValueError(
+            MSG_ERROR_ECHO_INVALID_LOG_METHOD.format(
+                method=log_method, valid_options=", ".join(sorted(VALID_LOG_METHODS))
+            )
+        )
 
     log_func = getattr(logger, log_method, None) if log_method else None
     if log and callable(log_func):
@@ -316,14 +323,15 @@ def _safe_format_match(match: CharMatch, *, use_color: bool, show_score: bool) -
         row = format_result_row(code, char, name, score)
         return format_result_line(row, use_color=use_color)
     except (KeyError, ValueError, TypeError) as exc:
-        error_msg = f"[Error formatting match: {exc!r}] → {match!r}"
         log_optionally_echo(
-            error_msg,
+            msg=MSG_DEBUG_FORMAT_MATCH_ERROR.format(error=exc, match=match),
             level="debug",
             show=False,
             style=lambda m: format_debug(m, use_color=use_color),
         )
-        return format_result_line(error_msg, use_color=use_color)
+        return format_result_line(
+            MSG_DEBUG_FORMAT_MATCH_ERROR.format(error=exc, match=match), use_color=use_color
+        )
 
 
 def matchtuple_to_charmatch(mt: MatchTuple) -> CharMatch:

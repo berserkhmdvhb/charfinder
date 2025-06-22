@@ -10,6 +10,10 @@ Functions:
     build_name_cache(): Build the Unicode name cache and optionally persist it.
 """
 
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
+
 import json
 import sys
 import time
@@ -18,30 +22,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-from charfinder.config.settings import get_cache_file
+from charfinder.config.messages import (
+    MSG_ERROR_WRITE_FAIL,
+    MSG_INFO_LOAD_SUCCESS,
+    MSG_INFO_REBUILD,
+    MSG_WARNING_WRITE_RETRY,
+)
 from charfinder.config.types import NameCache
 from charfinder.core.unicode_data_loader import load_alternate_names
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_setup import get_logger
 from charfinder.utils.logger_styles import format_error, format_info
 from charfinder.utils.normalizer import normalize
+from charfinder.validators import validate_cache_file_path
 
 __all__ = ["build_name_cache"]
 
 logger = get_logger()
-
-# ---------------------------------------------------------------------
-# Message Constants
-# ---------------------------------------------------------------------
-
-MSG_LOAD_SUCCESS = 'Loaded Unicode name cache from: "{path}"'
-MSG_WRITE_FAIL = "Failed to write cache after multiple attempts."
-MSG_WRITE_RETRY = (
-    "Failed to write cache (attempt {attempt}/{max_attempts}). Retrying in {delay}s..."
-)
-MSG_WRITE_SUCCESS = 'Cache written to: "{path}"'
-MSG_REBUILD = "Rebuilding Unicode name cache. This may take a few seconds..."
-MSG_INVALID_PATH_TYPE = "cache_file_path must be a valid Path object."
 
 
 # ---------------------------------------------------------------------
@@ -94,7 +91,7 @@ def _load_existing_cache(path: Path, *, options: CacheIOOptions) -> NameCache:
         raise ValueError(message) from exc
     else:
         echo(
-            MSG_LOAD_SUCCESS.format(path=path),
+            msg=MSG_INFO_LOAD_SUCCESS.format(path=path),
             style=lambda m: format_info(m, use_color=options.use_color),
             stream=sys.stderr,
             show=options.show,
@@ -135,7 +132,7 @@ def _save_cache_with_retries(
     for attempt in range(1, options.retry_attempts + 1):
         if _attempt_write():
             echo(
-                MSG_WRITE_SUCCESS.format(path=path),
+                msg=MSG_INFO_LOAD_SUCCESS.format(path=path),
                 style=lambda m: format_info(m, use_color=options.use_color),
                 stream=sys.stderr,
                 show=options.show,
@@ -145,7 +142,7 @@ def _save_cache_with_retries(
             break
         if attempt < options.retry_attempts:
             echo(
-                MSG_WRITE_RETRY.format(
+                msg=MSG_WARNING_WRITE_RETRY.format(
                     attempt=attempt,
                     max_attempts=options.retry_attempts,
                     delay=options.retry_delay,
@@ -159,7 +156,7 @@ def _save_cache_with_retries(
             time.sleep(options.retry_delay)
         else:
             echo(
-                MSG_WRITE_FAIL,
+                msg=MSG_ERROR_WRITE_FAIL,
                 style=lambda m: format_error(m, use_color=options.use_color),
                 stream=sys.stderr,
                 show=True,
@@ -196,13 +193,8 @@ def build_name_cache(*, options: BuildCacheOptions | None = None) -> NameCache:
     if options is None:
         options = BuildCacheOptions()
 
-    if options.cache_file_path is not None and not isinstance(options.cache_file_path, Path):
-        raise ValueError(MSG_INVALID_PATH_TYPE)
-
-    if options.cache_file_path is None:
-        options.cache_file_path = get_cache_file()
-
-    path = Path(options.cache_file_path)
+    path = validate_cache_file_path(options.cache_file_path)
+    options.cache_file_path = path
 
     io_options = CacheIOOptions(
         use_color=options.use_color,
@@ -215,7 +207,7 @@ def build_name_cache(*, options: BuildCacheOptions | None = None) -> NameCache:
         return _load_existing_cache(path, options=io_options)
 
     echo(
-        MSG_REBUILD,
+        msg=MSG_INFO_REBUILD,
         style=lambda m: format_info(m, use_color=options.use_color),
         stream=sys.stderr,
         show=options.show,
@@ -249,6 +241,9 @@ def build_name_cache(*, options: BuildCacheOptions | None = None) -> NameCache:
             entry["alternate_normalized"] = normalize(alt_name)
 
         cache[char] = entry
+
+    # Ensure parent directory exists
+    path.parent.mkdir(parents=True, exist_ok=True)
 
     _save_cache_with_retries(cache, path, options=io_options)
     return cache

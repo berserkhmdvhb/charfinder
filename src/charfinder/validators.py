@@ -25,6 +25,7 @@ Functions:
     validate_cache_rebuild_flag(): Validate that a rebuild flag is a proper boolean.
     validate_normalized_name(): Ensure a normalized name is a valid non-empty string.
     validate_unicode_data_url(): Validate that a Unicode data URL is well-formed.
+    validate_files_and_url(): Validate both file and url
     validate_cache_file_path(): Validate that a given or default cache file path exists.
     validate_unicode_data_file(): Confirm that a given file path points to an existing file.
     resolve_cli_settings(): Resolve CLI-derived color mode, use_color flag, and threshold.
@@ -44,6 +45,7 @@ and ensure strict consistency for all user- or config-sourced inputs.
 """
 
 import os
+import sys
 from argparse import Action, ArgumentParser, ArgumentTypeError, Namespace
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -78,6 +80,31 @@ from charfinder.config.constants import (
     VALID_SHOW_SCORES_FALSE,
     VALID_SHOW_SCORES_TRUE,
 )
+from charfinder.config.messages import (
+    MSG_ERROR_EMPTY_FUZZY_ALGO_LIST,
+    MSG_ERROR_ENV_INVALID_THRESHOLD,
+    MSG_ERROR_EXPECTED_BOOL,
+    MSG_ERROR_EXPECTED_DICT,
+    MSG_ERROR_EXPECTED_DICT_KEY,
+    MSG_ERROR_EXPECTED_DICT_VAL,
+    MSG_ERROR_FILE_NOT_FOUND,
+    MSG_ERROR_INVALID_AGG_FUNC,
+    MSG_ERROR_INVALID_COLOR_MODE_WITH_VALUE,
+    MSG_ERROR_INVALID_EXACT_MATCH_MODE,
+    MSG_ERROR_INVALID_FUZZY_MATCH_MODE,
+    MSG_ERROR_INVALID_NAME,
+    MSG_ERROR_INVALID_NORMALIZATION_PROFILE,
+    MSG_ERROR_INVALID_OUTPUT_FORMAT,
+    MSG_ERROR_INVALID_PATH_TYPE,
+    MSG_ERROR_INVALID_SHOW_SCORE_VALUE,
+    MSG_ERROR_INVALID_THRESHOLD,
+    MSG_ERROR_INVALID_THRESHOLD_TYPE,
+    MSG_ERROR_INVALID_URL,
+    MSG_ERROR_MISSING_FUZZY_ALGO_VALUE,
+    MSG_ERROR_UNSUPPORTED_ALGO_INPUT,
+    MSG_ERROR_UNSUPPORTED_URL_SCHEME,
+    MSG_ERROR_VALIDATION_FAILED,
+)
 from charfinder.config.settings import get_cache_file
 from charfinder.config.types import (
     FuzzyConfig,
@@ -86,31 +113,6 @@ from charfinder.config.types import (
 from charfinder.utils.formatter import echo, should_use_color
 from charfinder.utils.logger_styles import format_warning
 
-# ------------------------------------------------------------------------
-# Error Messages
-# ------------------------------------------------------------------------
-
-ERROR_INVALID_THRESHOLD = "Invalid threshold used."
-ERROR_INVALID_THRESHOLD_TYPE = "Threshold must be a float or int."
-ERROR_INVALID_COLOR_MODE = f"Invalid color mode. Must be one of: {', '.join(VALID_COLOR_MODES)}."
-ERROR_INVALID_CACHE_PATH = "Cache file path does not exist"
-ERROR_INVALID_NAME = "Normalized name must be a non-empty string"
-ERROR_EXPECTED_BOOL = "Expected a boolean value"
-ERROR_EXPECTED_DICT = "Expected 'name_cache' to be a dictionary."
-ERROR_EXPECTED_DICT_KEY = "Dictionary key must be a string"
-ERROR_EXPECTED_DICT_VAL = "Value must be a dictionary"
-ERROR_EXPECTED_PATH = "Expected 'cache_file_path' to be a Path object"
-ERROR_MISSING_FUZZY_ALGO_VALUE = "Missing fuzzy algorithm value."
-ERROR_EMPTY_FUZZY_ALGO_LIST = "Empty list of fuzzy algorithm values."
-ERROR_INVALID_OUTPUT_FORMAT = (
-    f"Invalid output format. Supported formats: {', '.join(sorted(VALID_OUTPUT_FORMATS))}."
-)
-ERROR_INVALID_AGG_FUNC = (
-    "Invalid hybrid aggregation function. "
-    "Expected one of: {', '.join(sorted(VALID_HYBRID_AGG_FUNCS))}."
-)
-
-ERROR_UNKNOWN_ALGO = "Unknown or unsupported fuzzy algorithm."
 # ------------------------------------------------------------------------
 # Fuzzy Algorithm Validators
 # ------------------------------------------------------------------------
@@ -155,9 +157,12 @@ def _normalize_and_validate_fuzzy_algo(fuzzy_algo: str) -> FuzzyAlgorithm:
     if resolved in FUZZY_ALGORITHM_REGISTRY:
         return resolved  # type: ignore[return-value]
 
-    valid_inputs = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
-    message = f"{ERROR_UNKNOWN_ALGO} Supported values: {', '.join(valid_inputs)}"
-    raise ValueError(message)
+    valid_options = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
+    raise ValueError(
+        MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(
+            valid_options=", ".join(valid_options), name=fuzzy_algo
+        )
+    )
 
 
 def validate_fuzzy_algo(
@@ -232,11 +237,11 @@ class ValidateFuzzyAlgoAction(Action):
             ValueError: If the provided value is not a supported fuzzy algorithm.
         """
         if values is None:
-            raise ValueError(ERROR_MISSING_FUZZY_ALGO_VALUE)
+            raise ValueError(MSG_ERROR_MISSING_FUZZY_ALGO_VALUE)
 
         if isinstance(values, Sequence) and not isinstance(values, str):
             if not values:
-                raise ValueError(ERROR_EMPTY_FUZZY_ALGO_LIST)
+                raise ValueError(MSG_ERROR_EMPTY_FUZZY_ALGO_LIST)
             target = values[0]
         else:
             target = values
@@ -286,9 +291,9 @@ def _validate_threshold_internal(threshold: float) -> float:
         ValueError: If the threshold is outside the range [0.0, 1.0].
     """
     if not isinstance(threshold, (float, int)):
-        raise TypeError(ERROR_INVALID_THRESHOLD_TYPE)
+        raise TypeError(MSG_ERROR_INVALID_THRESHOLD_TYPE)
     if threshold < 0.0 or threshold > 1.0:
-        raise ValueError(ERROR_INVALID_THRESHOLD)
+        raise ValueError(MSG_ERROR_INVALID_THRESHOLD)
     return float(threshold)
 
 
@@ -311,7 +316,7 @@ def threshold_range(value: str) -> float:
     try:
         fvalue = float(value)
     except ValueError as exc:
-        raise ValueError(ERROR_INVALID_THRESHOLD) from exc
+        raise ValueError(MSG_ERROR_INVALID_THRESHOLD) from exc
     return _validate_threshold_internal(fvalue)
 
 
@@ -370,9 +375,10 @@ def resolve_effective_threshold(cli_threshold: float | None, *, use_color: bool 
         try:
             return _validate_threshold_internal(float(env_value))
         except ValueError:
-            message = f"Invalid {ENV_MATCH_THRESHOLD} env var: {env_value!r}. Using default."
             echo(
-                message,
+                msg=MSG_ERROR_ENV_INVALID_THRESHOLD.format(
+                    env_var=ENV_MATCH_THRESHOLD, value=env_value
+                ),
                 style=lambda m: format_warning(m, use_color=use_color),
                 show=True,
                 log=True,
@@ -422,8 +428,11 @@ def validate_color_mode(
         return cast_color_mode(color_mode)
 
     if source == "core":
-        message = f"{ERROR_INVALID_COLOR_MODE} Got: {color_mode}"
-        raise ValueError(message)
+        raise ValueError(
+            MSG_ERROR_INVALID_COLOR_MODE_WITH_VALUE.format(
+                value=color_mode, valid_options=", ".join(sorted(VALID_COLOR_MODES))
+            )
+        )
     return DEFAULT_COLOR_MODE
 
 
@@ -470,8 +479,11 @@ def validate_fuzzy_match_mode(mode: str) -> FuzzyMatchMode:
     """
     mode = mode.lower()
     if mode not in VALID_FUZZY_MATCH_MODES:
-        message = f"Invalid fuzzy match mode: {mode}. Valid options: {VALID_FUZZY_MATCH_MODES}"
-        raise ValueError(message)
+        raise ValueError(
+            MSG_ERROR_INVALID_FUZZY_MATCH_MODE.format(
+                value=mode, valid_options=", ".join(sorted(VALID_FUZZY_MATCH_MODES))
+            )
+        )
     return cast("FuzzyMatchMode", mode)
 
 
@@ -492,11 +504,11 @@ def validate_exact_match_mode(exact_match_mode: str) -> ExactMatchMode:
         ValueError: If the exact match mode is not one of VALID_EXACT_MATCH_MODES.
     """
     if exact_match_mode not in VALID_EXACT_MATCH_MODES:
-        message = (
-            f"Invalid exact match mode: {exact_match_mode}. "
-            f"Valid options are: {VALID_EXACT_MATCH_MODES}"
+        raise ValueError(
+            MSG_ERROR_INVALID_EXACT_MATCH_MODE.format(
+                value=exact_match_mode, valid_options=", ".join(sorted(VALID_EXACT_MATCH_MODES))
+            )
         )
-        raise ValueError(message)
     return cast("ExactMatchMode", exact_match_mode)
 
 
@@ -507,15 +519,13 @@ def validate_exact_match_mode(exact_match_mode: str) -> ExactMatchMode:
 
 def validate_dict_str_keys(name_cache: NameCache) -> NameCache:
     if not isinstance(name_cache, dict):
-        raise TypeError(ERROR_EXPECTED_DICT)
+        raise TypeError(MSG_ERROR_EXPECTED_DICT)
 
     for key, value in name_cache.items():
         if not isinstance(key, str):
-            message = f"{ERROR_EXPECTED_DICT_KEY}. Found key of type {type(key)}."
-            raise TypeError(message)
+            raise TypeError(MSG_ERROR_EXPECTED_DICT_KEY.format(type=type(key)), key=key)
         if not isinstance(value, dict):
-            message = f"{ERROR_EXPECTED_DICT_VAL} for key '{key}'."
-            raise TypeError(message)
+            raise TypeError(MSG_ERROR_EXPECTED_DICT_VAL.format(type=type(value), key=key))
 
     return name_cache
 
@@ -534,8 +544,7 @@ def validate_cache_rebuild_flag(*, force_rebuild: bool) -> bool:
         bool: The validated `force_rebuild` flag.
     """
     if not isinstance(force_rebuild, bool):
-        message = f"{ERROR_EXPECTED_BOOL}, got {type(force_rebuild)}."
-        raise TypeError(message)
+        raise TypeError(MSG_ERROR_EXPECTED_BOOL.format(type=type(force_rebuild)))
     return force_rebuild
 
 
@@ -556,8 +565,7 @@ def validate_normalized_name(name: str) -> str:
         str: The validated name string.
     """
     if name is None or not isinstance(name, str) or not name.strip():
-        message = f"{ERROR_INVALID_NAME},got {{name!r}}."
-        raise ValueError(message)
+        raise ValueError(MSG_ERROR_INVALID_NAME.format(value=name))
     return name
 
 
@@ -584,44 +592,65 @@ def validate_unicode_data_url(url: str) -> bool:
     """
     parsed_url = urlparse(url)
     if not parsed_url.scheme or not parsed_url.netloc:
-        message = f"Invalid URL: {url}"
-        raise ValueError(message)
+        raise ValueError(MSG_ERROR_INVALID_URL.format(url=url))
     if parsed_url.scheme.lower() not in {"http", "https"}:
-        message = f"Unsupported URL scheme '{parsed_url.scheme}' in: {url}"
-        raise ValueError(message)
+        raise ValueError(MSG_ERROR_UNSUPPORTED_URL_SCHEME.format(scheme=parsed_url.scheme, url=url))
     return True
 
 
 def validate_cache_file_path(cache_file_path: Path | None) -> Path:
     """
-    Validate the provided cache file path or resolve the default one.
+    Validate and normalize the provided cache file path.
 
-    Ensures that the input is a valid `Path` object and that the file exists.
-    If `None` is passed, the function will use the default cache file path
-    as defined by `get_cache_file()`.
+    Ensures the input is a valid `Path` object. This function does not require
+    the file to exist, making it suitable for cache creation.
 
     Args:
-        cache_file_path (Path | None): The cache file path to validate or None to use default.
+        cache_file_path (Path | None): The cache file path to validate.
 
     Raises:
-        TypeError: If the resolved value is not a Path instance.
-        ValueError: If the file does not exist.
+        TypeError: If the input is not a Path instance or a string.
 
     Returns:
-        Path: A valid, existing Path object to the cache file.
+        Path: A valid Path object to the cache file.
     """
     if cache_file_path is None:
-        cache_file_path = get_cache_file()
+        return get_cache_file()
+
+    if isinstance(cache_file_path, str):
+        return Path(cache_file_path)
 
     if not isinstance(cache_file_path, Path):
-        message = f"{ERROR_EXPECTED_PATH}, got {type(cache_file_path)}"
-        raise TypeError(message)
-
-    if not cache_file_path.is_file():
-        message = f"{ERROR_INVALID_CACHE_PATH}: {cache_file_path}"
-        raise ValueError(message)
+        raise TypeError(MSG_ERROR_INVALID_PATH_TYPE.format(type=type(cache_file_path)))
 
     return cache_file_path
+
+
+def validate_files_and_url(
+    unicode_data_url: str,
+    unicode_data_file: Path,
+    *,
+    show: bool = True,
+) -> str | None:
+    """
+    Validate the Unicode data URL and the local file path.
+
+    Args:
+        unicode_data_url (str): The URL for the Unicode data file.
+        unicode_data_file (Path): The local path to the Unicode data file.
+        show (bool): If True, display progress messages.
+
+    Returns:
+        str | None: A message if validation fails, or None if validation is successful.
+    """
+    try:
+        validate_unicode_data_url(unicode_data_url)
+        validate_cache_file_path(unicode_data_file)
+    except ValueError as exc:
+        message = MSG_ERROR_VALIDATION_FAILED.format(error=exc)
+        echo(msg=message, style=format_warning, stream=sys.stderr, show=show)
+        return message
+    return None
 
 
 def validate_unicode_data_file(file_path: Path) -> bool:
@@ -638,8 +667,7 @@ def validate_unicode_data_file(file_path: Path) -> bool:
         bool: True if the file exists and is valid.
     """
     if not file_path.is_file():
-        message = f"The file {file_path} does not exist."
-        raise FileNotFoundError(message)
+        raise FileNotFoundError(MSG_ERROR_FILE_NOT_FOUND.format(path=file_path))
     return True
 
 
@@ -685,9 +713,12 @@ def validate_output_format(fmt: str) -> str:
     Returns:
         str: The validated output format.
     """
-    if fmt not in ("json", "text"):
-        message = f"{ERROR_INVALID_OUTPUT_FORMAT} Got: {fmt}"
-        raise ValueError(message)
+    if fmt not in VALID_OUTPUT_FORMATS:
+        raise ValueError(
+            MSG_ERROR_INVALID_OUTPUT_FORMAT.format(
+                format=fmt, valid_options=", ".join(sorted(VALID_OUTPUT_FORMATS))
+            )
+        )
     return fmt
 
 
@@ -705,8 +736,11 @@ def validate_hybrid_agg_fn(fn: str) -> HybridAggFunc:
         ValueError: If function is invalid.
     """
     if fn not in VALID_HYBRID_AGG_FUNCS:
-        message = f"{ERROR_INVALID_AGG_FUNC} Got: {fn}"
-        raise ValueError(message)
+        raise ValueError(
+            MSG_ERROR_INVALID_AGG_FUNC.format(
+                func=fn, valid_options=", ".join(sorted(VALID_HYBRID_AGG_FUNCS))
+            )
+        )
     return cast("HybridAggFunc", fn)
 
 
@@ -762,11 +796,11 @@ def validate_normalization_profile(
     lowered = value.lower()
     if lowered in VALID_NORMALIZATION_PROFILES:
         return cast("NormalizationProfile", lowered)
-    message = (
-        f"Invalid normalization profile '{value}' from {source}. "
-        f"Must be one of: {', '.join(VALID_NORMALIZATION_PROFILES)}."
+    raise ValueError(
+        MSG_ERROR_INVALID_NORMALIZATION_PROFILE.format(
+            value=value, source=source, valid_options=", ".join(VALID_NORMALIZATION_PROFILES)
+        )
     )
-    raise ValueError(message)
 
 
 def resolve_effective_normalization_profile(
@@ -806,11 +840,11 @@ def validate_show_score(value: str) -> bool:
         return True
     if lowered in VALID_SHOW_SCORES_FALSE:
         return False
-    message = (
-        f"Invalid value for --show-score: {value}. "
-        f"Valid options: {', '.join(sorted(VALID_SHOW_SCORES))}"
+    raise ArgumentTypeError(
+        MSG_ERROR_INVALID_SHOW_SCORE_VALUE.format(
+            value=value, valid_options=", ".join(sorted(VALID_SHOW_SCORES))
+        )
     )
-    raise ArgumentTypeError(message)
 
 
 def resolve_effective_show_score(*, cli_value: bool | None) -> bool:

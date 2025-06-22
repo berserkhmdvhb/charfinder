@@ -26,6 +26,11 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Literal, cast
 
+from charfinder.config.messages import (
+    MSG_WARNING_DELETE_EXISTING_ROLLOVER_FAILED,
+    MSG_WARNING_DELETE_OLD_LOG_FAILED,
+    MSG_WARNING_DELETE_ROLLOVER_TARGET_FAILED,
+)
 from charfinder.utils.logger_styles import format_warning
 
 __all__ = [
@@ -170,9 +175,8 @@ class CustomRotatingFileHandler(RotatingFileHandler):
                 # Lazy import
                 from charfinder.utils.formatter import log_optionally_echo  # noqa: PLC0415
 
-                message = f"Failed to delete old log file: {path}"
                 log_optionally_echo(
-                    message,
+                    msg=MSG_WARNING_DELETE_OLD_LOG_FAILED.format(path=path),
                     level="warning",
                     show=False,
                     style=format_warning,
@@ -190,9 +194,8 @@ class CustomRotatingFileHandler(RotatingFileHandler):
                     try:
                         dst.unlink()
                     except OSError:
-                        message = f"Failed to delete rollover target: {dst}"
                         log_optionally_echo(
-                            message,
+                            msg=MSG_WARNING_DELETE_ROLLOVER_TARGET_FAILED.format(path=dst),
                             level="warning",
                             show=False,
                             style=format_warning,
@@ -207,9 +210,8 @@ class CustomRotatingFileHandler(RotatingFileHandler):
                 try:
                     rollover_path.unlink()
                 except OSError:
-                    message = f"Failed to delete existing rollover log: {rollover_path}"
                     log_optionally_echo(
-                        message,
+                        msg=MSG_WARNING_DELETE_EXISTING_ROLLOVER_FAILED.format(path=rollover_path),
                         level="warning",
                         show=False,
                         style=format_warning,

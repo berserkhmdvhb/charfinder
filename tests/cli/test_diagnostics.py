@@ -10,7 +10,15 @@ from dotenv import set_key
 
 from charfinder.cli import diagnostics
 from charfinder.config.types import MatchDiagnosticsInfo
-
+from charfinder.config.messages import (
+    MSG_DEBUG_DOTENV_EMPTY,
+    MSG_DEBUG_DOTENV_END,
+    MSG_DEBUG_DOTENV_READ_ERROR,
+    MSG_DEBUG_NO_DOTENV_FOUND,
+    MSG_DEBUG_DOTENV_SELECTED,
+    MSG_DEBUG_DOTENV_ITEM,
+    MSG_DEBUG_OS_ENV_ONLY,
+)
 
 @pytest.fixture()
 def mock_echo(monkeypatch: MonkeyPatch) -> List[str]:
@@ -85,10 +93,10 @@ def test_print_dotenv_debug_with_existing_file(tmp_path: Path, monkeypatch: Monk
     monkeypatch.setenv("DOTENV_PATH", str(dotenv_path))
     diagnostics.print_dotenv_debug(use_color=False, show=True)
 
-    assert f"Selected .env file: {dotenv_path}" in mock_echo
-    assert "  CHARFINDER_LOG_MAX_BYTES = 123456" in mock_echo
-    assert "  CHARFINDER_ENV = UAT" in mock_echo
-    assert "=== END DOTENV DEBUG ===" in mock_echo
+    assert MSG_DEBUG_DOTENV_SELECTED.format(path=dotenv_path) in mock_echo
+    assert MSG_DEBUG_DOTENV_ITEM.format(key="CHARFINDER_LOG_MAX_BYTES", value="123456") in mock_echo
+    assert MSG_DEBUG_DOTENV_ITEM.format(key="CHARFINDER_ENV", value="UAT") in mock_echo
+    assert MSG_DEBUG_DOTENV_END in mock_echo
 
 
 
@@ -100,7 +108,7 @@ def test_print_dotenv_debug_with_empty_file(tmp_path: Path, monkeypatch: MonkeyP
     monkeypatch.setenv("DOTENV_PATH", str(dotenv_path))
     diagnostics.print_dotenv_debug(use_color=False, show=True)
 
-    assert "file exists but is empty" in "\n".join(mock_echo)
+    assert MSG_DEBUG_DOTENV_EMPTY in "\n".join(mock_echo)
 
 
 def test_print_dotenv_debug_file_missing(monkeypatch: MonkeyPatch, mock_echo: List[str]) -> None:
@@ -111,8 +119,8 @@ def test_print_dotenv_debug_file_missing(monkeypatch: MonkeyPatch, mock_echo: Li
     diagnostics.print_dotenv_debug(use_color=False, show=True)
 
     joined = "\n".join(mock_echo)
-    assert "No .env file found or resolved." in joined
-    assert "Environment variables may only be coming from the OS." in joined
+    assert MSG_DEBUG_NO_DOTENV_FOUND in joined
+    assert MSG_DEBUG_OS_ENV_ONLY in joined
 
 
 def test_print_dotenv_debug_invalid_encoding(tmp_path: Path, monkeypatch: MonkeyPatch, mock_echo: List[str]) -> None:
@@ -124,4 +132,4 @@ def test_print_dotenv_debug_invalid_encoding(tmp_path: Path, monkeypatch: Monkey
     diagnostics.print_dotenv_debug(use_color=False, show=True)
 
     joined = "\n".join(mock_echo)
-    assert "Failed to read .env file:" in joined
+    assert MSG_DEBUG_DOTENV_READ_ERROR in joined

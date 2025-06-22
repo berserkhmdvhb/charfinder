@@ -24,6 +24,11 @@ from charfinder.config.aliases import (
     FuzzyMatchMode,
     HybridAggFunc,
 )
+from charfinder.config.messages import (
+    MSG_ERROR_UNSUPPORTED_ALGO_INPUT,
+    MSG_ERROR_INVALID_FUZZY_MATCH_MODE,
+    MSG_ERROR_ALGO_NOT_FOUND
+)
 
 # ---------------------------------------------------------------------
 # Parametrized Combinations
@@ -57,19 +62,23 @@ def test_simple_ratio_exact_and_partial() -> None:
     assert simple_ratio("abc", "axc") == 2 / 3
     assert simple_ratio("", "") == 0.0
 
+
 def test_normalized_ratio_with_case_and_accents() -> None:
     assert normalized_ratio("CAFÉ", "CAFE") < 1.0
     assert normalized_ratio("café", "café") == 1.0
     assert normalized_ratio("CAFÉ", "CAFÉ") == 1.0
     assert normalized_ratio("Café", "café") == 1.0
 
+
 def test_levenshtein_ratio_basic() -> None:
     assert levenshtein_ratio("kitten", "sitting") < 1.0
     assert levenshtein_ratio("abc", "abc") == 1.0
 
+
 def test_token_sort_ratio_score_disorder() -> None:
     assert token_sort_ratio_score("a b c", "c b a") == 1.0
     assert 0.0 <= token_sort_ratio_score("abc", "xyz") <= 1.0
+
 
 @pytest.mark.parametrize("agg_fn", sorted(VALID_HYBRID_AGG_FUNCS))
 def test_hybrid_score_agg_functions(agg_fn: HybridAggFunc) -> None:
@@ -86,15 +95,23 @@ def test_resolve_algorithm_name_aliases(alias: str, expected: FuzzyAlgorithm) ->
     resolved = resolve_algorithm_name(alias)
     assert resolved == expected
 
+
 def test_resolve_algorithm_name_known_registry_name() -> None:
     for algo in FUZZY_ALGORITHM_REGISTRY:
         resolved = resolve_algorithm_name(algo)
         assert resolved == algo
 
-def test_resolve_algorithm_name_invalid() -> None:
-    with pytest.raises(ValueError, match=r"Invalid fuzzy algorithm.*foo"):
-        resolve_algorithm_name("foo")
 
+def test_resolve_algorithm_name_invalid() -> None:
+    """It should raise ValueError for unsupported algorithm name."""
+    invalid_name = "foo"
+    valid_options = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
+    expected_msg = MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(
+        name=invalid_name,
+        valid_options=valid_options,
+    )
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        resolve_algorithm_name(invalid_name)
 # ---------------------------------------------------------------------
 # Registry Access
 # ---------------------------------------------------------------------
@@ -110,9 +127,19 @@ def test_get_fuzzy_algorithm_registry_contains_expected() -> None:
 # ---------------------------------------------------------------------
 
 def test_compute_similarity_with_invalid_mode() -> None:
-    with pytest.raises(ValueError, match="Invalid fuzzy match mode"):
-        compute_similarity("a", "b", algorithm="simple_ratio", mode="invalid")  # type: ignore
+    """It should raise ValueError for invalid fuzzy match mode."""
+    invalid_mode = "invalid"
+    expected_msg = MSG_ERROR_INVALID_FUZZY_MATCH_MODE.format(
+        value=invalid_mode,
+        valid_options=", ".join(sorted(VALID_FUZZY_MATCH_MODES)),
+    )
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        compute_similarity("a", "b", algorithm="simple_ratio", mode=invalid_mode)  # type: ignore
+
 
 def test_compute_similarity_with_unregistered_algorithm() -> None:
-    with pytest.raises(ValueError, match=r"Unknown or unsupported fuzzy algorithm"):
-        compute_similarity("a", "b", algorithm="unknown")  # type: ignore
+    """It should raise ValueError if the algorithm is not in the registry."""
+    algorithm = "unknown"
+    expected_msg = MSG_ERROR_ALGO_NOT_FOUND.format(algorithm=algorithm)
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        compute_similarity("a", "b", algorithm=algorithm)  # type: ignore

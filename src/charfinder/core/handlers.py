@@ -22,10 +22,22 @@ Functions:
     - _normalize_and_build_config():
 """
 
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from charfinder.config.messages import (
+    MSG_DEBUG_REMOVED_DUPLICATE_FUZZY,
+    MSG_ERROR_INVALID_ALGORITHM,
+    MSG_ERROR_QUERY_EMPTY,
+    MSG_ERROR_QUERY_TYPE,
+    MSG_INFO_MATCH_FOUND,
+    MSG_INFO_MATCH_NOT_FOUND,
+)
 from charfinder.config.types import FuzzyMatchContext, MatchTuple, SearchConfig
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import BuildCacheOptions, build_name_cache
@@ -42,17 +54,6 @@ from charfinder.validators import (
 
 if TYPE_CHECKING:
     from charfinder.config.aliases import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
-
-
-# ---------------------------------------------------------------------
-# Message Constants
-# ---------------------------------------------------------------------
-
-MSG_QUERY_TYPE_ERROR = "Query must be a string."
-MSG_QUERY_EMPTY_ERROR = "Query string must not be empty."
-MSG_INVALID_ALGO = "Invalid fuzzy algorithm: {error}"
-MSG_MATCH_FOUND = "Found {n} match(es) for query: '{query}'"
-MSG_MATCH_NOT_FOUND = "No matches found for query: '{query}'"
 
 
 def _log_match_message(
@@ -72,12 +73,12 @@ def _log_match_message(
         verbose (bool): Whether to print to console.
     """
     message = (
-        MSG_MATCH_FOUND.format(n=len(matches), query=query)
+        MSG_INFO_MATCH_FOUND.format(n=len(matches), query=query)
         if matches
-        else MSG_MATCH_NOT_FOUND.format(query=query)
+        else MSG_INFO_MATCH_NOT_FOUND.format(query=query)
     )
     echo(
-        message,
+        msg=message,
         style=lambda m: format_info(m, use_color=use_color),
         show=verbose,
         log=True,
@@ -98,9 +99,9 @@ def _validate_query(query: str, config: SearchConfig) -> None:
         ValueError: If query is empty or match mode is invalid.
     """
     if not isinstance(query, str):
-        raise TypeError(MSG_QUERY_TYPE_ERROR)
+        raise TypeError(MSG_ERROR_QUERY_TYPE)
     if not query.strip():
-        raise ValueError(MSG_QUERY_EMPTY_ERROR)
+        raise ValueError(MSG_ERROR_QUERY_EMPTY)
     validate_fuzzy_match_mode(config.fuzzy_match_mode)
 
 
@@ -124,7 +125,7 @@ def _resolve_matches(
     try:
         resolved_algo = resolve_algorithm_name(config.fuzzy_algo)
     except ValueError as exc:
-        raise ValueError(MSG_INVALID_ALGO.format(error=str(exc))) from exc
+        raise ValueError(MSG_ERROR_INVALID_ALGORITHM.format(error=str(exc))) from exc
 
     name_cache = config.name_cache or build_name_cache(
         options=BuildCacheOptions(
@@ -180,12 +181,9 @@ def _resolve_matches(
             if tpl.code not in exact_codes
         ]
         removed_count = len(raw_fuzzy_results) - len(fuzzy_matches)
-        message = (
-            f"Removed {removed_count} duplicate fuzzy match(es) already present in exact results."
-        )
         if removed_count > 0 and config.verbose:
             echo(
-                message,
+                msg=MSG_DEBUG_REMOVED_DUPLICATE_FUZZY.format(removed_count=removed_count),
                 style=lambda m: format_debug(m, use_color=config.use_color),
                 show=config.verbose,
                 log=True,

@@ -2,8 +2,10 @@
 
 import argparse
 import pytest
+import re
 
 from charfinder.config import constants as C
+from charfinder.config import messages as M
 from charfinder import validators as V
 
 # ---------------------------------------------------------------------
@@ -34,8 +36,13 @@ def test_validate_fuzzy_match_mode_valid(mode: str) -> None:
 
 def test_validate_fuzzy_match_mode_invalid() -> None:
     """Should raise for invalid match mode."""
-    with pytest.raises(ValueError, match="Invalid fuzzy match mode:"):
-        V.validate_fuzzy_match_mode("invalid_mode")
+    value = "invalid_mode"
+    expected_msg = M.MSG_ERROR_INVALID_FUZZY_MATCH_MODE.format(
+        value=value,
+        valid_options=", ".join(sorted(C.VALID_FUZZY_MATCH_MODES)),
+    )
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        V.validate_fuzzy_match_mode(value)
 
 
 @pytest.mark.parametrize("mode", C.VALID_EXACT_MATCH_MODES)
@@ -46,9 +53,13 @@ def test_validate_exact_match_mode_valid(mode: str) -> None:
 
 def test_validate_exact_match_mode_invalid() -> None:
     """Should raise for invalid exact match mode."""
-    with pytest.raises(ValueError, match="Invalid exact match mode:"):
-        V.validate_exact_match_mode("badmode")
-
+    value = "badmode"
+    expected_msg = M.MSG_ERROR_INVALID_EXACT_MATCH_MODE.format(
+        value=value,
+        valid_options=", ".join(sorted(C.VALID_EXACT_MATCH_MODES)),
+    )
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        V.validate_exact_match_mode(value)
 
 # ---------------------------------------------------------------------
 # Aggregation Function Validation
@@ -62,9 +73,13 @@ def test_validate_hybrid_agg_fn_valid(agg: str) -> None:
 
 def test_validate_hybrid_agg_fn_invalid() -> None:
     """Should raise for unknown hybrid aggregation functions."""
-    with pytest.raises(ValueError, match="Got: funkyavg"):
-        V.validate_hybrid_agg_fn("funkyavg")
-
+    func = "funkyavg"
+    expected_msg = M.MSG_ERROR_INVALID_AGG_FUNC.format(
+        func=func,
+        valid_options=", ".join(sorted(C.VALID_HYBRID_AGG_FUNCS)),
+    )
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        V.validate_hybrid_agg_fn(func)
 
 # ---------------------------------------------------------------------
 # Threshold Validation
@@ -79,13 +94,13 @@ def test_validate_threshold_valid_values(threshold: float) -> None:
 @pytest.mark.parametrize("threshold", [-0.1, 1.1, 99])
 def test_validate_threshold_out_of_bounds(threshold: float) -> None:
     """Should raise ValueError for out-of-bound threshold values."""
-    with pytest.raises(ValueError, match="Invalid threshold used"):
+    with pytest.raises(ValueError, match=re.escape(M.MSG_ERROR_INVALID_THRESHOLD)):
         V.validate_threshold(threshold)
 
 
 def test_validate_threshold_type_error() -> None:
     """Should raise TypeError for non-numeric threshold values."""
-    with pytest.raises(TypeError, match="Threshold must be a float"):
+    with pytest.raises(TypeError, match=re.escape(M.MSG_ERROR_INVALID_THRESHOLD_TYPE)):
         V.validate_threshold("0.5")  # type: ignore
 
 
@@ -101,9 +116,8 @@ def test_validate_color_mode_valid(color: str) -> None:
 
 def test_validate_color_mode_invalid() -> None:
     """Should raise for unknown color mode."""
-    with pytest.raises(ValueError, match="Invalid color mode"):
+    with pytest.raises(ValueError, match=re.escape("Invalid color mode")):
         V.validate_color_mode("blackandwhite")
-
 
 # ---------------------------------------------------------------------
 # Output Format Validation
@@ -114,12 +128,12 @@ def test_validate_output_format_valid(fmt: str) -> None:
     """Should accept all valid output formats."""
     assert V.validate_output_format(fmt) == fmt
 
-
 def test_validate_output_format_invalid() -> None:
     """Should raise for unsupported output format."""
-    with pytest.raises(ValueError, match="Invalid output format"):
+    valid_options = ", ".join(sorted(C.VALID_OUTPUT_FORMATS))
+    expected_msg = M.MSG_ERROR_INVALID_OUTPUT_FORMAT.format(format="xml", valid_options=valid_options)
+    with pytest.raises(ValueError, match=expected_msg):
         V.validate_output_format("xml")
-
 
 # ---------------------------------------------------------------------
 # Show Score Validation
@@ -137,12 +151,14 @@ def test_validate_show_score_falsy(val: str) -> None:
     assert V.validate_show_score(val) is False
 
 
+
 def test_validate_show_score_invalid() -> None:
     """Should raise for unknown show score values."""
-    with pytest.raises(argparse.ArgumentTypeError, match="Invalid value for --show-score"):
+    valid_options = ", ".join(sorted(C.VALID_SHOW_SCORES))
+    expected_msg = M.MSG_ERROR_INVALID_SHOW_SCORE_VALUE.format(value="maybe", valid_options=valid_options)
+    with pytest.raises(argparse.ArgumentTypeError, match=expected_msg):
         V.validate_show_score("maybe")
-
-
+        
 # ---------------------------------------------------------------------
 # Effective Resolver Logic
 # ---------------------------------------------------------------------
