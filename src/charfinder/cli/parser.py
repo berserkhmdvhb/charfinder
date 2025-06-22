@@ -239,7 +239,7 @@ def create_parser() -> argparse.ArgumentParser:
         default=DEFAULT_OUTPUT_FORMAT,
         help=(
             "Output format:\n"
-            "'text' for human-friendly table (default), 'json' for structured output."
+            "\t'text' for human-friendly table (default), 'json' for structured output."
         ),
     )
 
