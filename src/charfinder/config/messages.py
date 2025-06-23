@@ -27,7 +27,7 @@ MSG_DEBUG_SECTION_START = "=== DEBUG DIAGNOSTICS ==="
 MSG_DEBUG_SECTION_END = "=== END DEBUG DIAGNOSTICS ==="
 MSG_DEBUG_PARSED_ARGS = "Parsed args:"
 MSG_DEBUG_ARG_ITEM = "{key:<20} = {value}"
-MSG_DEBUG_ENV_VAR = "\t{env_var} = {value}"
+MSG_DEBUG_ENV_VAR = "{env_var} = {value}"
 MSG_DEBUG_DOTENV_LOADED_FILES = "Loaded .env file(s):"
 
 MSG_DEBUG_DOTENV_START = "=== DOTENV DEBUG ==="
@@ -38,7 +38,7 @@ MSG_DEBUG_DOTENV_SELECTED = "Selected .env file: {path}"
 MSG_DEBUG_DOTENV_EMPTY = ".env file exists but is empty or contains no key-value pairs."
 MSG_DEBUG_DOTENV_READ_ERROR = "Failed to read .env file: {error}"
 MSG_DEBUG_DOTENV_ITEM = "{key:<20} = {value}"
-
+MSG_DEBUG_NORMALIZED_QUERY_TOKENS = "Normalized query tokens = {tokens}"
 
 # diagnostics_match.py
 

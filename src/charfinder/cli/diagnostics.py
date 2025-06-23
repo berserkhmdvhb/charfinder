@@ -31,6 +31,7 @@ from charfinder.config.messages import (
     MSG_DEBUG_DOTENV_START,
     MSG_DEBUG_ENV_VAR,
     MSG_DEBUG_NO_DOTENV_FOUND,
+    MSG_DEBUG_NORMALIZED_QUERY_TOKENS,
     MSG_DEBUG_PARSED_ARGS,
     MSG_DEBUG_SECTION_END,
     MSG_DEBUG_SECTION_START,
@@ -39,6 +40,7 @@ from charfinder.config.settings import resolve_dotenv_path
 from charfinder.config.types import MatchDiagnosticsInfo
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_debug
+from charfinder.utils.normalizer import normalize
 
 __all__ = [
     "print_debug_diagnostics",
@@ -103,6 +105,17 @@ def print_debug_diagnostics(
         show=show,
     )
 
+    query_tokens = getattr(args, "option_query", None) or getattr(args, "positional_query", None)
+    if query_tokens and hasattr(args, "normalization_profile"):
+        normalized_tokens = [
+            normalize(q, profile=args.normalization_profile) for q in query_tokens
+        ]
+        _debug_echo(
+            msg=MSG_DEBUG_NORMALIZED_QUERY_TOKENS.format(tokens=normalized_tokens),
+            use_color=use_color,
+            show=show,
+        )
+        
     if match_info:
         print_match_diagnostics(
             args=args,

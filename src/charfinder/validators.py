@@ -806,7 +806,13 @@ def resolve_effective_normalization_profile(
         return validate_normalization_profile(cli_value, source="cli")
 
     env_value = os.getenv(ENV_NORMALIZATION_PROFILE)
-    return validate_normalization_profile(env_value, source="env")
+    if env_value is not None:
+        try:
+            return validate_normalization_profile(env_value, source="env")
+        except ValueError:
+            pass
+
+    return DEFAULT_NORMALIZATION_PROFILE
 
 
 def validate_show_score(value: str) -> bool:

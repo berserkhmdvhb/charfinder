@@ -486,3 +486,26 @@ def test_validate_normalized_name_valid() -> None:
 def test_validate_normalized_name_invalid(val: str | None) -> None:
     with pytest.raises(ValueError, match=M.MSG_ERROR_INVALID_NAME.format(value=val)):
         V.validate_normalized_name(val)  # type: ignore
+
+
+def test_validate_normalization_profile_none_returns_default() -> None:
+    """Should return default normalization profile when value is None."""
+    assert V.validate_normalization_profile(None) == C.DEFAULT_NORMALIZATION_PROFILE
+
+
+@pytest.mark.parametrize("val", C.VALID_NORMALIZATION_PROFILES)
+def test_validate_normalization_profile_valid(val: str) -> None:
+    """Should accept valid normalization profile strings."""
+    assert V.validate_normalization_profile(val) == val
+
+
+def test_validate_normalization_profile_invalid_raises() -> None:
+    """Should raise for invalid normalization profile string."""
+    bad_value = "flatten"
+    expected_msg = M.MSG_ERROR_INVALID_NORMALIZATION_PROFILE.format(
+        value=bad_value,
+        source="cli",
+        valid_options=", ".join(C.VALID_NORMALIZATION_PROFILES),
+    )
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        V.validate_normalization_profile(bad_value)

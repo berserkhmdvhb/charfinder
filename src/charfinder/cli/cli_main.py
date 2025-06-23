@@ -34,6 +34,7 @@ from charfinder.utils.normalizer import normalize
 from charfinder.validators import (
     apply_fuzzy_defaults,
     resolve_cli_settings,
+    resolve_effective_normalization_profile,
     resolve_effective_show_score,
 )
 
@@ -60,6 +61,11 @@ def main() -> None:
 
     # Resolve show_score (CLI > env > default)
     args.show_score = resolve_effective_show_score(cli_value=args.show_score)
+
+    # Resolve normalization profile( CLI > env > default)
+    args.normalization_profile = resolve_effective_normalization_profile(
+        cli_value=args.normalization_profile
+    )
 
     # Query handling: resolve final query string
     raw_query = resolve_final_query(args)
