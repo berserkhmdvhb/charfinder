@@ -23,6 +23,9 @@ from unittest.mock import patch
 
 from charfinder.utils import logger_helpers as lh
 from charfinder.config.types import EchoFunc
+from charfinder.config.messages import MSG_WARNING_DELETE_ROLLOVER_TARGET_FAILED
+from charfinder.utils.formatter import log_optionally_echo
+from charfinder.utils.logger_styles import format_warning
 
 pytestmark = pytest.mark.unit
 
@@ -195,3 +198,48 @@ def test_do_rollover_warns_on_unlink_fail(
     logs = log_stream.getvalue()
     assert "Failed to delete old log file" in logs
     assert str(failing_file) in logs
+
+
+
+
+
+
+def test_do_rollover_warns_on_unlink_of_rollover_target(
+    tmp_path: Path,
+    log_stream: StringIO,
+    debug_logger: logging.Logger,
+) -> None:
+    """do_rollover logs warning if rollover target cannot be deleted."""
+    base_file = tmp_path / "charfinder.log"
+    base_file.write_text("main", encoding="utf-8")
+
+    handler = lh.CustomRotatingFileHandler(str(base_file), backupCount=3, delay=False)
+
+    # Create rotated files
+    log1 = Path(handler.rotation_filename(f"{base_file}.1"))
+    log2 = Path(handler.rotation_filename(f"{base_file}.2"))
+    log3 = Path(handler.rotation_filename(f"{base_file}.3"))
+    log1.write_text("rotate me", encoding="utf-8")
+    log2.write_text("also rotate", encoding="utf-8")
+    log3.write_text("block me", encoding="utf-8")
+    target = log3.resolve()
+
+    print(f"[DEBUG] Target to fail unlink: {target}")
+
+    original_unlink = Path.unlink
+
+    def unlink_side_effect(self: Path, *args: object, **kwargs: object) -> None:
+        print(f"[DEBUG] Attempting unlink: {self}")
+        if self.resolve() == target:
+            print(f"[DEBUG] Simulating unlink failure for: {self}")
+            raise OSError("Simulated failure")
+        return original_unlink(self)
+
+    with patch("pathlib.Path.unlink", new=unlink_side_effect):
+        handler.do_rollover()
+
+    logs = log_stream.getvalue()
+    print("[DEBUG] Captured logs:\n", logs)
+
+    assert "Failed to delete rollover target" in logs
+    assert str(target) in logs

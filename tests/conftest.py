@@ -238,6 +238,7 @@ def fail_unlink_for() -> Callable[[Path], ContextManager[None]]:
 
             def side_effect(self: Path, *args: Any, **kwargs: Any) -> None:
                 if self == file_to_fail:
+                    print(f"[DEBUG] Simulated unlink failure triggered for: {self}")
                     raise PermissionError(errno.EACCES, "Permission denied", str(self))
                 return original_unlink(self, *args, **kwargs)
 
