@@ -334,6 +334,9 @@ def test_resolve_effective_show_score_fallback(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.delenv("CHARFINDER_SHOW_SCORE", raising=False)
     assert V.resolve_effective_show_score(cli_value=None) == C.DEFAULT_SHOW_SCORE
 
+def test_validate_threshold_defaults_when_none() -> None:
+    """Should return default threshold if input is None (core context)."""
+    assert V.validate_threshold(None) == C.DEFAULT_THRESHOLD
 
 # ---------------------------------------------------------------------
 # Cache File
@@ -405,6 +408,21 @@ def test_validate_name_cache_structure_invalid_entry_type() -> None:
     with pytest.raises(TypeError):
         V.validate_name_cache_structure({"x": "notadict"})
 
+
+def test_validate_dict_str_keys_raises_if_not_dict() -> None:
+    """Should raise TypeError if input is not a dictionary at all."""
+    with pytest.raises(TypeError, match=re.escape(M.MSG_ERROR_EXPECTED_DICT)):
+        V.validate_dict_str_keys(["not", "a", "dict"])  # type: ignore
+
+
+def test_validate_cache_file_path_converts_str_to_path() -> None:
+    """Should convert string input to Path."""
+    result = V.validate_cache_file_path("some/path/cache.json")
+    assert isinstance(result, Path)
+    assert result.name == "cache.json"
+
+
+
 # ---------------------------------------------------------------------
 # Unicode Data
 # ---------------------------------------------------------------------
@@ -436,6 +454,26 @@ def test_validate_files_and_url_success(tmp_path: Path) -> None:
     assert msg is None
 
 
+def test_validate_unicode_data_file_success(tmp_path: Path) -> None:
+    """Should return True for a valid existing file path."""
+    f = tmp_path / "file.txt"
+    f.write_text("data")
+    assert V.validate_unicode_data_file(f) is True
+
+
+def test_validate_unicode_data_file_missing(tmp_path: Path) -> None:
+    """Should raise FileNotFoundError if file does not exist."""
+    f = tmp_path / "missing.txt"
+    with pytest.raises(FileNotFoundError, match=re.escape(M.MSG_ERROR_FILE_NOT_FOUND.format(path=f))):
+        V.validate_unicode_data_file(f)
+
+
+def test_validate_name_cache_structure_type_error() -> None:
+    """Should raise if name_cache is not a dict."""
+    with pytest.raises(TypeError, match="Expected name_cache to be a dict."):
+        V.validate_name_cache_structure("not-a-dict")
+
+        
 # ---------------------------------------------------------------------
 # Normalization
 # ---------------------------------------------------------------------

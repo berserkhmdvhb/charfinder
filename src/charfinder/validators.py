@@ -585,7 +585,7 @@ def validate_unicode_data_url(url: str) -> bool:
     return True
 
 
-def validate_cache_file_path(cache_file_path: Path | None) -> Path:
+def validate_cache_file_path(cache_file_path: Path | str | None) -> Path:
     """
     Validate and normalize the provided cache file path.
 
