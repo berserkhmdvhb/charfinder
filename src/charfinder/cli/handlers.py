@@ -44,6 +44,7 @@ from charfinder.validators import (
     resolve_cli_settings,
     validate_exact_match_mode,
     validate_fuzzy_match_mode,
+    validate_normalization_profile,
     validate_output_format,
 )
 
@@ -71,6 +72,7 @@ class SearchParams:
     verbose: bool
     use_color: bool
     threshold: float
+    normalization_profile: str
 
 
 # ---------------------------------------------------------------------
@@ -118,7 +120,7 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
         # Validate match modes (explicitly CLI-sourced)
         fuzzy_mode = validate_fuzzy_match_mode(args.fuzzy_match_mode)
         exact_mode = validate_exact_match_mode(args.exact_match_mode)
-
+        normalization_profile = validate_normalization_profile(args.normalization_profile)
         if not query_str:
             return handle_empty_query(use_color=use_color)
 
@@ -133,6 +135,7 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
             verbose=args.verbose,
             use_color=use_color,
             threshold=threshold,
+            normalization_profile=normalization_profile,
         )
 
         return _run_query_and_return(params, output_format=args.format, args=args)
@@ -171,7 +174,6 @@ def _run_query_and_return(
     Returns:
         MatchResult: Structured CLI result with exit code and optional diagnostics.
     """
-
     validated_format = validate_output_format(output_format)
 
     if validated_format == "json":

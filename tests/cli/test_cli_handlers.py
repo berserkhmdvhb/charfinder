@@ -159,6 +159,7 @@ def test_run_query_json_output(
         verbose=False,
         use_color=False,
         threshold=0.8,
+        normalization_profile="aggressive",
     )
 
     result = _run_query_and_return(params, output_format="json", args=args)
@@ -200,6 +201,7 @@ def test_run_query_text_output_with_matches(
         verbose=False,
         use_color=False,
         threshold=0.8,
+        normalization_profile="aggressive",
     )
 
     result = _run_query_and_return(params, output_format="text", args=args)
@@ -241,6 +243,7 @@ def test_run_query_text_output_no_matches(
         verbose=False,
         use_color=False,
         threshold=0.8,
+        normalization_profile="aggressive",
     )
 
     result = _run_query_and_return(params, output_format="text", args=args)
@@ -293,6 +296,7 @@ def test_handle_find_chars_keyboard_interrupt(
         use_color=False,
         format="text",
         threshold=0.7,
+        normalization_profile="aggressive"
     )
     result = handle_find_chars(args, query_str="a")
     assert result.exit_code == EXIT_CANCELLED
@@ -321,6 +325,7 @@ def test_handle_find_chars_success(
         use_color=False,
         format="text",
         threshold=0.7,
+        normalization_profile="aggressive",
     )
     result = handle_find_chars(args, query_str="hello")
     assert result.exit_code == EXIT_SUCCESS
@@ -382,6 +387,7 @@ def test_handle_find_chars_reraises_system_exit(
         use_color=False,
         format="text",
         threshold=0.7,
+        normalization_profile="aggressive",
     )
     with pytest.raises(SystemExit):
         handle_find_chars(args, query_str="force exit")

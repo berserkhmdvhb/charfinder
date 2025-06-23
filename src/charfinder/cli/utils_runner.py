@@ -81,7 +81,7 @@ def resolve_final_query(args: Namespace) -> str:
         args (Namespace): Parsed CLI arguments.
 
     Returns:
-        str: The final normalized query string to use.
+        str: The final joint query string to use.
     """
     query_list = args.option_query if args.option_query else args.positional_query
     return " ".join(query_list).strip()

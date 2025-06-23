@@ -66,6 +66,7 @@ class SearchConfig:
     exact_match_mode: str
     agg_fn: HybridAggFunc
     prefer_fuzzy: bool
+    normalization_profile: NormalizationProfile
 ```
 
 #### `MatchDiagnosticsInfo`

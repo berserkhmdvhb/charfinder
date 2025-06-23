@@ -35,6 +35,7 @@ def test_search_config_instantiation() -> None:
         exact_match_mode="word-subset",
         agg_fn="mean",
         prefer_fuzzy=True,
+        normalization_profile="aggressive",
     )
     assert config.fuzzy
     assert config.threshold == 0.7

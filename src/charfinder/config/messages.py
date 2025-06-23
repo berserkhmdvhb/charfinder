@@ -80,7 +80,7 @@ MSG_INFO_NO_DOTENV_LOADED = "No .env file loaded — using system env or default
 MSG_ERROR_QUERY_TYPE = "Query must be a string."
 MSG_ERROR_QUERY_EMPTY = "Query string must not be empty."
 MSG_ERROR_INVALID_ALGORITHM = "Invalid fuzzy algorithm: {error}"
-MSG_INFO_MATCH_FOUND = "Found {n} match(es) for query: '{query}'"
+MSG_INFO_MATCH_FOUND = "Found {n} match(es) for normalized query: '{query}'"
 MSG_INFO_MATCH_NOT_FOUND = "No matches found for query: '{query}'"
 MSG_DEBUG_REMOVED_DUPLICATE_FUZZY = (
     "Removed {removed_count} duplicate fuzzy match(es) already present in exact results."

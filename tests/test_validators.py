@@ -509,3 +509,25 @@ def test_validate_normalization_profile_invalid_raises() -> None:
     )
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
         V.validate_normalization_profile(bad_value)
+
+
+# resolve_effective_normalization_profile
+
+def test_resolve_normalization_profile_cli_priority() -> None:
+    """Should return CLI value if provided."""
+    result = V.resolve_effective_normalization_profile("medium")
+    assert result == "medium"
+
+
+def test_resolve_normalization_profile_env_used(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Should use environment variable if CLI value is None."""
+    monkeypatch.setenv("CHARFINDER_NORMALIZATION_PROFILE", "aggressive")
+    result = V.resolve_effective_normalization_profile(None)
+    assert result == "aggressive"
+
+
+def test_resolve_normalization_profile_env_invalid_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Should fall back to default if env var is invalid."""
+    monkeypatch.setenv("CHARFINDER_NORMALIZATION_PROFILE", "invalid_profile")
+    result = V.resolve_effective_normalization_profile(None)
+    assert result == C.DEFAULT_NORMALIZATION_PROFILE

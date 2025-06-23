@@ -34,6 +34,7 @@ def test_validate_query_rejects_non_string() -> None:
         exact_match_mode="substring",
         agg_fn="mean",
         prefer_fuzzy=False,
+        normalization_profile="aggressive",
     )
     with pytest.raises(TypeError, match="Query must be a string"):
         H._validate_query(cast(Any, 123), config=config)
@@ -52,6 +53,7 @@ def test_validate_query_rejects_empty_string() -> None:
         exact_match_mode="substring",
         agg_fn="max",
         prefer_fuzzy=False,
+        normalization_profile="aggressive",
     )
     with pytest.raises(ValueError, match="Query string must not be empty"):
         H._validate_query("   ", config=config)
@@ -74,10 +76,12 @@ def test_build_search_config_valid_threshold() -> None:
         exact_match_mode="substring",
         agg_fn="mean",
         prefer_fuzzy=True,
+        normalization_profile="aggressive",
     )
     assert isinstance(cfg, SearchConfig)
     assert cfg.threshold == 0.9
     assert cfg.fuzzy_algo == "token_sort_ratio"
+    assert cfg.normalization_profile == "aggressive"
 
 
 def test_build_search_config_invalid_threshold() -> None:
@@ -94,6 +98,7 @@ def test_build_search_config_invalid_threshold() -> None:
             exact_match_mode="substring",
             agg_fn="max",
             prefer_fuzzy=False,
+            normalization_profile="aggressive",
         )
 
 
@@ -127,6 +132,7 @@ def test_resolve_matches_exact_only(
         exact_match_mode="substring",
         agg_fn="max",
         prefer_fuzzy=False,
+        normalization_profile="aggressive",
     )
     matches, used_fuzzy = H._resolve_matches("grin", config=config)
     assert not used_fuzzy
@@ -159,6 +165,7 @@ def test_resolve_matches_fuzzy_added(
         exact_match_mode="substring",
         agg_fn="mean",
         prefer_fuzzy=True,
+        normalization_profile="aggressive",
     )
     matches, used_fuzzy = H._resolve_matches("check", config=config)
     assert used_fuzzy is True
@@ -181,6 +188,7 @@ def test_resolve_matches_invalid_algo(mock_cache: MagicMock) -> None:
         exact_match_mode="substring",
         agg_fn="mean",
         prefer_fuzzy=False,
+        normalization_profile="aggressive",
     )
     with pytest.raises(ValueError, match="Invalid fuzzy algorithm"):
         H._resolve_matches("abc", config=config)
@@ -218,6 +226,7 @@ def test_resolve_matches_logs_removed_duplicates(
         exact_match_mode="substring",
         agg_fn="mean",
         prefer_fuzzy=True,
+        normalization_profile="aggressive",
     )
     matches, used_fuzzy = H._resolve_matches("check", config=config)
     assert used_fuzzy is True

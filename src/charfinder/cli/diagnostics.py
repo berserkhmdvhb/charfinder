@@ -107,15 +107,13 @@ def print_debug_diagnostics(
 
     query_tokens = getattr(args, "option_query", None) or getattr(args, "positional_query", None)
     if query_tokens and hasattr(args, "normalization_profile"):
-        normalized_tokens = [
-            normalize(q, profile=args.normalization_profile) for q in query_tokens
-        ]
+        normalized_tokens = [normalize(q, profile=args.normalization_profile) for q in query_tokens]
         _debug_echo(
             msg=MSG_DEBUG_NORMALIZED_QUERY_TOKENS.format(tokens=normalized_tokens),
             use_color=use_color,
             show=show,
         )
-        
+
     if match_info:
         print_match_diagnostics(
             args=args,

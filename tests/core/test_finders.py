@@ -35,6 +35,7 @@ def sample_config() -> SearchConfig:
         exact_match_mode="substring",
         agg_fn="mean",
         prefer_fuzzy=False,
+        normalization_profile="aggressive",
     )
 
 

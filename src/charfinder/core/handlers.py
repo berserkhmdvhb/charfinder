@@ -49,11 +49,17 @@ from charfinder.validators import (
     validate_exact_match_mode,
     validate_fuzzy_algo,
     validate_fuzzy_match_mode,
+    validate_normalization_profile,
     validate_threshold,
 )
 
 if TYPE_CHECKING:
-    from charfinder.config.aliases import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
+    from charfinder.config.aliases import (
+        FuzzyAlgorithm,
+        FuzzyMatchMode,
+        HybridAggFunc,
+        NormalizationProfile,
+    )
 
 
 def _log_match_message(
@@ -120,6 +126,7 @@ def _resolve_matches(
         tuple[list[MatchTuple], bool]: List of matches and a flag
         indicating whether fuzzy matching was used.
     """
+    q = query
     _validate_query(query, config)
 
     try:
@@ -138,7 +145,7 @@ def _resolve_matches(
         )
     )
 
-    norm_query = normalize(query)
+    norm_query = normalize(query, profile=config.normalization_profile)
     exact_matches = [
         MatchTuple(
             code=tpl.code,
@@ -192,7 +199,7 @@ def _resolve_matches(
     all_matches = sorted(
         exact_matches + fuzzy_matches, key=lambda m: (m.is_fuzzy, -(m.score or 0.0))
     )
-    _log_match_message(all_matches, query, use_color=config.use_color, verbose=config.verbose)
+    _log_match_message(all_matches, query=q, use_color=config.use_color, verbose=config.verbose)
     return all_matches, used_fuzzy
 
 
@@ -208,6 +215,7 @@ def build_search_config(
     exact_match_mode: str,
     agg_fn: HybridAggFunc,
     prefer_fuzzy: bool,
+    normalization_profile: NormalizationProfile,
 ) -> SearchConfig:
     """
     Validate inputs and return a full SearchConfig object.
@@ -223,6 +231,7 @@ def build_search_config(
         exact_match_mode (str): 'substring' or 'word-subset'.
         agg_fn (HybridAggFunc): Aggregation method for hybrid mode.
         prefer_fuzzy (bool): Whether to include fuzzy even with exact match.
+        normalization_profile (Literal): Profile for Unicode normalization.
 
     Returns:
         SearchConfig: Fully validated search configuration object.
@@ -238,6 +247,7 @@ def build_search_config(
         exact_match_mode=validate_exact_match_mode(exact_match_mode),
         agg_fn=agg_fn,
         prefer_fuzzy=bool(prefer_fuzzy),
+        normalization_profile=validate_normalization_profile(normalization_profile),
     )
 
 
@@ -254,7 +264,7 @@ def _normalize_and_build_config(
     exact_match_mode: str,
     agg_fn: HybridAggFunc,
     prefer_fuzzy: bool,
-    normalization_profile: Literal["raw", "light", "medium", "aggressive"],
+    normalization_profile: NormalizationProfile,
 ) -> tuple[str, SearchConfig]:
     """
     Normalize the query and return it alongside a validated SearchConfig.
@@ -274,7 +284,7 @@ def _normalize_and_build_config(
         normalization_profile (Literal): Profile for Unicode normalization.
 
     Returns:
-        tuple[str, SearchConfig]: Normalized query and validated config.
+        tuple[str, SearchConfig]: Normalized query, and validated config.
     """
     norm_query = normalize(query, profile=normalization_profile)
     config = build_search_config(
@@ -288,5 +298,6 @@ def _normalize_and_build_config(
         exact_match_mode=exact_match_mode,
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
+        normalization_profile=normalization_profile,
     )
     return norm_query, config
