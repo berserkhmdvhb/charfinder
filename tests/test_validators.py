@@ -246,6 +246,14 @@ def test_validate_show_score_invalid() -> None:
     with pytest.raises(argparse.ArgumentTypeError, match=expected_msg):
         V.validate_show_score("maybe")
         
+
+def test_resolve_effective_show_score_env_invalid(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Should fall back to default if env var is invalid."""
+    monkeypatch.setenv("CHARFINDER_SHOW_SCORE", "maybe")  # Invalid value
+    result = V.resolve_effective_show_score(cli_value=None)
+    assert result == C.DEFAULT_SHOW_SCORE
+
+
 # ---------------------------------------------------------------------
 # Effective Resolver Logic
 # ---------------------------------------------------------------------

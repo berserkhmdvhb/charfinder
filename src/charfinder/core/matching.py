@@ -82,9 +82,6 @@ def find_exact_matches(
     matches: list[MatchTuple] = []
 
     for char, names in name_cache.items():
-        if not isinstance(names, dict) or "original" not in names or "normalized" not in names:
-            continue
-
         code_point = ord(char)
         original_name = names["original"]
         norm_name = names["normalized"]

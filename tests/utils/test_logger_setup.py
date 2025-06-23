@@ -75,17 +75,25 @@ def test_setup_logging_is_idempotent(temp_log_dir: Path) -> None:
     assert len(get_logger().handlers) == 2
 
 
-def test_reset_true_reconfigures_handlers(temp_log_dir: Path) -> None:
-    """reset=True should replace old handlers."""
+def test_reset_true_reconfigures_handlers(
+    temp_log_dir: Path,
+    clean_charfinder_logger: None,
+) -> None:
+    """reset=True should clear existing handlers and reinitialize them."""
     logger = get_logger()
-    setup_logging(log_dir=temp_log_dir, reset=True)
-    first_ids = [id(h) for h in logger.handlers]
 
-    setup_logging(log_dir=temp_log_dir, reset=True)
-    second_ids = [id(h) for h in logger.handlers]
+    # Add a dummy handler manually
+    dummy_handler = logging.StreamHandler()
+    logger.addHandler(dummy_handler)
+    assert dummy_handler in logger.handlers
 
-    assert first_ids != second_ids
-    assert len(second_ids) == 2
+    # Run setup_logging with reset=True
+    setup_logging(log_dir=temp_log_dir, reset=True)
+
+    # Now the dummy handler should be gone
+    assert dummy_handler not in logger.handlers
+    assert len(logger.handlers) == 2  # Expect: Stream + RotatingFile
+
 
 
 def test_console_log_level_respects_debug_flag(

@@ -11,10 +11,13 @@ from __future__ import annotations
 from io import StringIO
 import logging
 import pytest
+import re
 
 from charfinder.config.types import FuzzyMatchContext
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
-from charfinder.config.constants import DEFAULT_THRESHOLD
+from charfinder.config.constants import DEFAULT_THRESHOLD, VALID_EXACT_MATCH_MODES
+from charfinder.config.messages import MSG_EXACT_CHECKING, MSG_ERROR_INVALID_EXACT_MATCH_MODE
+ 
 
 
 # ---------------------------------------------------------------------
@@ -25,6 +28,7 @@ from charfinder.config.constants import DEFAULT_THRESHOLD
 def sample_name_cache() -> dict[str, dict[str, str]]:
     return {
         "✓": {
+
             "original": "CHECK MARK",
             "normalized": "check mark",
             "alternate_normalized": "tick",
@@ -134,3 +138,44 @@ def test_fuzzy_match_verbose_logging(
     assert results
     assert "trying fuzzy" in output
     assert "threshold=0.5" in output
+
+
+def test_find_exact_matches_logs_when_verbose(
+    log_stream: StringIO,
+    debug_logger: logging.Logger,  # ensures logger is wired to log_stream
+) -> None:
+    """Should log exact checking details when verbose=True."""
+    name_cache = {
+        "✓": {"original": "CHECK MARK", "normalized": "check mark"},
+    }
+
+    result = find_exact_matches(
+        "check",
+        name_cache,
+        exact_match_mode="substring",
+        verbose=True,
+    )
+
+    assert result
+
+    expected_msg = MSG_EXACT_CHECKING.format(
+        code=0x2713,
+        name="check mark",
+        alt="",
+    )
+
+    log_output = log_stream.getvalue()
+    assert expected_msg in log_output
+
+
+def test_find_exact_matches_raises_on_invalid_mode() -> None:
+    """Should raise if an unsupported exact match mode is given."""
+    name_cache = {
+        "✓": {"original": "CHECK MARK", "normalized": "check mark"},
+    }
+    expected_msg = MSG_ERROR_INVALID_EXACT_MATCH_MODE.format(
+        value="invalid",
+        valid_options=", ".join(sorted(VALID_EXACT_MATCH_MODES)),
+    )
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        find_exact_matches("check", name_cache, exact_match_mode="invalid", verbose=False)
