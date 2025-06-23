@@ -114,8 +114,6 @@ def find_exact_matches(
 
             if query_words <= name_words:
                 matches.append(MatchTuple(code_point, char, original_name, None))
-        else:
-            raise ValueError(MSG_UNKNOWN_EXACT_MODE.format(mode=exact_match_mode))
 
     return matches
 

@@ -179,3 +179,33 @@ def test_find_exact_matches_raises_on_invalid_mode() -> None:
     )
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
         find_exact_matches("check", name_cache, exact_match_mode="invalid", verbose=False)
+
+
+from charfinder.config.messages import MSG_SUBSET_CHECKING
+
+def test_word_subset_logs_when_verbose(
+    sample_name_cache: dict[str, dict[str, str]],
+    log_stream: StringIO,
+    debug_logger: logging.Logger,
+) -> None:
+    """Should log subset matching details when verbose=True in word-subset mode."""
+    result = find_exact_matches(
+        "ballot",
+        sample_name_cache,
+        exact_match_mode="word-subset",
+        verbose=True,
+    )
+    assert result
+
+    expected_1 = MSG_SUBSET_CHECKING.format(
+        query={"ballot"},
+        name={"check", "mark", "tick"},
+    )
+    expected_2 = MSG_SUBSET_CHECKING.format(
+        query={"ballot"},
+        name={"ballot", "x"},
+    )
+
+    log_output = log_stream.getvalue()
+    assert expected_1 in log_output
+    assert expected_2 in log_output
