@@ -523,7 +523,7 @@ def validate_dict_str_keys(name_cache: NameCache) -> NameCache:
 
     for key, value in name_cache.items():
         if not isinstance(key, str):
-            raise TypeError(MSG_ERROR_EXPECTED_DICT_KEY.format(type=type(key)), key=key)
+            raise TypeError(MSG_ERROR_EXPECTED_DICT_KEY.format(type=type(key), key=key))
         if not isinstance(value, dict):
             raise TypeError(MSG_ERROR_EXPECTED_DICT_VAL.format(type=type(value), key=key))
 
