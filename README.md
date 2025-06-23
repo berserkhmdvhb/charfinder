@@ -246,13 +246,17 @@ charfinder/
 │   │   ├── logger_styles.py         # Logging color/style definitions
 │   │   └── normalizer.py            # Unicode normalization logic
 │
-└── tests/                           # Unit and integration tests
-    ├── cli/                         # CLI test modules
-    ├── config/                      # Config/settings/types tests
-    ├── core/                        # Core logic tests
-    ├── logger/                      # Logging-related tests
-    ├── conftest.py                  # Shared test fixtures and utilities
-    └── manual/demo.ipynb            # Manual usage and demo notebook
+└── tests/                           # Unit, integration, and manual tests
+    ├── cli/                         # CLI interface and argument handling tests
+    ├── config/                      # Tests for constants, settings, types, aliases
+    ├── core/                        # Core Unicode search, cache, and matching logic
+    ├── utils/                       # Terminal formatting, normalization, and logger utilities
+    ├── helpers/                     # Internal testing utilities (not test files)
+    ├── manual/                      # Manual testing and usage examples
+    │   └── demo.ipynb               # Interactive demo notebook
+    ├── test_fuzzymatchlib.py        # Tests for fuzzy algorithm registry and scoring
+    ├── test_validators.py           # Input validation and config resolution logic
+    └── conftest.py                  # Shared test fixtures and environment isolation
 ```
 
 
