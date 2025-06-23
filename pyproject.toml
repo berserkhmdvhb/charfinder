@@ -108,3 +108,12 @@ filterwarnings = [
 markers = [
   "unit: marks tests as unit tests"
 ]
+
+# ----------------------------
+# Coverage Configuration
+# ----------------------------
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+]

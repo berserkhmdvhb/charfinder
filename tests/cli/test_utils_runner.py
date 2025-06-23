@@ -6,26 +6,35 @@ including workflow execution and logging configuration.
 
 from __future__ import annotations
 
+# ---------------------------------------------------------------------
+# Imports 
+# ---------------------------------------------------------------------
+
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 from argparse import Namespace
 from typing import Callable
 import pytest
 
-from charfinder.config.messages import MSG_WARNING_INTERRUPTED
-
-# ---------------------------------------------------------------------
-# Imports (after env and fixtures are active)
-# ---------------------------------------------------------------------
 from charfinder.cli import utils_runner
-from charfinder.config.types import FuzzyConfig
 from charfinder.cli.handlers import get_version
+from charfinder.config.types import (
+    FuzzyConfig,
+    MatchResult,
+    MatchDiagnosticsInfo
+)    
 from charfinder.config.constants import (
     EXIT_SUCCESS,
     EXIT_CANCELLED,
     EXIT_ERROR,
 )    
-from charfinder.config.types import MatchResult
+from charfinder.config.messages import (
+    MSG_ERROR_UNHANDLED_EXCEPTION,
+    MSG_WARNING_PROD_ENV,
+    MSG_WARNING_INTERRUPTED
+
+)
+
 
 # ---------------------------------------------------------------------
 # Autouse Fixture: Isolate CHARFINDER_ROOT_DIR_FOR_TESTS for this module
@@ -173,7 +182,68 @@ def test_handle_cli_workflow_unhandled_exception_debug_on(
     captured = capsys.readouterr()
 
     assert exit_code == EXIT_ERROR
-    assert "Unhandled error during CLI execution" in captured.err
+    assert MSG_ERROR_UNHANDLED_EXCEPTION in captured.err
     assert "RuntimeError: BOOM" in captured.err
 
+# ---------------------------------------------------------------------
+# handle_cli_workflow – PROD environment warning
+# ---------------------------------------------------------------------
 
+@patch("charfinder.cli.utils_runner.echo")
+@patch("charfinder.cli.utils_runner.get_logger")
+@patch("charfinder.cli.utils_runner.teardown_logger")
+@patch("charfinder.cli.utils_runner.handle_find_chars")
+@patch("charfinder.cli.utils_runner.is_prod", return_value=True)
+def test_handle_cli_workflow_warns_in_prod(
+    mock_is_prod: MagicMock,
+    mock_handler: MagicMock,
+    mock_teardown: MagicMock,
+    mock_logger: MagicMock,
+    mock_echo: MagicMock,
+) -> None:
+    """Covers warning when CHARFINDER_ENV is PROD."""
+    from charfinder.config.messages import MSG_WARNING_PROD_ENV
+
+    args = Namespace(verbose=True, debug=False, color="auto", threshold=0.75)
+    mock_handler.return_value = MatchResult(exit_code=EXIT_SUCCESS, match_info=None)
+
+    exit_code = utils_runner.handle_cli_workflow(args, query_str="prod", use_color=True)
+    assert exit_code == EXIT_SUCCESS
+
+    called_msgs = [call.kwargs.get("msg") for call in mock_echo.call_args_list]
+    assert any(MSG_WARNING_PROD_ENV in msg for msg in called_msgs if isinstance(msg, str))
+    
+# ---------------------------------------------------------------------
+# handle_cli_workflow – debug diagnostics print when args.debug = True
+# ---------------------------------------------------------------------
+
+@patch("charfinder.cli.utils_runner.print_debug_diagnostics")
+@patch("charfinder.cli.utils_runner.get_logger")
+@patch("charfinder.cli.utils_runner.teardown_logger")
+@patch("charfinder.cli.utils_runner.handle_find_chars")
+@patch("charfinder.cli.utils_runner.get_environment", return_value="DEV")
+def test_handle_cli_workflow_prints_debug_diagnostics(
+    mock_env: MagicMock,
+    mock_handler: MagicMock,
+    mock_teardown: MagicMock,
+    mock_logger: MagicMock,
+    mock_print_debug: MagicMock,
+) -> None:
+    """Covers print_debug_diagnostics when debug=True and successful run."""
+    args = Namespace(verbose=False, debug=True, color="auto", threshold=0.75)
+    mock_handler.return_value = MatchResult(
+        exit_code=EXIT_SUCCESS,
+        match_info=MatchDiagnosticsInfo(
+            fuzzy=True,
+            fuzzy_was_used=True,
+            fuzzy_algo="token_sort_ratio",
+            fuzzy_match_mode="basic",
+            prefer_fuzzy=True,
+            exact_match_mode="strict",
+            threshold=0.75,
+            hybrid_agg_fn=None,
+        ),
+    )
+    exit_code = utils_runner.handle_cli_workflow(args, query_str="debug", use_color=True)
+    assert exit_code == EXIT_SUCCESS
+    mock_print_debug.assert_called_once()

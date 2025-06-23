@@ -56,7 +56,6 @@ from charfinder.config.constants import (
 )
 from charfinder.config.messages import (
     MSG_ERROR_AGG_FN_UNEXPECTED,
-    MSG_ERROR_ALGO_NOT_FOUND,
     MSG_ERROR_UNSUPPORTED_ALGO_INPUT,
 )
 from charfinder.validators import (
@@ -274,8 +273,6 @@ def compute_similarity(
     if mode == "hybrid":
         return hybrid_score(s1, s2, agg_fn)
 
-    resolved_algo = FUZZY_ALGORITHM_REGISTRY.get(algorithm)
-    if not resolved_algo:
-        raise ValueError(MSG_ERROR_ALGO_NOT_FOUND.format(algorithm=algorithm))
+    resolved_algo = FUZZY_ALGORITHM_REGISTRY[algorithm]
 
     return resolved_algo(s1, s2)

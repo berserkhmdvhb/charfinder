@@ -14,6 +14,7 @@ from charfinder.fuzzymatchlib import (
     hybrid_score,
     FUZZY_ALGORITHM_REGISTRY,
 )
+from charfinder.validators import validate_hybrid_agg_fn
 from charfinder.config.constants import (
     VALID_FUZZY_MATCH_MODES,
     VALID_HYBRID_AGG_FUNCS,
@@ -124,6 +125,8 @@ def test_get_fuzzy_algorithm_registry_contains_expected() -> None:
     assert "levenshtein_ratio" in registry
     assert set(registry) == set(FUZZY_ALGORITHM_REGISTRY.keys())
 
+    
+
 # ---------------------------------------------------------------------
 # Error Handling
 # ---------------------------------------------------------------------
@@ -161,6 +164,22 @@ def test_hybrid_score_rejects_invalid_agg_fn() -> None:
         hybrid_score("abc", "def", agg_fn="unsupported")  # type: ignore[arg-type]
 
 
+def test_hybrid_score_runtime_error_on_unreachable_agg_fn(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Covers unreachable RuntimeError fallback in hybrid_score()."""
+
+    class FakeAgg(str):
+        def __eq__(self, other: object) -> bool:
+            return False
+
+    fake_value = FakeAgg("mean")
+    expected_msg = MSG_ERROR_AGG_FN_UNEXPECTED.format(agg_fn="mean")
+    # Patch the *local* validate_hybrid_agg_fn inside fuzzymatchlib to return fake_value
+    monkeypatch.setattr("charfinder.fuzzymatchlib.validate_hybrid_agg_fn", lambda _: fake_value)
+
+    with pytest.raises(RuntimeError, match=re.escape(expected_msg)):
+        hybrid_score("abc", "xyz", agg_fn="mean")  # validator returns FakeAgg("mean")
+
+
 
 def test_compute_similarity_registry_miss(monkeypatch: pytest.MonkeyPatch) -> None:
     """Should raise ValueError if algorithm is removed from registry before validation."""
@@ -174,8 +193,6 @@ def test_compute_similarity_registry_miss(monkeypatch: pytest.MonkeyPatch) -> No
 
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
         compute_similarity("abc", "abc", algorithm="simple_ratio")
-
-
 
 # ---------------------------------------------------------------------
 # Public API Coverage
