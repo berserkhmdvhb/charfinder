@@ -145,7 +145,7 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
 
     except Exception as exc:
         if isinstance(exc, (SystemExit, KeyboardInterrupt, GeneratorExit)):
-            raise # pragma: no cover
+            raise  # pragma: no cover
         log_optionally_echo(
             msg=MSG_ERROR_UNEXPECTED_EXCEPTION.format(error=exc),
             level="error",
