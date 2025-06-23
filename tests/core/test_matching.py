@@ -16,8 +16,8 @@ import re
 from charfinder.config.types import FuzzyMatchContext
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.config.constants import DEFAULT_THRESHOLD, VALID_EXACT_MATCH_MODES
-from charfinder.config.messages import MSG_EXACT_CHECKING, MSG_ERROR_INVALID_EXACT_MATCH_MODE
- 
+from charfinder.config.messages import MSG_EXACT_CHECKING, MSG_ERROR_INVALID_EXACT_MATCH_MODE, MSG_SUBSET_CHECKING
+
 
 
 # ---------------------------------------------------------------------
@@ -181,8 +181,6 @@ def test_find_exact_matches_raises_on_invalid_mode() -> None:
         find_exact_matches("check", name_cache, exact_match_mode="invalid", verbose=False)
 
 
-from charfinder.config.messages import MSG_SUBSET_CHECKING
-
 def test_word_subset_logs_when_verbose(
     sample_name_cache: dict[str, dict[str, str]],
     log_stream: StringIO,
@@ -198,12 +196,12 @@ def test_word_subset_logs_when_verbose(
     assert result
 
     expected_1 = MSG_SUBSET_CHECKING.format(
-        query={"ballot"},
-        name={"check", "mark", "tick"},
+        query=set(["ballot"]),
+        name=set(["check", "mark", "tick"]),
     )
     expected_2 = MSG_SUBSET_CHECKING.format(
-        query={"ballot"},
-        name={"ballot", "x"},
+        query=set(["ballot"]),
+        name=set(["ballot", "x"]),
     )
 
     log_output = log_stream.getvalue()

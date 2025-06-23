@@ -102,6 +102,7 @@ def test_build_match_result_returns_structured_info() -> None:
         prefer_fuzzy=True,
         exact_match_mode="strict",
         threshold=0.75,
+        normalization_profile="aggressive",
     )
 
     result = build_match_result(args, fuzzy_used=True, exit_code=EXIT_SUCCESS)
@@ -120,6 +121,7 @@ def test_build_match_result_hybrid_mode_uses_agg_fn() -> None:
         prefer_fuzzy=False,
         exact_match_mode="loose",
         threshold=0.5,
+        normalization_profile="aggressive",
     )
     result = build_match_result(args, fuzzy_used=True, exit_code=EXIT_SUCCESS)
     match_info = result.match_info
@@ -147,6 +149,7 @@ def test_run_query_json_output(
         prefer_fuzzy=False,
         threshold=0.8,
         show_score=False,
+        normalization_profile="aggressive",
     )
     params = SearchParams(
         query="A",
@@ -189,6 +192,7 @@ def test_run_query_text_output_with_matches(
         prefer_fuzzy=False,
         threshold=0.8,
         show_score=True,
+        normalization_profile="aggressive",
     )
     params = SearchParams(
         query="A",
@@ -231,6 +235,7 @@ def test_run_query_text_output_no_matches(
         prefer_fuzzy=False,
         threshold=0.8,
         show_score=False,
+        normalization_profile="aggressive",
     )
     params = SearchParams(
         query="unknown",
@@ -270,6 +275,7 @@ def test_handle_find_chars_empty_query() -> None:
         format="text",
         threshold=0.7,
         color="auto",
+        normalization_profile="aggressive",
     )
     result = handle_find_chars(args, query_str="")
     assert result.exit_code == EXIT_INVALID_USAGE
@@ -355,6 +361,7 @@ def test_handle_find_chars_generic_exception(
         use_color=False,
         format="text",
         threshold=0.7,
+        normalization_profile="aggressive",
     )
     result = handle_find_chars(args, query_str="fail")
 
@@ -391,3 +398,57 @@ def test_handle_find_chars_reraises_system_exit(
     )
     with pytest.raises(SystemExit):
         handle_find_chars(args, query_str="force exit")
+
+
+def test_handle_find_chars_empty_direct_trigger() -> None:
+    args = Namespace(
+        fuzzy=False,
+        fuzzy_algo="simple_ratio",
+        fuzzy_match_mode="basic",
+        exact_match_mode="substring",
+        hybrid_agg_fn=None,
+        prefer_fuzzy=False,
+        verbose=False,
+        use_color=True,
+        threshold=0.75,
+        normalization_profile="raw",
+        format="text",
+        show_score=None,
+    )
+    result = handle_find_chars(args, query_str="")
+    assert result.exit_code == EXIT_INVALID_USAGE
+    assert result.match_info is None
+
+
+@patch("charfinder.cli.handlers.resolve_cli_settings", return_value=("default", False, 0.7))
+@patch("charfinder.cli.handlers.validate_fuzzy_match_mode", return_value="basic")
+@patch("charfinder.cli.handlers.validate_exact_match_mode", return_value="strict")
+@patch("charfinder.cli.handlers._run_query_and_return")
+def test_handle_find_chars_reraises_generator_exit(
+    mock_run: MagicMock,
+    mock_exact: MagicMock,
+    mock_fuzzy: MagicMock,
+    mock_settings: MagicMock,
+) -> None:
+    """Ensure GeneratorExit is re-raised inside the generic exception handler."""
+    def raise_generator_exit(*args: Any, **kwargs: Any) -> None:
+        raise GeneratorExit()
+
+    mock_run.side_effect = raise_generator_exit
+
+    args = Namespace(
+        fuzzy=False,
+        fuzzy_algo="token_sort_ratio",
+        fuzzy_match_mode="basic",
+        exact_match_mode="strict",
+        hybrid_agg_fn=None,
+        prefer_fuzzy=False,
+        verbose=True,
+        use_color=False,
+        format="text",
+        threshold=0.7,
+        normalization_profile="aggressive",
+    )
+
+    with pytest.raises(GeneratorExit):
+        handle_find_chars(args, query_str="trigger")
