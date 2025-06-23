@@ -1,4 +1,4 @@
-"""Tests for fuzzymatchlib.py – all algorithms, modes, and combinations."""
+"""Tests for fuzzymatchlib.py all algorithms, modes, and combinations."""
 
 import re
 import pytest
@@ -27,7 +27,8 @@ from charfinder.config.aliases import (
 from charfinder.config.messages import (
     MSG_ERROR_UNSUPPORTED_ALGO_INPUT,
     MSG_ERROR_INVALID_FUZZY_MATCH_MODE,
-    MSG_ERROR_ALGO_NOT_FOUND
+    MSG_ERROR_ALGO_NOT_FOUND,
+    MSG_ERROR_AGG_FN_UNEXPECTED,
 )
 
 # ---------------------------------------------------------------------
@@ -48,7 +49,7 @@ def test_compute_similarity_combinations(
     mode: FuzzyMatchMode,
     agg_fn: HybridAggFunc | None,
 ) -> None:
-    """Test all algorithm × mode × agg_fn combinations."""
+    """Test all algorithm * mode * agg_fn combinations."""
     score = compute_similarity("abc", "abc", algorithm=algorithm, mode=mode, agg_fn=agg_fn or "mean")
     assert isinstance(score, float)
     assert 0.0 <= score <= 1.0
@@ -148,3 +149,40 @@ def test_compute_similarity_with_unregistered_algorithm() -> None:
     )
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
         compute_similarity("a", "b", algorithm=algorithm)  # type: ignore
+
+from charfinder.config.messages import MSG_ERROR_INVALID_AGG_FUNC
+
+def test_hybrid_score_rejects_invalid_agg_fn() -> None:
+    """Should raise ValueError for unsupported aggregation function."""
+    expected_msg = MSG_ERROR_INVALID_AGG_FUNC.format(
+        func="unsupported", valid_options=", ".join(sorted(VALID_HYBRID_AGG_FUNCS))
+    )
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        hybrid_score("abc", "def", agg_fn="unsupported")  # type: ignore[arg-type]
+
+
+
+def test_compute_similarity_registry_miss(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Should raise ValueError if algorithm is removed from registry before validation."""
+    monkeypatch.delitem(FUZZY_ALGORITHM_REGISTRY, "simple_ratio", raising=False)
+
+    from charfinder.config.messages import MSG_ERROR_UNSUPPORTED_ALGO_INPUT
+    valid_options = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
+    expected_msg = MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(
+        name="simple_ratio", valid_options=", ".join(valid_options)
+    )
+
+    with pytest.raises(ValueError, match=re.escape(expected_msg)):
+        compute_similarity("abc", "abc", algorithm="simple_ratio")
+
+
+
+# ---------------------------------------------------------------------
+# Public API Coverage
+# ---------------------------------------------------------------------
+
+def test_compute_similarity_final_return() -> None:
+    """Covers compute_similarity() returning resolved algorithm function call."""
+    score = compute_similarity("abc", "xyz", algorithm="simple_ratio", mode="single")
+    assert isinstance(score, float)
+    assert 0.0 <= score <= 1.0
