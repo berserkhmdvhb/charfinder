@@ -138,6 +138,19 @@ def test_parse_unicode_data_invalid_code(caplog: pytest.LogCaptureFixture) -> No
     result = parse_unicode_data(line, show=False)
     assert result == {}
 
+
+def test_parse_unicode_data_skips_empty_and_comment_lines() -> None:
+    """Empty lines and comment lines should be skipped."""
+    fields = [""] * 19
+    fields[0] = "0041"
+    fields[10] = "LATIN CAPITAL LETTER A"
+    valid_line = ";".join(fields)
+
+    text = "\n# This is a comment\n\n   \n" + valid_line
+    result = parse_unicode_data(text, show=False)
+    assert "A" in result
+    assert result["A"] == "LATIN CAPITAL LETTER A"
+
 # ---------------------------------------------------------------------
 # Tests for load_alternate_names (integration)
 # ---------------------------------------------------------------------
@@ -160,3 +173,24 @@ def test_load_alternate_names_local(
 
     result = load_alternate_names(show=False, use_color=False)
     assert result == {"A": "LATIN CAPITAL LETTER A"}
+
+
+def test_load_alternate_names_download_fails(monkeypatch: MonkeyPatch) -> None:
+    """Return empty dict if download fails and file missing."""
+    monkeypatch.setattr("charfinder.core.unicode_data_loader.get_unicode_data_file", lambda: Path("nonexistent.txt"))
+    monkeypatch.setattr("charfinder.core.unicode_data_loader.get_unicode_data_url", lambda: "https://example.com/unicode.txt")
+    monkeypatch.setattr("charfinder.core.unicode_data_loader.download_and_cache_unicode_data", lambda *a, **kw: False)
+
+    result = load_alternate_names(show=False, use_color=False)
+    assert result == {}
+
+
+def test_load_alternate_names_download_success_but_read_fails(monkeypatch: MonkeyPatch) -> None:
+    """Return empty dict if file can't be read after download."""
+    monkeypatch.setattr("charfinder.core.unicode_data_loader.get_unicode_data_file", lambda: Path("after-download.txt"))
+    monkeypatch.setattr("charfinder.core.unicode_data_loader.get_unicode_data_url", lambda: "https://example.com/unicode.txt")
+    monkeypatch.setattr("charfinder.core.unicode_data_loader.download_and_cache_unicode_data", lambda *a, **kw: True)
+    monkeypatch.setattr("charfinder.core.unicode_data_loader.load_unicode_data_from_file", lambda *a, **kw: None)
+
+    result = load_alternate_names(show=False, use_color=False)
+    assert result == {}

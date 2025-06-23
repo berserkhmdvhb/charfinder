@@ -358,3 +358,30 @@ def test_handle_find_chars_generic_exception(
     call_args = mock_log_optionally_echo.call_args[1]  # kwargs of the call
     msg = call_args.get("msg", "") or call_args.get("message", "")
     assert "unexpected error" in msg.lower()
+
+
+@patch("charfinder.cli.handlers.resolve_cli_settings", return_value=("default", False, 0.7))
+@patch("charfinder.cli.handlers.validate_fuzzy_match_mode", return_value="basic")
+@patch("charfinder.cli.handlers.validate_exact_match_mode", return_value="strict")
+@patch("charfinder.cli.handlers._run_query_and_return", side_effect=SystemExit(2))
+def test_handle_find_chars_reraises_system_exit(
+    mock_run: MagicMock,
+    mock_exact: MagicMock,
+    mock_fuzzy: MagicMock,
+    mock_settings: MagicMock,
+) -> None:
+    """Ensure SystemExit is not swallowed and is re-raised."""
+    args = Namespace(
+        fuzzy=False,
+        fuzzy_algo="token_sort_ratio",
+        fuzzy_match_mode="basic",
+        exact_match_mode="strict",
+        hybrid_agg_fn=None,
+        prefer_fuzzy=False,
+        verbose=True,
+        use_color=False,
+        format="text",
+        threshold=0.7,
+    )
+    with pytest.raises(SystemExit):
+        handle_find_chars(args, query_str="force exit")

@@ -6,6 +6,7 @@ Validates query input, config building, match coordination, and logging.
 from __future__ import annotations
 
 from io import StringIO
+import logging
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
@@ -13,6 +14,7 @@ import pytest
 
 from charfinder.config.types import MatchTuple, SearchConfig
 from charfinder.core import handlers as H
+from charfinder.config.messages import MSG_DEBUG_REMOVED_DUPLICATE_FUZZY
 
 
 # ---------------------------------------------------------------------
@@ -183,6 +185,47 @@ def test_resolve_matches_invalid_algo(mock_cache: MagicMock) -> None:
     with pytest.raises(ValueError, match="Invalid fuzzy algorithm"):
         H._resolve_matches("abc", config=config)
 
+@patch("charfinder.core.handlers.find_fuzzy_matches")
+@patch("charfinder.core.handlers.find_exact_matches")
+@patch("charfinder.core.handlers.build_name_cache")
+def test_resolve_matches_logs_removed_duplicates(
+    mock_cache: MagicMock,
+    mock_exact: MagicMock,
+    mock_fuzzy: MagicMock,
+    log_stream: StringIO,
+    debug_logger: logging.Logger,  # required to route logs to log_stream
+) -> None:
+    """Debug log is printed when fuzzy matches are deduplicated due to exact matches."""
+    from charfinder.config.messages import MSG_DEBUG_REMOVED_DUPLICATE_FUZZY
+
+    mock_exact.return_value = [
+        MatchTuple(0x2713, "✓", "CHECK MARK", None, False)
+    ]
+    mock_fuzzy.return_value = [
+        MatchTuple(0x2713, "✓", "CHECK MARK", 1.0, True),   # Duplicate of exact
+        MatchTuple(0x2714, "✔", "HEAVY CHECK MARK", 0.9, True),
+    ]
+    mock_cache.return_value = {}
+
+    config = H.build_search_config(
+        fuzzy=True,
+        threshold=0.7,
+        name_cache=None,
+        verbose=True,  # Required to trigger echo and log
+        use_color=False,
+        fuzzy_algo="token_sort_ratio",
+        fuzzy_match_mode="single",
+        exact_match_mode="substring",
+        agg_fn="mean",
+        prefer_fuzzy=True,
+    )
+    matches, used_fuzzy = H._resolve_matches("check", config=config)
+    assert used_fuzzy is True
+    assert len(matches) == 2
+
+    expected_message = MSG_DEBUG_REMOVED_DUPLICATE_FUZZY.format(removed_count=1)
+    log_output = log_stream.getvalue()
+    assert expected_message in log_output
 
 # ---------------------------------------------------------------------
 # _normalize_and_build_config
