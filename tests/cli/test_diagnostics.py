@@ -141,3 +141,19 @@ def test_print_dotenv_debug_invalid_encoding(tmp_path: Path, monkeypatch: Monkey
     # Check that the error was reported
     assert any("Failed to read .env file:" in line for line in mock_echo)
     assert MSG_DEBUG_DOTENV_END in mock_echo
+
+
+def test_debug_diagnostics_normalizes_query_tokens(mock_echo: list[str]) -> None:
+    """Should normalize and log query tokens if normalization_profile and query are present."""
+    args = Namespace(
+        normalization_profile="nfkc",
+        option_query=["ℌ𝔢𝔩𝔩𝔬    ", "𝔚𝔬𝔯𝔩𝔡     "],
+    )
+
+    diagnostics.print_debug_diagnostics(args, use_color=False, show=True)
+
+    # Get actual line logged by print_debug_diagnostics
+    found = [line for line in mock_echo if line.startswith("Normalized query tokens = ")]
+    assert len(found) == 1
+    assert "Normalized query tokens =" in found[0]
+    assert "ℌ" in found[0] and "𝔚" in found[0]  # still includes original chars

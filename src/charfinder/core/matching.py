@@ -19,7 +19,6 @@ from charfinder.config.messages import (
     MSG_FUZZY_START,
     MSG_NO_SCORE_COMPUTED,
     MSG_SUBSET_CHECKING,
-    MSG_UNKNOWN_EXACT_MODE,
 )
 from charfinder.config.types import FuzzyMatchContext, MatchTuple
 from charfinder.fuzzymatchlib import compute_similarity
