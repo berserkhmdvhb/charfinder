@@ -32,6 +32,10 @@ def test_validate_fuzzy_algo_rejects_invalid() -> None:
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
         V.validate_fuzzy_algo(invalid_algo)
 
+def test_validate_fuzzy_algo_cli_returns_as_is() -> None:
+    """Should return input directly in CLI context without validation."""
+    result = V.validate_fuzzy_algo("token_sort_ratio", source="cli")
+    assert result == "token_sort_ratio"
 
 # Validate FuzzyAlgoAction
 
@@ -57,6 +61,23 @@ def test_validate_fuzzy_algo_action_empty_list() -> None:
     parser = argparse.ArgumentParser()
     with pytest.raises(ValueError, match=re.escape(M.MSG_ERROR_EMPTY_FUZZY_ALGO_LIST)):
         action(parser, argparse.Namespace(), [])
+
+
+def test_validate_fuzzy_algo_action_list_value_parser() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fuzzy-algo", action=V.ValidateFuzzyAlgoAction)
+    args = parser.parse_args(["--fuzzy-algo", "levenshtein"])
+    assert args.fuzzy_algo == "levenshtein_ratio"
+
+
+def test_validate_fuzzy_algo_action_direct_list_value() -> None:
+    """Should handle list of values when called manually."""
+    parser = argparse.ArgumentParser()
+    action = V.ValidateFuzzyAlgoAction(option_strings=["--fuzzy-algo"], dest="fuzzy_algo")
+    ns = argparse.Namespace()
+    action(parser, ns, ["levenshtein"])
+    assert ns.fuzzy_algo == "levenshtein_ratio"
+
 
 # apply_fuzzy_defaults
 
@@ -157,6 +178,17 @@ def test_validate_threshold_type_error() -> None:
     """Should raise TypeError for non-numeric threshold values."""
     with pytest.raises(TypeError, match=re.escape(M.MSG_ERROR_INVALID_THRESHOLD_TYPE)):
         V.validate_threshold("0.5")  # type: ignore
+
+
+def test_threshold_range_valid() -> None:
+    """Should convert and validate a proper threshold string."""
+    assert V.threshold_range("0.5") == 0.5
+
+
+def test_threshold_range_invalid_format() -> None:
+    """Should raise ValueError if string is not convertible to float."""
+    with pytest.raises(ValueError, match=M.MSG_ERROR_INVALID_THRESHOLD):
+        V.threshold_range("not-a-float")
 
 
 # ---------------------------------------------------------------------

@@ -157,6 +157,34 @@ def test_build_name_cache_skips_rebuild(tmp_path: Path, valid_cache_content: dic
     result = build_name_cache(options=options)
     assert result == valid_cache_content
 
+def test_build_name_cache_uses_default_options(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Calling build_name_cache() without options should use default BuildCacheOptions."""
+    monkeypatch.setattr(sys, "maxunicode", 128)  # reduce loop time
+    monkeypatch.setattr("charfinder.core.name_cache.validate_cache_file_path", lambda _: tmp_path / "default.json")
+    monkeypatch.setattr("charfinder.core.name_cache._save_cache_with_retries", lambda *a, **k: None)
+
+    result = build_name_cache()
+    assert isinstance(result, dict)
+
+
+def test_build_name_cache_handles_value_error(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Cache build should skip characters that raise ValueError from unicodedata.name()."""
+    monkeypatch.setattr(sys, "maxunicode", 1)
+
+    def mock_name(c: str, default: str = "") -> str:
+        raise ValueError("simulated")
+
+    monkeypatch.setattr("charfinder.core.name_cache.unicodedata.name", mock_name)
+
+    options = BuildCacheOptions(
+        cache_file_path=tmp_path / "skip.json",
+        force_rebuild=True,
+        show=False,
+        use_color=False,
+    )
+
+    result = build_name_cache(options=options)
+    assert result == {}  # everything was skipped
 
 # ---------------------------------------------------------------------
 # Performance + Sanity

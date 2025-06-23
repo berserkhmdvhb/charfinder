@@ -118,19 +118,6 @@ from charfinder.utils.logger_styles import format_warning
 # ------------------------------------------------------------------------
 
 
-def is_supported_fuzzy_algo(value: str) -> bool:
-    """
-    Check if a fuzzy algorithm name is supported.
-
-    Args:
-        value (str): The fuzzy algorithm name to check.
-
-    Returns:
-        bool: True if the algorithm is supported (including aliases), False otherwise.
-    """
-    return value in FUZZY_ALGO_ALIASES
-
-
 def _normalize_and_validate_fuzzy_algo(fuzzy_algo: str) -> FuzzyAlgorithm:
     """
     Normalize and validate the given fuzzy algorithm name.
