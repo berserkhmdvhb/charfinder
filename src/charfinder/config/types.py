@@ -65,6 +65,7 @@ class FuzzyMatchContext:
     match_mode: FuzzyMatchMode
     agg_fn: HybridAggFunc
     verbose: bool
+    debug: bool
     use_color: bool
     query: str
 
@@ -75,6 +76,7 @@ class SearchConfig:
     threshold: float
     name_cache: NameCache | None
     verbose: bool
+    debug: bool
     use_color: bool
     fuzzy_algo: FuzzyAlgorithm
     fuzzy_match_mode: FuzzyMatchMode

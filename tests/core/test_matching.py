@@ -16,9 +16,17 @@ import re
 from charfinder.config.types import FuzzyMatchContext
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.config.constants import DEFAULT_THRESHOLD, VALID_EXACT_MATCH_MODES
-from charfinder.config.messages import MSG_EXACT_CHECKING, MSG_ERROR_INVALID_EXACT_MATCH_MODE, MSG_SUBSET_CHECKING
+from charfinder.config.messages import (
+    MSG_EXACT_CHECKING,
+    MSG_ERROR_INVALID_EXACT_MATCH_MODE,
+    MSG_SUBSET_CHECKING,
+    MSG_DEBUG_MATCH_SECTION_END,
+    MSG_DEBUG_FUZZY_EXECUTED,
+    MSG_DEBUG_HYBRID_ALGOS_HEADER,
+    MSG_DEBUG_HYBRID_AGG_FN,
+    MSG_DEBUG_MATCH_SECTION_END,
 
-
+)
 
 # ---------------------------------------------------------------------
 # Fixtures
@@ -49,6 +57,7 @@ def fuzzy_context() -> FuzzyMatchContext:
         match_mode="single",
         agg_fn="mean",
         verbose=False,
+        debug=False,
         use_color=False,
     )
 
@@ -128,6 +137,7 @@ def test_fuzzy_match_verbose_logging(
 ) -> None:
     """Fuzzy match emits verbose logs when verbose=True."""
     fuzzy_context.verbose = True
+    fuzzy_context.debug = False
     fuzzy_context.query = "check"
     fuzzy_context.threshold = 0.5
     fuzzy_context.fuzzy_algo = "token_sort_ratio"
@@ -138,6 +148,27 @@ def test_fuzzy_match_verbose_logging(
     assert results
     assert "trying fuzzy" in output
     assert "threshold=0.5" in output
+
+def test_fuzzy_match_verbose__debug_logging(
+    fuzzy_context: FuzzyMatchContext,
+    sample_name_cache: dict[str, dict[str, str]],
+    debug_logger: logging.Logger,
+    log_stream: StringIO,
+) -> None:
+    """Fuzzy match emits verbose logs when verbose=True."""
+    fuzzy_context.verbose = True
+    fuzzy_context.debug = True
+    fuzzy_context.query = "check"
+    fuzzy_context.threshold = 0.5
+    fuzzy_context.fuzzy_algo = "token_sort_ratio"
+
+    results = find_fuzzy_matches("check", sample_name_cache, fuzzy_context)
+    output = log_stream.getvalue()
+
+    assert results
+    assert "trying fuzzy" in output
+    assert "threshold=0.5" in output
+    assert "Skipped char" in output
 
 
 def test_find_exact_matches_logs_when_verbose(

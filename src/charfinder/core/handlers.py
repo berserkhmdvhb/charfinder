@@ -170,6 +170,7 @@ def _resolve_matches(
             match_mode=config.fuzzy_match_mode,
             agg_fn=config.agg_fn,
             verbose=config.verbose,
+            debug=config.debug,
             use_color=config.use_color,
             query=norm_query,
         )
@@ -209,6 +210,7 @@ def build_search_config(
     threshold: float,
     name_cache: dict[str, dict[str, str]] | None,
     verbose: bool,
+    debug: bool,
     use_color: bool,
     fuzzy_algo: FuzzyAlgorithm,
     fuzzy_match_mode: FuzzyMatchMode,
@@ -225,6 +227,7 @@ def build_search_config(
         threshold (float): Similarity threshold for fuzzy scoring.
         name_cache (dict | None): Cached Unicode name data.
         verbose (bool): Whether to print logs.
+        debug (bool): Wether to print diagnostics.
         use_color (bool): Whether to use ANSI color output.
         fuzzy_algo (FuzzyAlgorithm): Selected fuzzy algorithm.
         fuzzy_match_mode (FuzzyMatchMode): 'single' or 'hybrid'.
@@ -241,6 +244,7 @@ def build_search_config(
         threshold=validate_threshold(threshold),
         name_cache=name_cache,
         verbose=verbose,
+        debug=debug,
         use_color=use_color,
         fuzzy_algo=validate_fuzzy_algo(fuzzy_algo),
         fuzzy_match_mode=validate_fuzzy_match_mode(fuzzy_match_mode),
@@ -258,6 +262,7 @@ def _normalize_and_build_config(
     threshold: float,
     name_cache: dict[str, dict[str, str]] | None,
     verbose: bool,
+    debug: bool,
     use_color: bool,
     fuzzy_algo: FuzzyAlgorithm,
     fuzzy_match_mode: FuzzyMatchMode,
@@ -275,6 +280,7 @@ def _normalize_and_build_config(
         threshold (float): Similarity threshold for fuzzy scoring.
         name_cache (dict | None): Cached Unicode name data.
         verbose (bool): Whether to print logs.
+        debug (bool): Whether to print diagnostics.
         use_color (bool): Whether to use ANSI color output.
         fuzzy_algo (FuzzyAlgorithm): Selected fuzzy algorithm.
         fuzzy_match_mode (FuzzyMatchMode): 'single' or 'hybrid'.
@@ -292,6 +298,7 @@ def _normalize_and_build_config(
         threshold=threshold,
         name_cache=name_cache,
         verbose=verbose,
+        debug=debug,
         use_color=use_color,
         fuzzy_algo=fuzzy_algo,
         fuzzy_match_mode=fuzzy_match_mode,

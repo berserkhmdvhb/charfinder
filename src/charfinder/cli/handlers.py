@@ -70,6 +70,7 @@ class SearchParams:
     agg_fn: str | None
     prefer_fuzzy: bool
     verbose: bool
+    debug: bool
     use_color: bool
     threshold: float
     normalization_profile: str
@@ -133,6 +134,7 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
             agg_fn=args.hybrid_agg_fn,
             prefer_fuzzy=args.prefer_fuzzy,
             verbose=args.verbose,
+            debug=args.debug,
             use_color=use_color,
             threshold=threshold,
             normalization_profile=normalization_profile,

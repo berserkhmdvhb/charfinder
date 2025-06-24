@@ -29,6 +29,7 @@ def test_search_config_instantiation() -> None:
         threshold=0.7,
         name_cache=None,
         verbose=True,
+        debug=False,
         use_color=False,
         fuzzy_algo="token_sort_ratio",
         fuzzy_match_mode="single",
@@ -50,6 +51,7 @@ def test_fuzzy_match_context_instantiation() -> None:
         match_mode="hybrid",
         agg_fn="max",
         verbose=False,
+        debug=False,
         use_color=True,
         query="snow"
     )

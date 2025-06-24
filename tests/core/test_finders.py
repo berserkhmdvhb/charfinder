@@ -29,6 +29,7 @@ def sample_config() -> SearchConfig:
         threshold=1.0,
         name_cache=None,
         verbose=False,
+        debug=False,
         use_color=False,
         fuzzy_algo="simple_ratio",
         fuzzy_match_mode="single",

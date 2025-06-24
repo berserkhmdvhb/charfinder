@@ -60,6 +60,7 @@ class SearchConfig:
     threshold: float
     name_cache: NameCache | None
     verbose: bool
+    deubg: bool
     use_color: bool
     fuzzy_algo: FuzzyAlgorithm
     fuzzy_match_mode: FuzzyMatchMode

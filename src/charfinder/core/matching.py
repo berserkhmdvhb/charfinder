@@ -196,7 +196,7 @@ def find_fuzzy_matches(
         score = _max_score(score1, score2)
 
         if score is None:
-            if context.verbose:
+            if context.verbose and context.debug:
                 echo(
                     msg=MSG_NO_SCORE_COMPUTED.format(char=char, code=ord(char)),
                     style=lambda m: format_debug(m, use_color=context.use_color),
