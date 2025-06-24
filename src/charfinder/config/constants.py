@@ -92,6 +92,9 @@ FUZZY_ALGO_ALIASES: dict[str, FuzzyAlgorithm] = {
     "tsr": "token_sort_ratio",
     "token_sort": "token_sort_ratio",
     "token_sort_ratio": "token_sort_ratio",
+    "token_subset": "token_subset_ratio",
+    "token_subset_ratio": "token_subset_ratio",
+    "tsub": "token_subset_ratio",
     "hybrid": "hybrid_score",
 }
 
@@ -150,14 +153,14 @@ FIELD_WIDTHS = {
 
 DEFAULT_COLOR_MODE: ColorMode = "auto"
 DEFAULT_EXACT_MATCH_MODE: ExactMatchMode = "word-subset"
-DEFAULT_FUZZY_ALGO: FuzzyAlgorithm = "token_sort_ratio"
+DEFAULT_FUZZY_ALGO: FuzzyAlgorithm = "token_subset_ratio"
 DEFAULT_FUZZY_MATCH_MODE: FuzzyMatchMode = "single"
 DEFAULT_HYBRID_AGG_FUNC: HybridAggFunc = "mean"
 DEFAULT_NORMALIZATION_FORM: NormalizationForm = "NFKD"
 DEFAULT_NORMALIZATION_PROFILE: NormalizationProfile = "aggressive"
 DEFAULT_OUTPUT_FORMAT: OutputFormat = "text"
 DEFAULT_SHOW_SCORE = True
-DEFAULT_THRESHOLD: float = 0.7
+DEFAULT_THRESHOLD: float = 0.65
 
 # ---------------------------------------------------------------------
 # Hybrid scoring weights for fuzzy match components

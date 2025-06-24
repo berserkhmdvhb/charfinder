@@ -12,7 +12,7 @@ from charfinder.config import aliases
 
 
 def test_fuzzy_algorithm_literals() -> None:
-    expected = {"levenshtein_ratio", "simple_ratio", "normalized_ratio", "token_sort_ratio", "hybrid_score"}
+    expected = {"levenshtein_ratio", "simple_ratio", "normalized_ratio", "token_sort_ratio", "token_subset_ratio", "hybrid_score"}
     assert set(get_args(aliases.FuzzyAlgorithm)) == expected
 
 

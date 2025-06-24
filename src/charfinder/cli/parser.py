@@ -197,7 +197,8 @@ def create_parser() -> argparse.ArgumentParser:
         help=(
             "Fuzzy matching algorithm to use (case-insensitive).\n"
             f"\t Options: {', '.join(sorted(VALID_FUZZY_ALGO_NAMES))}.\n"
-            f"\t Aliases: {', '.join(sorted(VALID_FUZZY_ALGO_ALIASES))}."
+            f"\t Aliases: {','.join(sorted(VALID_FUZZY_ALGO_ALIASES))}.\n"
+            f"\t Default: {DEFAULT_FUZZY_ALGO}."
         ),
     )
 
@@ -205,14 +206,18 @@ def create_parser() -> argparse.ArgumentParser:
         f"--{ARG_FUZZY_MATCH_MODE.replace('_', '-')}",
         choices=VALID_FUZZY_MATCH_MODES,
         default=DEFAULT_FUZZY_MATCH_MODE,
-        help="Fuzzy match mode when --fuzzy is enabled.",
+        help=(
+            "Fuzzy match mode when --fuzzy is enabled."
+            "\t single (default): Uses algo determined by --fuzzy-algo.\n"
+            "\t hybrid : Weighted sum of mutiple algorithms.\n"
+        ),
     )
 
     parser.add_argument(
         ARG_HYBRID_AGG_FN,
         choices=VALID_HYBRID_AGG_FUNCS,
         default=DEFAULT_HYBRID_AGG_FUNC,
-        help="Aggregation function for hybrid match mode (default: mean).",
+        help=f"Aggregation function for hybrid match mode (default: {DEFAULT_HYBRID_AGG_FUNC}).",
     )
     # ---------------------------------------------------------------------
     # Normalization Options
@@ -239,7 +244,8 @@ def create_parser() -> argparse.ArgumentParser:
         default=DEFAULT_OUTPUT_FORMAT,
         help=(
             "Output format:\n"
-            "\t'text' for human-friendly table (default), 'json' for structured output."
+            "\t'text' for human-friendly table (default), 'json' for structured output.\n"
+            "\t Default: {DEFAULT_OUTPUT_FORMAT}"
         ),
     )
 

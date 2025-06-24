@@ -145,6 +145,22 @@ def token_sort_ratio_score(a: str, b: str) -> float:
     return float(fuzz.token_sort_ratio(a, b)) / 100.0
 
 
+def token_subset_ratio_score(a: str, b: str) -> float:
+    a_tokens = set(a.split())
+    b_tokens = set(b.split())
+    common = a_tokens & b_tokens
+
+    if not common:
+        return 0.0
+
+    reduced_a = " ".join(t for t in a.split() if t in common)
+    reduced_b = " ".join(t for t in b.split() if t in common)
+
+    fuzz_score = float(fuzz.token_sort_ratio(reduced_a, reduced_b)) / 100.0
+    coverage = len(common) / len(a.split())
+    return fuzz_score * coverage
+
+
 def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC) -> float:
     """
     Hybrid score combining multiple algorithms with a chosen aggregate function.
@@ -196,6 +212,7 @@ FUZZY_ALGORITHM_REGISTRY: dict[FuzzyAlgorithm, AlgorithmFn] = {
     "normalized_ratio": normalized_ratio,
     "levenshtein_ratio": levenshtein_ratio,
     "token_sort_ratio": token_sort_ratio_score,
+    "token_subset_ratio": token_subset_ratio_score,
     "hybrid_score": functools.partial(hybrid_score, agg_fn="mean"),
 }
 

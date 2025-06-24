@@ -88,6 +88,31 @@ def test_hybrid_score_agg_functions(agg_fn: HybridAggFunc) -> None:
     assert isinstance(score, float)
     assert 0.0 <= score <= 1.0
 
+
+def test_token_subset_ratio_score_behavior() -> None:
+    """Test token_subset_ratio_score on common, no-match, and partial-match cases."""
+    from charfinder.fuzzymatchlib import token_subset_ratio_score
+
+    # Full token match (should yield 1.0)
+    assert token_subset_ratio_score("face kiss", "kiss face") == pytest.approx(1.0)
+
+    # Partial token match (1 of 2 match, so coverage = 0.5, sort ratio = 100%)
+    assert token_subset_ratio_score("face kiss", "kiss dummy") == pytest.approx(0.5)
+
+    # No token overlap (should be 0.0)
+    assert token_subset_ratio_score("abc", "xyz") == 0.0
+
+    # Identical multiword sentence
+    assert token_subset_ratio_score("a b c", "a b c") == 1.0
+
+    # Subset match with order preserved
+    assert token_subset_ratio_score("this is a test", "this test") < 1.0
+
+    # Empty input strings
+    assert token_subset_ratio_score("", "") == 0.0
+    assert token_subset_ratio_score("nonempty", "") == 0.0
+    assert token_subset_ratio_score("", "nonempty") == 0.0
+
 # ---------------------------------------------------------------------
 # Resolver Tests
 # ---------------------------------------------------------------------

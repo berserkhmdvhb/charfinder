@@ -22,6 +22,7 @@ FuzzyAlgorithm = Literal[
     "simple_ratio",
     "normalized_ratio",
     "token_sort_ratio",
+    "token_subset_ratio",
     "hybrid_score",
 ]
 
