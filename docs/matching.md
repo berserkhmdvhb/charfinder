@@ -14,9 +14,6 @@ CharFinder searches Unicode character names using **exact** and/or **fuzzy** mat
 
 ### Default Flow
 
-**Diagram**
-aa
-
 ```mermaid
 graph TD
     A[Input Query] --> B[Normalize → trim, NFKD, strip accents, uppercase]
@@ -30,6 +27,16 @@ graph TD
     H -- No --> G
     I --> G
 ```
+
+
+1. Normalize query (trim, NFKD, strip accents, uppercase).
+2. Attempt **exact match** first using selected mode.
+3. If exact matches found:
+   * Return exact results.
+   * If --prefer-fuzzy is set **and** --fuzzy is enabled, fuzzy results are also included.
+4. If exact matches are **not** found and --fuzzy is enabled:
+   * Perform fuzzy matching.
+
 
 aa
 ## 3. CLI Arguments Affecting Matching
