@@ -16,19 +16,6 @@ CharFinder searches Unicode character names using **exact** and/or **fuzzy** mat
 
 **Diagram**
 
-```mermaid
-graph TD
-    A[Input Query] --> B[Normalize: NFC + uppercase]
-    B --> C{Exact match found?}
-    C -- Yes --> D[Return exact match]
-    D --> E{--prefer\-fuzzy AND --fuzzy set?}
-    E -- Yes --> F[Also run fuzzy match]
-    E -- No --> G[Return results]
-    C -- No --> H{--fuzzy set?}
-    H -- Yes --> I[Run fuzzy match]
-    H -- No --> G
-    I --> G
----
 
 ## 3. CLI Arguments Affecting Matching
 
