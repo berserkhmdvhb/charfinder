@@ -14,6 +14,7 @@ CharFinder searches Unicode character names using **exact** and/or **fuzzy** mat
 
 ### Default Flow
 
+```mermaid
 graph TD
     A[Input Query] --> B[Normalize: NFC + UPPERCASE]
     B --> C{Exact match found}
