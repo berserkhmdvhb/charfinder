@@ -19,7 +19,7 @@ aa
 
 ```mermaid
 graph TD
-    A[Input Query] --> B[Normalize: NFC + uppercase]
+    A[Input Query] --> B[Normalize: NFC + uppercase()]
     B --> C{Exact match found?}
     C -- Yes --> D[Return exact match]
     D --> E{--prefer\-fuzzy AND --fuzzy set?}
