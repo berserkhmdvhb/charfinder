@@ -375,6 +375,7 @@ def test_validate_cache_file_path_type_error() -> None:
     with pytest.raises(TypeError, match=M.MSG_ERROR_INVALID_PATH_TYPE.format(type=int)):
         V.validate_cache_file_path(123)  # type: ignore
 
+
 @pytest.mark.parametrize("val", [True, False])
 def test_validate_cache_rebuild_flag_valid(val: bool) -> None:
     assert V.validate_cache_rebuild_flag(force_rebuild=val) is val
