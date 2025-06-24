@@ -337,14 +337,25 @@ CharFinder correctly matches Unicode emoji and symbols. For example:
 
 ## 5. 🎯 Matching Engine (Exact + Fuzzy)
 
-CharFinder uses a layered matching strategy to identify Unicode characters by name. By default, it performs an **exact match** first—this ensures fast and accurate results when the query is correct. If no exact match is found, and fuzzy matching is enabled, it falls back to **fuzzy match** mode, which helps recover from typos or partial/inexact queries.
+CharFinder uses a layered and configurable matching strategy to identify Unicode characters by name. It starts with **exact matching** for speed and precision, then optionally falls back to **fuzzy matching** if no exact hits are found or if `--prefer-fuzzy` is enabled.
 
-Fuzzy matching can use a **single algorithm** (like `token_sort_ratio`) or a **hybrid strategy** that combines multiple similarity metrics (e.g., Levenshtein, normalized ratio) with configurable aggregation functions.
+### 🔹 Exact Matching
+- Fast string comparisons using `substring` or `word-subset` logic.
+- Ideal for full or partial queries that directly appear in character names.
+- Controlled via `--exact-match-mode` (default: `word-subset`).
 
-- Exact modes: `substring`, `word-subset` (default).
-- Fuzzy modes: `first`, `all`, `hybrid` with multiple algorithms and aggregation.
-- Normalization is by default applied, but the intensity and level can be tweaked by `--normalization-profile`.
-- Matching logic is configurable via CLI flags like `--fuzzy`, `--prefer-fuzzy`, `--fuzzy-algo`, etc.
+### 🔸 Fuzzy Matching
+Fuzzy matching recovers from typos, partial input, or scrambled tokens. It supports:
+- **Single-algorithm matching** (e.g., `simple_ratio`, `levenshtein_ratio`, `token_sort_ratio`, `token_subset_ratio` [default]):
+- **Hybrid mode** combining multiple algorithms, with configurable aggregation (`mean`, `max` [defaut], etc.):
+- Fine-grained control via:
+  - `--fuzzy`, `--prefer-fuzzy`
+  - `--fuzzy-algo` (including `hybrid`)
+  - `--fuzzy-match-mode` (`single`, `all`, `hybrid`)
+  - `--threshold` for similarity filtering
+
+### ⚙️ Normalization
+Input and character names are normalized by default using configurable profiles (`--normalization-profile`) to ensure consistency across scripts, cases, accents, and formatting.
 
 📚 See [`matching.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/matching.md).
 
