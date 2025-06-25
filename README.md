@@ -301,7 +301,7 @@ You can customize this behavior using the `--normalization-profile` CLI argument
 | ------------ | ------------ | ------------- | ------------------- | ----------------- | ---------------------------------------------------- |
 | `raw`        | —            | ❌             | ❌                   | ❌                 | No changes                                           |
 | `light`      | NFC            | ❌             | ✅                   | ❌                 | Trim + collapse spaces + `.upper()`                  |
-| `medium`     | NFKD         | ❌             | ✅                   | ❌                 | `light` + Unicode normalization                      |
+| `medium`     | NFC, NFKD         | ❌             | ✅                   | ❌                 | `light` + Unicode normalization                      |
 | `aggressive` | NFC, NFKD         | ✅             | ✅                   | ✅                 | `medium` + remove diacritics + zero-width characters |
 
 The default profile is **`aggressive`**, which offers the most robust matching by removing visual and encoding differences.
