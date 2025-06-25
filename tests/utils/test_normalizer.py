@@ -81,6 +81,28 @@ def test_unicode_normalization_forms(
     assert result == expected
 
 
+@pytest.mark.parametrize(
+    "input_text, expected",
+    [
+        ("café", "CAFE"),
+        ("café", "CAFE"),                     # 'e' + U+0301
+        ("CAFÉ", "CAFE"),
+        ("CAFÉ", "CAFE"),                     # capital E + U+0301
+        ("𝒸𝒶𝓇é", "CARE"),                      # italic math letters → ASCII equivalents
+        ("ｃａｆｅ́", "CAFE"),                  # fullwidth + U+0301
+    ],
+)
+def test_readme_examples_aggressive(input_text: str, expected: str) -> None:
+    """Test normalization of README examples under aggressive profile."""
+    result = normalizer_module.normalize(input_text, profile="aggressive")
+    print("\n" + "-" * 40)
+    print(f"Input text   : {repr(input_text)}")
+    print(f"Codepoints   : {' '.join(f'U+{ord(c):04X}' for c in input_text)}")
+    print(f"Normalized   : {repr(result)}")
+    print(f"Expected     : {repr(expected)}")
+    print("-" * 40)
+    assert result == expected
+
 # ---------------------------------------------------------------------
 # Matrix 2: Normalization Profiles (raw, light, medium, aggressive)
 # ---------------------------------------------------------------------
