@@ -93,7 +93,7 @@ def download_and_cache_unicode_data(
     except (URLError, TimeoutError, OSError) as exc:
         echo(
             msg=MSG_WARNING_DOWNLOAD_FAILED.format(error=exc),
-            style=lambda m: format_warning(m),
+            style=lambda m: format_warning(m, use_color=use_color),
             stream=sys.stderr,
             show=show,
             log=True,
@@ -108,6 +108,7 @@ def load_unicode_data_from_file(
     unicode_data_file: Path,
     *,
     show: bool = True,
+    use_color: bool = True,
 ) -> str | None:
     """
     Load the Unicode data from a local file.
@@ -115,6 +116,7 @@ def load_unicode_data_from_file(
     Args:
         unicode_data_file (Path): The file path to read from.
         show (bool): If True, display progress messages.
+        use_color (bool): If True, show colorized log output.
 
     Returns:
         str | None: The content of the file or None if reading failed.
@@ -123,7 +125,7 @@ def load_unicode_data_from_file(
         text = unicode_data_file.read_text(encoding="utf-8")
         echo(
             msg=MSG_INFO_LOAD_LOCAL_FILE.format(path=unicode_data_file),
-            style=lambda m: format_info(m),
+            style=lambda m: format_info(m, use_color=use_color),
             stream=sys.stderr,
             show=show,
             log=True,
@@ -132,7 +134,7 @@ def load_unicode_data_from_file(
     except OSError as exc:
         echo(
             msg=MSG_WARNING_READ_FAILED.format(path=unicode_data_file, error=exc),
-            style=lambda m: format_warning(m),
+            style=lambda m: format_warning(m, use_color=use_color),
             stream=sys.stderr,
             show=show,
             log=True,
@@ -143,13 +145,19 @@ def load_unicode_data_from_file(
         return text
 
 
-def parse_unicode_data(text: str, *, show: bool = True) -> dict[str, str]:
+def parse_unicode_data(
+    text: str,
+    *,
+    show: bool = True,
+    use_color: bool = True,
+) -> dict[str, str]:
     """
     Parse the Unicode data text and return a dictionary of alternate names.
 
     Args:
         text (str): The raw text of the Unicode data.
         show (bool): If True, display progress messages.
+        use_color (bool): If True, show colorized log output.
 
     Returns:
         dict[str, str]: A dictionary mapping characters to their alternate names.
@@ -163,7 +171,7 @@ def parse_unicode_data(text: str, *, show: bool = True) -> dict[str, str]:
         if len(fields) < EXPECTED_MIN_FIELDS:
             echo(
                 msg=MSG_WARNING_MALFORMED_LINE.format(line=stripped_line),
-                style=lambda m: format_warning(m),
+                style=lambda m: format_warning(m, use_color=use_color),
                 stream=sys.stderr,
                 show=show,
                 log=True,
@@ -179,7 +187,7 @@ def parse_unicode_data(text: str, *, show: bool = True) -> dict[str, str]:
             except ValueError as exc:
                 echo(
                     msg=MSG_WARNING_INVALID_CODE.format(code_hex=code_hex, error=exc),
-                    style=lambda m: format_warning(m),
+                    style=lambda m: format_warning(m, use_color=use_color),
                     stream=sys.stderr,
                     show=show,
                     log=True,
@@ -210,7 +218,7 @@ def load_alternate_names(*, show: bool = True, use_color: bool = True) -> dict[s
 
     text = None
     if unicode_data_file.exists():
-        text = load_unicode_data_from_file(unicode_data_file, show=show)
+        text = load_unicode_data_from_file(unicode_data_file, show=show, use_color=use_color)
 
     if not text:
         success = download_and_cache_unicode_data(
@@ -221,8 +229,8 @@ def load_alternate_names(*, show: bool = True, use_color: bool = True) -> dict[s
         )
         if not success:
             return {}
-        text = load_unicode_data_from_file(unicode_data_file, show=show)
+        text = load_unicode_data_from_file(unicode_data_file, show=show, use_color=use_color)
         if not text:
             return {}
 
-    return parse_unicode_data(text, show=show)
+    return parse_unicode_data(text, show=show, use_color=use_color)

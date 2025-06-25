@@ -207,9 +207,9 @@ def create_parser() -> argparse.ArgumentParser:
         choices=VALID_FUZZY_MATCH_MODES,
         default=DEFAULT_FUZZY_MATCH_MODE,
         help=(
-            "Fuzzy match mode when --fuzzy is enabled."
-            "\t single (default): Uses algo determined by --fuzzy-algo.\n"
-            "\t hybrid : Weighted sum of mutiple algorithms.\n"
+            "Fuzzy match mode when --fuzzy is enabled.\n"
+            "\t single : Uses algo determined by --fuzzy-algo.\n"
+            "\t hybrid (default): Weighted aggregation of mutiple algorithms.\n"
         ),
     )
 
