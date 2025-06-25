@@ -6,20 +6,18 @@ This document provides a deep technical reference for the core matching behavior
 
 ## 1. Overview
 
-CharFinder searches Unicode character names using **exact** and/or **fuzzy** matching. The process is governed by a `SearchConfig` structure and influenced by CLI arguments or API parameters. Normalization is always applied, ensuring robust and consistent comparisons across character names.
+CharFinder searches Unicode character names using **exact** and/or **fuzzy** matching. The process is governed by a `SearchConfig` structure and influenced by CLI arguments or API parameters. Normalization is always applied using a selected normalization profile (`--normalization-profile`), ensuring robust and consistent comparisons across character names.
 
 ---
 
 ## 2. Matching Flow
 
-### Default Flow
-
 ```mermaid
 graph TD
-    A[Input Query] --> B[Normalize → trim, NFKD, strip accents, uppercase]
+    A[Input Query] --> B[Normalize using selected profile]
     B --> C{Exact match found?}
-    C -- Yes --> D[Return exact match]
-    D --> E{--prefer\-fuzzy AND --fuzzy set?}
+    C -- Yes --> D[Return exact match(es)]
+    D --> E{--prefer-fuzzy AND --fuzzy set?}
     E -- Yes --> F[Also run fuzzy match]
     E -- No --> G[Return results]
     C -- No --> H{--fuzzy set?}
@@ -28,28 +26,19 @@ graph TD
     I --> G
 ```
 
+---
 
-1. Normalize query (trim, NFKD, strip accents, uppercase).
-2. Attempt **exact match** first using selected mode.
-3. If exact matches found:
-   * Return exact results.
-   * If --prefer-fuzzy is set **and** --fuzzy is enabled, fuzzy results are also included.
-4. If exact matches are **not** found and --fuzzy is enabled:
-   * Perform fuzzy matching.
-
-
-aa
 ## 3. CLI Arguments Affecting Matching
 
-| Argument                                     | Description                                                          |
-| -------------------------------------------- | -------------------------------------------------------------------- |
-| `--fuzzy`                                    | Enables fallback to fuzzy matching if exact match fails.             |
-| `--prefer-fuzzy`                             | Also returns fuzzy matches even if exact matches were found.         |
-| `--threshold FLOAT`                          | Minimum fuzzy score \[0.0, 1.0] to accept a match (default: `0.65`). |
-| `--exact-match-mode {substring,word-subset}` | Exact match strategy. Default: `word-subset`.                        |
-| `--fuzzy-match-mode {first,all,hybrid}`      | Fuzzy match strategy. Default: `first`.                              |
-| `--fuzzy-algo ALGO`                          | Selects fuzzy algorithm. Default: `token_subset_ratio`.              |
-| `--hybrid-agg-fn {mean,median,max,min}`      | Aggregation function in hybrid mode. Default: `mean`.                |
+| Argument                                     | Description                                                                     |
+| -------------------------------------------- | ------------------------------------------------------------------------------- |
+| `--fuzzy`                                    | Enables fallback to fuzzy matching if exact match fails.                        |
+| `--prefer-fuzzy`                             | Also returns fuzzy matches even if exact matches were found.                    |
+| `--threshold FLOAT`                          | Minimum fuzzy score \[0.0, 1.0] to accept a match (default: `0.65`).            |
+| `--exact-match-mode {substring,word-subset}` | Exact match strategy. Default: `word-subset`.                                   |
+| `--fuzzy-match-mode {first,all,hybrid}`      | Fuzzy match strategy. Default: `first`.                                         |
+| `--fuzzy-algo ALGO`                          | Selects fuzzy algorithm. Default: `token_subset_ratio`. Ignored in hybrid mode. |
+| `--hybrid-agg-fn {mean,median,max,min}`      | Aggregation function in hybrid mode. Default: `mean`.                           |
 
 ---
 
@@ -76,20 +65,22 @@ aa
 
 ### Available Algorithms (`--fuzzy-algo`)
 
-| Algorithm            | Description                                                            |
-| -------------------- | ---------------------------------------------------------------------- |
-| `simple_ratio`       | SequenceMatcher-based ratio (fast character overlap).                  |
-| `normalized_ratio`   | Normalized ratio accounting for case and space differences.            |
-| `levenshtein_ratio`  | Edit-distance based similarity (more expensive).                       |
-| `token_sort_ratio`   | Token-based sort before comparison (handles word reordering well).     |
-| `token_subset_ratio` | Token subset matching; penalizes extra or missing words (new default). |
-| `hybrid_score`       | Internal use; combines multiple scores with weights.                   |
+| Algorithm            | Description                                                          | Used in Hybrid? |
+| -------------------- | -------------------------------------------------------------------- | --------------- |
+| `simple_ratio`       | SequenceMatcher-based ratio (fast character overlap).                | ✅               |
+| `normalized_ratio`   | Normalized ratio accounting for case and space differences.          | ✅               |
+| `levenshtein_ratio`  | Edit-distance based similarity (more expensive).                     | ✅               |
+| `token_sort_ratio`   | Token-based sort before comparison (handles word reordering well).   | ✅               |
+| `token_subset_ratio` | Token subset matching; penalizes extra or missing words. *(default)* | ❌               |
+| `hybrid_score`       | Internal alias; not directly available via CLI.                      | N/A             |
+
+> Note: If `--fuzzy-match-mode=hybrid` is selected, the `--fuzzy-algo` value is ignored.
 
 ### Hybrid Mode Details
 
 If `--fuzzy-match-mode hybrid` is selected:
 
-* The following algorithms are used:
+* These four algorithms are used in combination:
 
   * `token_sort_ratio`
   * `simple_ratio`
@@ -105,9 +96,7 @@ If `--fuzzy-match-mode hybrid` is selected:
 | `normalized_ratio`  | 0.15   |
 | `levenshtein_ratio` | 0.15   |
 
-* Final score is computed using the aggregation function defined by `--hybrid-agg-fn`:
-
-  * Options: `mean` (default), `median`, `max`, `min`
+* The final score is computed using the aggregation function specified via `--hybrid-agg-fn`.
 
 ---
 
@@ -128,7 +117,7 @@ class SearchConfig:
     agg_fn: HybridAggFunc
     prefer_fuzzy: bool
     normalization_profile: NormalizationProfile
-    hybrid_weights: HybridWeights
+    hybrid_weights: HybridWeights  # Not exposed via CLI
 ```
 
 ---
@@ -190,18 +179,20 @@ When `--debug` is enabled:
   * Chosen algorithms and mode
   * Threshold and scoring function
   * Aggregation details (for hybrid mode)
-* Additionally, `--verbose` may show skipped characters and internal scores for transparency.
+* Environment variable `CHARFINDER_DEBUG_ENV_LOAD=1` also activates debug diagnostics.
+* Logs and console diagnostics reflect environment mode, config state, and fallback logic.
 
 ---
 
 ## 9. Summary Matrix
 
-| Match Path             | Exact Mode         | Fuzzy Mode | Algorithms Used                    | Aggregation     |
-| ---------------------- | ------------------ | ---------- | ---------------------------------- | --------------- |
-| Exact only             | substring / subset | -          | -                                  | -               |
-| Exact → Fuzzy fallback | substring / subset | first/all  | user-selected or default           | -               |
-| Exact → Fuzzy fallback | substring / subset | hybrid     | weighted combination of algorithms | mean/median/... |
-| Prefer fuzzy           | any                | any        | fuzzy run even if exact succeeds   | as above        |
+| Match Path             | Exact Mode         | Fuzzy Match Mode | Algorithms Used                  | Aggregation     |
+| ---------------------- | ------------------ | ---------------- | -------------------------------- | --------------- |
+| Exact only             | substring / subset | -                | -                                | -               |
+| Exact → Fuzzy fallback | substring / subset | first/all        | user-selected or default         | -               |
+| Exact → Fuzzy fallback | substring / subset | hybrid           | fixed hybrid set                 | mean/median/... |
+| Prefer fuzzy           | any                | any              | fuzzy run even if exact succeeds | as above        |
+| No exact match         | any                | hybrid           | fixed hybrid set                 | mean/median/... |
 
 ---
 
