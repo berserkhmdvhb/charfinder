@@ -36,7 +36,7 @@ graph TD
 | `--prefer-fuzzy`                             | Also returns fuzzy matches even if exact matches were found.                    |
 | `--threshold FLOAT`                          | Minimum fuzzy score \[0.0, 1.0] to accept a match (default: `0.65`).            |
 | `--exact-match-mode {substring,word-subset}` | Exact match strategy. Default: `word-subset`.                                   |
-| `--fuzzy-match-mode {first,all,hybrid}`      | Fuzzy match strategy. Default: `first`.                                         |
+| `--fuzzy-match-mode {single,hybrid}`      | Fuzzy match strategy. Default: `hybrid`.                                         |
 | `--fuzzy-algo ALGO`                          | Selects fuzzy algorithm. Default: `token_subset_ratio`. Ignored in hybrid mode. |
 | `--hybrid-agg-fn {mean,median,max,min}`      | Aggregation function in hybrid mode. Default: `mean`.                           |
 
@@ -59,8 +59,7 @@ graph TD
 
 | Mode     | CLI Option                           | Description                                                               |
 | -------- | ------------------------------------ | ------------------------------------------------------------------------- |
-| `first`  | `--fuzzy-match-mode first` (default) | Return only the best match above the threshold.                           |
-| `all`    | `--fuzzy-match-mode all`             | Return all matches scoring above the threshold.                           |
+| `single`    | `--fuzzy-match-mode single`             | Runs fuzzy match mode using a single algorithm                        |
 | `hybrid` | `--fuzzy-match-mode hybrid`          | Score using multiple algorithms, aggregate results, then apply threshold. |
 
 ### Available Algorithms (`--fuzzy-algo`)
@@ -189,9 +188,9 @@ When `--debug` is enabled:
 | Match Path             | Exact Mode         | Fuzzy Match Mode | Algorithms Used                  | Aggregation     |
 | ---------------------- | ------------------ | ---------------- | -------------------------------- | --------------- |
 | Exact only             | substring / subset | -                | -                                | -               |
-| Exact → Fuzzy fallback | substring / subset | first/all        | user-selected or default         | -               |
 | Exact → Fuzzy fallback | substring / subset | hybrid           | fixed hybrid set                 | mean/median/... |
-| Prefer fuzzy           | any                | any              | fuzzy run even if exact succeeds | as above        |
+| Exact → Fuzzy fallback | substring / subset | single           | user-selected or default         | -               |
+| Prefer fuzzy           | any                | any              | fuzzy run even if exact succeeds |mean/median/...  |
 | No exact match         | any                | hybrid           | fixed hybrid set                 | mean/median/... |
 
 ---
