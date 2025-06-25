@@ -56,26 +56,26 @@ FUZZY_ALGO_ALIASES = {
 
 | Constant                        | Default Value      |
 | ------------------------------- | ------------------ |
-| `DEFAULT_THRESHOLD`             | `0.7`              |
+| `DEFAULT_THRESHOLD`             | `0.65`              |
 | `DEFAULT_FUZZY_ALGO`            | `token_sort_ratio` |
-| `DEFAULT_FUZZY_MATCH_MODE`      | `single`           |
+| `DEFAULT_FUZZY_MATCH_MODE`      | `hybrid`           |
 | `DEFAULT_EXACT_MATCH_MODE`      | `word-subset`      |
 | `DEFAULT_HYBRID_AGG_FUNC`       | `mean`             |
 | `DEFAULT_COLOR_MODE`            | `auto`             |
 | `DEFAULT_OUTPUT_FORMAT`         | `text`             |
-| `DEFAULT_NORMALIZATION_FORM`    | `NFKD`             |
+| `DEFAULT_NORMALIZATION_FORM`    | `NFC`             |
 | `DEFAULT_NORMALIZATION_PROFILE` | `aggressive`       |
 
 ---
 
 ## 🧪 Normalization Profiles
 
-| Level        | Unicode Form | Strip Accents | Strip Whitespace      | Transformation Summary             |
-| ------------ | ------------ | ------------- | --------------------- | ---------------------------------- |
-| `raw`        | NFC          | False         | False                 | NFC + `.upper()` (no stripping)    |
-| `light`      | NFC          | False         | (unspecified → False) | NFC + `.upper()`                   |
-| `medium`     | NFKD         | False         | (unspecified → False) | NFKD + `.upper()`                  |
-| `aggressive` | NFKD         | True          | (unspecified → False) | NFKD + remove accents + `.upper()` |
+| Profile      | Unicode Form | Strip Accents | Collapse Whitespace | Remove Zero-Width | Transformation Summary                               |
+| ------------ | ------------ | ------------- | ------------------- | ----------------- | ---------------------------------------------------- |
+| `raw`        | —            | ❌             | ❌                   | ❌                 | No changes                                           |
+| `light`      | NFC            | ❌             | ✅                   | ❌                 | Trim + collapse spaces + `.upper()`                  |
+| `medium`     | NFC, NFKD         | ❌             | ✅                   | ❌                 | `light` + Unicode normalization                      |
+| `aggressive` | NFC, NFKD         | ✅             | ✅                   | ✅                 | `medium` + remove diacritics + zero-width characters |
 
 ---
 
