@@ -90,12 +90,11 @@ If `--fuzzy-match-mode hybrid` is selected:
 
 | Algorithm           | Weight |
 | ------------------- | ------ |
-| `token_sort_ratio`  | 0.55   |
-| `simple_ratio`      | 0.15   |
-| `normalized_ratio`  | 0.15   |
-| `levenshtein_ratio` | 0.15   |
-
-* The final score is computed using the aggregation function specified via `--hybrid-agg-fn`.
+| `simple_ratio`      | 0.00   |
+| `normalized_ratio`  | 0.00   |
+| `levenshtein_ratio` | 0.30   |
+| `token_sort_ratio`  | 0.10   |
+| `token_subset_ratio` | 0.60  |
 
 ---
 
@@ -183,7 +182,21 @@ When `--debug` is enabled:
 
 ---
 
-## 9. Summary Matrix
+## 9. Environment Overrides (`.env`)
+
+Several `.env` variables can be used to override fuzzy and exact matching behavior:
+
+| Variable                           | Description                                                                        |
+| ---------------------------------- | ---------------------------------------------------------------------------------- |
+| `CHARFINDER_MATCH_THRESHOLD`       | Overrides the minimum score to accept a fuzzy match (e.g. `0.7`)                   |
+| `CHARFINDER_NORMALIZATION_PROFILE` | Sets the normalization profile used (e.g. `aggressive`)                            |
+| `CHARFINDER_FUZZY_WEIGHTS`         | Controls per-algorithm weighting in hybrid mode (e.g. `levenshtein_ratio:0.4,...`) |
+| `CHARFINDER_DEBUG_ENV_LOAD`        | If set to `1`, shows debug trace of .env resolution and match config               |
+
+
+---
+
+## 10. Summary Matrix
 
 | Match Path             | Exact Mode         | Fuzzy Match Mode | Algorithms Used                  | Aggregation     |
 | ---------------------- | ------------------ | ---------------- | -------------------------------- | --------------- |
