@@ -287,23 +287,24 @@ CharFinder implements a **layered architecture** with clear boundaries:
 ---
 
 ### 🔄 Normalization
+### 🔄 Normalization
 
-Characters that look the same can be encoded in multiple ways. For example:
+Characters that look the same can be encoded in different ways. For example:
 
 * `é` (U+00E9) vs. `é` (`e` + U+0301) are visually identical but distinct Unicode sequences.
 
-To ensure matching is consistent, CharFinder applies **Unicode normalization, case folding, and optional accent stripping** to both your input and the name cache.
+To ensure consistent matching, CharFinder applies **Unicode normalization, case folding, whitespace cleanup, and optional accent/diacritic stripping** depending on the selected profile.
 
 You can customize this behavior using the `--normalization-profile` CLI argument:
 
-| Profile      | Unicode Form | Strip Accents | Strip Whitespace      | Transformation Summary             |
-| ------------ | ------------ | ------------- | --------------------- | ---------------------------------- |
-| `raw`        | NFC          | False         | False                 | NFC + `.upper()` (no stripping)    |
-| `light`      | NFC          | False         | False                 | NFC + `.upper()`                   |
-| `medium`     | NFKD         | False         | False                 | NFKD + `.upper()`                  |
-| `aggressive` | NFKD         | True          | False                 | NFKD + remove accents + `.upper()` |
+| Profile      | Unicode Form | Strip Accents | Collapse Whitespace | Remove Zero-Width | Transformation Summary                               |
+| ------------ | ------------ | ------------- | ------------------- | ----------------- | ---------------------------------------------------- |
+| `raw`        | —            | ❌             | ❌                   | ❌                 | No changes                                           |
+| `light`      | NFC            | ❌             | ✅                   | ❌                 | Trim + collapse spaces + `.upper()`                  |
+| `medium`     | NFKD         | ❌             | ✅                   | ❌                 | `light` + Unicode normalization                      |
+| `aggressive` | NFC, NFKD         | ✅             | ✅                   | ✅                 | `medium` + remove diacritics + zero-width characters |
 
-The default profile is **`aggressive`**, which provides robust matching across visually similar characters.
+The default profile is **`aggressive`**, which offers the most robust matching by removing visual and encoding differences.
 
 ---
 
@@ -315,7 +316,7 @@ The default profile is **`aggressive`**, which provides robust matching across v
 | `café`                 | `U+0063 U+0061 U+0066 U+0065 U+0301` | `CAFE`     | ✅            |
 | `CAFÉ`                  | `U+0043 U+0041 U+0046 U+00C9`        | `CAFE`     | ✅            |
 | `CAFÉ`                 | `U+0043 U+0041 U+0046 U+0045 U+0301` | `CAFE`     | ✅            |
-| `𝒸𝒶𝓇é` (italic math) | `U+1D4B8 U+1D4B6 U+1D4FB U+00E9`     | `CAFE`     | ✅ (fallback) |
+| `𝒸𝒶𝓻é` (italic math) | `U+1D4B8 U+1D4B6 U+1D4FB U+00E9`     | `CARE`     | ✅ (fallback) |
 | `ｃａｆｅ́` (fullwidth)     | `U+FF43 U+FF41 U+FF46 U+FF45 U+0301` | `CAFE`     | ✅ (folded)   |
 
 Even though the second input uses a decomposed form (`e` + combining acute), CharFinder normalizes and folds it to ensure a stable match.
