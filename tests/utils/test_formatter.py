@@ -5,6 +5,7 @@ Covers formatting functions, color wrapping, and header/row formatting.
 
 from __future__ import annotations
 
+from colorama import init
 import sys
 from io import StringIO
 from types import SimpleNamespace
@@ -23,7 +24,6 @@ from charfinder.config.constants import VALID_COLOR_MODES
 @pytest.fixture(autouse=True)
 def init_colorama() -> None:
     """Ensure colorama is initialized cleanly before each test (resets ANSI)."""
-    from colorama import init
     init(autoreset=True)
 
 

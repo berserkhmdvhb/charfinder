@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from collections.abc import Callable
 from colorama import Style
 
 from charfinder.utils.logger_styles import (
@@ -13,6 +12,15 @@ from charfinder.utils.logger_styles import (
     format_settings,
     format_success,
     format_warning,
+    COLOR_HEADER,
+    COLOR_CODELINE,
+    COLOR_ERROR,
+    COLOR_INFO,
+    COLOR_SUCCESS,
+    COLOR_WARNING,
+    COLOR_DEBUG,
+    COLOR_SETTINGS,
+    RESET,
 )
 from charfinder.config.types import FormatterFunc
 
@@ -54,18 +62,17 @@ def test_format_functions_with_and_without_color(
 
 def test_color_constants_are_ansi_sequences() -> None:
     """Color constants should be valid ANSI escape sequences."""
-    from charfinder.utils import logger_styles as ls
 
     color_constants = [
-        ls.COLOR_HEADER,
-        ls.COLOR_CODELINE,
-        ls.COLOR_ERROR,
-        ls.COLOR_INFO,
-        ls.COLOR_SUCCESS,
-        ls.COLOR_WARNING,
-        ls.COLOR_DEBUG,
-        ls.COLOR_SETTINGS,
-        ls.RESET,
+        COLOR_HEADER,
+        COLOR_CODELINE,
+        COLOR_ERROR,
+        COLOR_INFO,
+        COLOR_SUCCESS,
+        COLOR_WARNING,
+        COLOR_DEBUG,
+        COLOR_SETTINGS,
+        RESET,
     ]
 
     for color in color_constants:

@@ -10,8 +10,6 @@ Covers:
 from pathlib import Path
 from typing import get_type_hints, TextIO
 
-import pytest
-
 from charfinder.config import types
 
 

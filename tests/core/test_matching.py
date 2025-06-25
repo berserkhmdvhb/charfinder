@@ -20,12 +20,6 @@ from charfinder.config.messages import (
     MSG_EXACT_CHECKING,
     MSG_ERROR_INVALID_EXACT_MATCH_MODE,
     MSG_SUBSET_CHECKING,
-    MSG_DEBUG_MATCH_SECTION_END,
-    MSG_DEBUG_FUZZY_EXECUTED,
-    MSG_DEBUG_HYBRID_ALGOS_HEADER,
-    MSG_DEBUG_HYBRID_AGG_FN,
-    MSG_DEBUG_MATCH_SECTION_END,
-
 )
 
 # ---------------------------------------------------------------------

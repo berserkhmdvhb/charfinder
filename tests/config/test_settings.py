@@ -20,7 +20,10 @@ from charfinder.config.constants import (
     DEFAULT_LOG_ROOT,
     ENV_ENVIRONMENT,
     ENV_LOG_MAX_BYTES,
+    ENV_FUZZY_WEIGHT,
+    FUZZY_HYBRID_WEIGHTS,
 )    
+from charfinder.config.messages import MSG_ERROR_INVALID_WEIGHT_FORMAT
 
 @pytest.mark.parametrize(
     "env_value,expected",
@@ -204,3 +207,45 @@ def test_get_log_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     importlib.reload(sett)
     path = sett.get_log_dir()
     assert path == DEFAULT_LOG_ROOT / "TEST"
+
+def test_parse_fuzzy_weight_string_valid() -> None:
+    """Should parse valid fuzzy weight string."""
+    raw = "algo1:0.3,algo2:0.4,algo3:0.3"
+    result = settings.parse_fuzzy_weight_string(raw)
+    assert isinstance(result, dict)
+    assert result == {"algo1": 0.3, "algo2": 0.4, "algo3": 0.3}
+    assert abs(sum(result.values()) - 1.0) < 0.01
+
+
+@pytest.mark.parametrize("bad_input", ["invalid", "keyonly:", "a:0.5,b", "a:abc"])
+def test_parse_fuzzy_weight_string_invalid_format(bad_input: str) -> None:
+    """Should raise ValueError on invalid format strings."""
+    with pytest.raises(ValueError, match=MSG_ERROR_INVALID_WEIGHT_FORMAT.format(raw=bad_input)):
+        settings.parse_fuzzy_weight_string(bad_input)
+
+
+def test_parse_fuzzy_weight_string_invalid_total() -> None:
+    """Should raise ValueError if total weight is out of valid range."""
+    raw = "a:0.5,b:0.6"  # Total = 1.1
+    with pytest.raises(ValueError) as exc_info:
+        settings.parse_fuzzy_weight_string(raw)
+
+    message = str(exc_info.value)
+    assert "Parsed weights must sum to approximately 1.0" in message
+    assert "1.1000" in message
+    assert "'a': 0.5" in message
+
+
+
+def test_get_fuzzy_hybrid_weights_env_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Should return default weights when env var is missing."""
+    monkeypatch.delenv(ENV_FUZZY_WEIGHT, raising=False)
+    result = settings.get_fuzzy_hybrid_weights()
+    assert result == FUZZY_HYBRID_WEIGHTS
+
+
+def test_get_fuzzy_hybrid_weights_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Should parse fuzzy weights from valid env var."""
+    monkeypatch.setenv(ENV_FUZZY_WEIGHT, "a:0.4,b:0.3,c:0.3")
+    result = settings.get_fuzzy_hybrid_weights()
+    assert result == {"a": 0.4, "b": 0.3, "c": 0.3}

@@ -85,10 +85,11 @@ Used when `--fuzzy-match-mode=hybrid`:
 
 ```python
 FUZZY_HYBRID_WEIGHTS = {
-    "simple_ratio": 0.15,
-    "normalized_ratio": 0.15,
-    "levenshtein_ratio": 0.15,
-    "token_sort_ratio": 0.55,
+    "simple_ratio": 0.10,
+    "normalized_ratio": 0.10,
+    "levenshtein_ratio": 0.10,
+    "token_sort_ratio": 0.50,
+    "token_subset_ratio": 0.20,
 }
 ```
 

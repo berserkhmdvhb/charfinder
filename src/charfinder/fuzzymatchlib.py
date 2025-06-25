@@ -38,7 +38,6 @@ Constants:
 
 from __future__ import annotations
 
-import functools
 import statistics
 import unicodedata
 from typing import TYPE_CHECKING, cast
@@ -47,12 +46,9 @@ import Levenshtein
 from rapidfuzz import fuzz
 
 from charfinder.config.constants import (
-    DEFAULT_FUZZY_ALGO,
-    DEFAULT_FUZZY_MATCH_MODE,
     DEFAULT_HYBRID_AGG_FUNC,
     DEFAULT_NORMALIZATION_FORM,
     FUZZY_ALGO_ALIASES,
-    FUZZY_HYBRID_WEIGHTS,
 )
 from charfinder.config.messages import (
     MSG_ERROR_AGG_FN_UNEXPECTED,
@@ -60,6 +56,7 @@ from charfinder.config.messages import (
 )
 from charfinder.validators import (
     validate_fuzzy_algo,
+    validate_fuzzy_hybrid_weights,
     validate_fuzzy_match_mode,
     validate_hybrid_agg_fn,
 )
@@ -67,11 +64,10 @@ from charfinder.validators import (
 if TYPE_CHECKING:
     from charfinder.config.aliases import (
         FuzzyAlgorithm,
-        FuzzyMatchMode,
         HybridAggFunc,
         NormalizationForm,
     )
-    from charfinder.config.types import AlgorithmFn
+    from charfinder.config.types import AlgorithmFn, FuzzyMatchContext
 
 
 __all__ = ["compute_similarity"]
@@ -146,22 +142,39 @@ def token_sort_ratio_score(a: str, b: str) -> float:
 
 
 def token_subset_ratio_score(a: str, b: str) -> float:
-    a_tokens = set(a.split())
-    b_tokens = set(b.split())
-    common = a_tokens & b_tokens
+    """
+    Compute a score based on whether tokens from 'a' are a fuzzy subset of tokens in 'b'.
+    Each token in 'a' must have a good match in 'b'.
 
-    if not common:
+    Args:
+        a: Normalized query string (already normalized externally).
+        b: Normalized candidate string (already normalized externally).
+
+    Returns:
+        float: Similarity score in range [0.0, 1.0]
+    """
+    a_tokens = a.split()
+    b_tokens = b.split()
+
+    if not a_tokens or not b_tokens:
         return 0.0
 
-    reduced_a = " ".join(t for t in a.split() if t in common)
-    reduced_b = " ".join(t for t in b.split() if t in common)
+    matched_scores = []
+    for a_token in a_tokens:
+        # Find best match for this query token in the candidate tokens
+        best_score = max(fuzz.ratio(a_token, b_token) for b_token in b_tokens)
+        matched_scores.append(best_score)
 
-    fuzz_score = float(fuzz.token_sort_ratio(reduced_a, reduced_b)) / 100.0
-    coverage = len(common) / len(a.split())
-    return fuzz_score * coverage
+    # Final score = average normalized match quality of all query tokens
+    return sum(matched_scores) / (100.0 * len(matched_scores))
 
 
-def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC) -> float:
+def hybrid_score(
+    a: str,
+    b: str,
+    agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
+    weights: dict[str, float] | None = None,
+) -> float:
     """
     Hybrid score combining multiple algorithms with a chosen aggregate function.
 
@@ -169,26 +182,27 @@ def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC
         a: First string.
         b: Second string.
         agg_fn: Aggregation function to combine scores ("mean", "median", "max", "min").
+        weights: Optional dict of algorithm names to weights. If None, uses env/default.
 
     Returns:
         float: Hybrid similarity score in the range [0.0, 1.0].
 
     Raises:
-        ValueError: If agg_fn is not supported.
+        ValueError: If agg_fn is not supported or weights are invalid.
     """
     agg_fn = validate_hybrid_agg_fn(agg_fn)
+    weights = validate_fuzzy_hybrid_weights(weights)
 
     components = {
         "simple_ratio": simple_ratio(a, b),
         "normalized_ratio": normalized_ratio(a, b),
         "levenshtein_ratio": levenshtein_ratio(a, b),
         "token_sort_ratio": token_sort_ratio_score(a, b),
+        "token_subset_ratio": token_subset_ratio_score(a, b),
     }
 
     if agg_fn == "mean":
-        return sum(
-            components[name] * FUZZY_HYBRID_WEIGHTS.get(name, 0.0) for name in FUZZY_HYBRID_WEIGHTS
-        )
+        return sum(components[name] * weights.get(name, 0.0) for name in weights)
 
     scores = list(components.values())
 
@@ -199,7 +213,6 @@ def hybrid_score(a: str, b: str, agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC
     if agg_fn == "min":
         return min(scores)
 
-    # This should be unreachable due to validation
     raise RuntimeError(MSG_ERROR_AGG_FN_UNEXPECTED.format(agg_fn=agg_fn))
 
 
@@ -213,7 +226,7 @@ FUZZY_ALGORITHM_REGISTRY: dict[FuzzyAlgorithm, AlgorithmFn] = {
     "levenshtein_ratio": levenshtein_ratio,
     "token_sort_ratio": token_sort_ratio_score,
     "token_subset_ratio": token_subset_ratio_score,
-    "hybrid_score": functools.partial(hybrid_score, agg_fn="mean"),
+    "hybrid_score": hybrid_score,
 }
 
 
@@ -261,9 +274,7 @@ def get_fuzzy_algorithm_registry() -> list[str]:
 def compute_similarity(
     s1: str,
     s2: str,
-    algorithm: FuzzyAlgorithm = DEFAULT_FUZZY_ALGO,
-    mode: FuzzyMatchMode = DEFAULT_FUZZY_MATCH_MODE,
-    agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
+    context: FuzzyMatchContext,
 ) -> float:
     """
     Compute similarity between two strings using a specified fuzzy algorithm
@@ -272,10 +283,7 @@ def compute_similarity(
     Args:
         s1: First string (e.g., query).
         s2: Second string (e.g., candidate).
-        algorithm: One of 'sequencematcher', 'rapidfuzz', or 'levenshtein'.
-        mode: 'single' (default) to use one algorithm, or 'hybrid' to use hybrid_score
-            (supports configurable aggregation).
-        agg_fn: Aggregation function to aggregate the scores.
+        context: Match configuration (algorithm, mode, weights, agg_fn, etc.)
 
     Returns:
         float: Similarity score in the range [0.0, 1.0].
@@ -284,12 +292,11 @@ def compute_similarity(
         ValueError: If match mode is invalid.
         RuntimeError: If an unexpected algorithm is passed.
     """
-    algorithm = validate_fuzzy_algo(algorithm)
-    mode = validate_fuzzy_match_mode(mode)
+    algorithm = validate_fuzzy_algo(context.fuzzy_algo)
+    mode = validate_fuzzy_match_mode(context.match_mode)
 
     if mode == "hybrid":
-        return hybrid_score(s1, s2, agg_fn)
+        return hybrid_score(s1, s2, agg_fn=context.agg_fn, weights=context.weights)
 
     resolved_algo = FUZZY_ALGORITHM_REGISTRY[algorithm]
-
     return resolved_algo(s1, s2)

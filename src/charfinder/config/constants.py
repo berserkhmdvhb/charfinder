@@ -47,6 +47,7 @@ __all__ = [
     "ENV_COLOR_MODE",
     "ENV_DEBUG_ENV_LOAD",
     "ENV_ENVIRONMENT",
+    "ENV_FUZZY_WEIGHT",
     "ENV_LOG_BACKUP_COUNT",
     "ENV_LOG_LEVEL",
     "ENV_LOG_MAX_BYTES",
@@ -59,6 +60,8 @@ __all__ = [
     "EXPECTED_MIN_FIELDS",
     "FIELD_WIDTHS",
     "FUZZY_ALGO_ALIASES",
+    "FUZZY_WEIGHT_MAX_TOTAL",
+    "FUZZY_WEIGHT_MIN_TOTAL",
     "LOG_FILE_NAME",
     "LOG_FORMAT",
     "LOG_METHODS",
@@ -167,11 +170,13 @@ DEFAULT_THRESHOLD: float = 0.65
 # ---------------------------------------------------------------------
 
 FUZZY_HYBRID_WEIGHTS: dict[str, float] = {
-    "simple_ratio": 0.15,
-    "normalized_ratio": 0.15,
-    "levenshtein_ratio": 0.15,
-    "token_sort_ratio": 0.55,
+    "simple_ratio": 0.10,
+    "normalized_ratio": 0.10,
+    "levenshtein_ratio": 0.10,
+    "token_sort_ratio": 0.50,
+    "token_subset_ratio": 0.20,
 }
+
 # ---------------------------------------------------------------------
 # Normalization Profiles
 # ---------------------------------------------------------------------
@@ -217,7 +222,10 @@ ENV_MATCH_THRESHOLD = "CHARFINDER_MATCH_THRESHOLD"
 ENV_COLOR_MODE = "CHARFINDER_COLOR_MODE"
 ENV_NORMALIZATION_PROFILE = "CHARFINDER_NORMALIZATION_PROFILE"
 ENV_SHOW_SCORE = "CHARFINDER_SHOW_SCORE"
+ENV_FUZZY_WEIGHT = "CHARFINDER_FUZZY_WEIGHTS"
 
+FUZZY_WEIGHT_MIN_TOTAL = 0.98
+FUZZY_WEIGHT_MAX_TOTAL = 1.02
 
 # ------------------------------------------------------------------------
 # UnicodeData

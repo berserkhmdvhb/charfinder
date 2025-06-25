@@ -202,7 +202,6 @@ def test_handle_cli_workflow_warns_in_prod(
     mock_echo: MagicMock,
 ) -> None:
     """Covers warning when CHARFINDER_ENV is PROD."""
-    from charfinder.config.messages import MSG_WARNING_PROD_ENV
 
     args = Namespace(verbose=True, debug=False, color="auto", threshold=0.75)
     mock_handler.return_value = MatchResult(exit_code=EXIT_SUCCESS, match_info=None)

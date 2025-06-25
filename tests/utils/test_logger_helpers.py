@@ -22,10 +22,6 @@ import pytest
 from unittest.mock import patch
 
 from charfinder.utils import logger_helpers as lh
-from charfinder.config.types import EchoFunc
-from charfinder.config.messages import MSG_WARNING_DELETE_ROLLOVER_TARGET_FAILED
-from charfinder.utils.formatter import log_optionally_echo
-from charfinder.utils.logger_styles import format_warning
 
 pytestmark = pytest.mark.unit
 

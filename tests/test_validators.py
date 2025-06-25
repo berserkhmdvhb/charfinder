@@ -540,3 +540,37 @@ def test_resolve_normalization_profile_env_invalid_fallback(monkeypatch: pytest.
     monkeypatch.setenv("CHARFINDER_NORMALIZATION_PROFILE", "invalid_profile")
     result = V.resolve_effective_normalization_profile(None)
     assert result == C.DEFAULT_NORMALIZATION_PROFILE
+
+# ---------------------------------------------------------------------
+# Fuzzy Weights
+# ---------------------------------------------------------------------
+
+def test_validate_fuzzy_hybrid_weights_valid_dict() -> None:
+    """Should return the input dict if weights sum to ~1.0."""
+    weights = {"a": 0.5, "b": 0.5}
+    assert V.validate_fuzzy_hybrid_weights(weights) == weights
+
+
+def test_validate_fuzzy_hybrid_weights_dict_invalid_total() -> None:
+    """Should raise ValueError if weights total is out of [0.0, 1.0] range."""
+    weights = {"a": 0.8, "b": 0.3}  # Total = 1.1
+    with pytest.raises(ValueError, match="Parsed weights must sum to approximately 1.0"):
+        V.validate_fuzzy_hybrid_weights(weights)
+
+
+def test_validate_fuzzy_hybrid_weights_str_parsing(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Should parse string weights via validate_fuzzy_hybrid_weights()."""
+    monkeypatch.delenv("CHARFINDER_FUZZY_WEIGHT", raising=False)
+    raw = "x:0.6,y:0.4"
+    expected = {"x": 0.6, "y": 0.4}
+    result = V.validate_fuzzy_hybrid_weights(raw)
+    assert result == expected
+
+
+def test_validate_fuzzy_hybrid_weights_type_error() -> None:
+    """Should raise TypeError if input is not str, dict, or None."""
+    with pytest.raises(
+        TypeError,
+        match=re.escape("Invalid type for fuzzy hybrid weights: expected str, dict, or None but got <class 'int'>."),
+    ):
+        V.validate_fuzzy_hybrid_weights(42)  # type: ignore[arg-type]

@@ -20,7 +20,7 @@ from charfinder.config.messages import (
     MSG_NO_SCORE_COMPUTED,
     MSG_SUBSET_CHECKING,
 )
-from charfinder.config.types import FuzzyMatchContext, MatchTuple
+from charfinder.config.types import FuzzyMatchContext, MatchTuple, NameCache
 from charfinder.fuzzymatchlib import compute_similarity
 from charfinder.utils.formatter import echo, log_optionally_echo
 from charfinder.utils.logger_setup import get_logger
@@ -55,7 +55,7 @@ def _max_score(*scores: float | None) -> float | None:
 
 def find_exact_matches(
     norm_query: str,
-    name_cache: dict[str, dict[str, str]],
+    name_cache: NameCache,
     exact_match_mode: str,
     *,
     verbose: bool = False,
@@ -124,7 +124,7 @@ def find_exact_matches(
 
 def find_fuzzy_matches(
     norm_query: str,
-    name_cache: dict[str, dict[str, str]],
+    name_cache: NameCache,
     context: FuzzyMatchContext,
 ) -> list[MatchTuple]:
     """
@@ -138,8 +138,8 @@ def find_fuzzy_matches(
 
     Args:
         norm_query (str): The normalized query string.
-        name_cache (dict): The name cache with normalized and alternate names.
-        context (FuzzyMatchContext): Context including threshold, algorithm, mode, etc.
+        name_cache (NameCache): The name cache with normalized and alternate names.
+        context (FuzzyMatchContext): Context including threshold, algorithm, mode, weights, etc.
 
     Returns:
         list[MatchTuple]: List of matches with computed scores.
@@ -148,8 +148,6 @@ def find_fuzzy_matches(
     validate_fuzzy_match_mode(context.match_mode)
     validate_threshold(context.threshold)
     validate_name_cache_structure(name_cache)
-
-    matches: list[MatchTuple] = []
 
     if context.verbose:
         echo(
@@ -167,33 +165,18 @@ def find_fuzzy_matches(
             log_method="info",
         )
 
+    def compute_score(name: str | None) -> float | None:
+        if not name:
+            return None
+        return compute_similarity(norm_query, name, context)
+
+    matches: list[MatchTuple] = []
+
     for char, names in name_cache.items():
-        norm_name = names["normalized"]
-        alt_norm = names.get("alternate_normalized")
-
-        # Score against official name
-        score1 = compute_similarity(
-            norm_query,
-            norm_name,
-            context.fuzzy_algo,
-            context.match_mode,
-            agg_fn=context.agg_fn,
+        score = _max_score(
+            compute_score(names["normalized"]),
+            compute_score(names.get("alternate_normalized")),
         )
-
-        # Score against alternate name if present
-        score2 = (
-            compute_similarity(
-                norm_query,
-                alt_norm,
-                context.fuzzy_algo,
-                context.match_mode,
-                agg_fn=context.agg_fn,
-            )
-            if alt_norm
-            else None
-        )
-
-        score = _max_score(score1, score2)
 
         if score is None:
             if context.verbose and context.debug:

@@ -211,7 +211,6 @@ def test_resolve_matches_logs_removed_duplicates(
     debug_logger: logging.Logger,  # required to route logs to log_stream
 ) -> None:
     """Debug log is printed when fuzzy matches are deduplicated due to exact matches."""
-    from charfinder.config.messages import MSG_DEBUG_REMOVED_DUPLICATE_FUZZY
 
     mock_exact.return_value = [
         MatchTuple(0x2713, "✓", "CHECK MARK", None, False)

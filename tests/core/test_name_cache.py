@@ -8,12 +8,13 @@ from typing import Any, IO
 from unittest.mock import patch
 
 import pytest
-
+ 
 from charfinder.core.name_cache import (
     BuildCacheOptions,
     CacheIOOptions,
     build_name_cache,
     _save_cache_with_retries,
+    _load_existing_cache
 )
 
 # ---------------------------------------------------------------------
@@ -67,7 +68,6 @@ def test_load_existing_cache_invalid_json(dummy_cache_path: Path) -> None:
     dummy_cache_path.write_text("INVALID_JSON", encoding="utf-8")
 
     options = CacheIOOptions(use_color=False, show=False, retry_attempts=1, retry_delay=0)
-    from charfinder.core.name_cache import _load_existing_cache
 
     with pytest.raises(ValueError, match="Failed to load cache from"):
         _load_existing_cache(dummy_cache_path, options=options)

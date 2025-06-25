@@ -68,6 +68,7 @@ class FuzzyMatchContext:
     debug: bool
     use_color: bool
     query: str
+    weights: dict[str, float] | None = None
 
 
 @dataclass

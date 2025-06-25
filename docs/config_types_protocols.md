@@ -47,6 +47,8 @@ class FuzzyMatchContext:
     verbose: bool
     use_color: bool
     query: str
+    weights: dict[FuzzyAlgorithm, float] | None = None
+    
 ```
 
 #### `SearchConfig`

@@ -18,6 +18,7 @@ from charfinder.cli.handlers import (
     build_match_result,
     _run_query_and_return,
     handle_find_chars,
+    get_version,
     SearchParams,
 )
 from charfinder.config.constants import (
@@ -29,7 +30,6 @@ from charfinder.config.constants import (
 from charfinder.config.messages import (
     MSG_ERROR_EMPTY_QUERY,
     MSG_INFO_SEARCH_CANCELLED,
-    MSG_ERROR_UNEXPECTED_EXCEPTION
 )
 
 @pytest.fixture(autouse=True)
@@ -50,7 +50,6 @@ def test_get_version_returns_string() -> None:
 
 @patch("charfinder.cli.handlers.version", side_effect=PackageNotFoundError)
 def test_get_version_package_not_found(mock_version: MagicMock) -> None:
-    from charfinder.cli.handlers import get_version
 
     get_version.cache_clear()  # <-- Clear cached result to allow mock to take effect
     result = get_version()

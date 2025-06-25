@@ -1,9 +1,12 @@
+"""Tests for ensuring isolation of tests in log directory (logs/TEST)"""
+
+
 from pathlib import Path
+
 
 def test_logs_are_only_created_in_test_env(tmp_path: Path) -> None:
     """Ensure test code creates logs in logs/TEST only, not in DEV/PROD/etc."""
-    from shutil import copytree
-    import tempfile
+    
 
     log_root = Path.cwd() / "logs"
     pre_existing_dirs = {p.name for p in log_root.iterdir() if p.is_dir()} if log_root.exists() else set()

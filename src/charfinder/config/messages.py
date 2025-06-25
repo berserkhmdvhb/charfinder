@@ -69,7 +69,16 @@ MSG_DEBUG_FUZZY_SKIPPED_DUE_TO_EXACT = "Fuzzy requested but skipped due to exact
 MSG_WARNING_INVALID_ENV_INT = "Invalid int for '{env_var!r}' = '{value!r}'; using default {default}"
 MSG_WARNING_DOTENV_PATH_MISSING = 'DOTENV_PATH is set to "{path}" but the file does not exist.'
 MSG_INFO_NO_DOTENV_LOADED = "No .env file loaded — using system env or defaults."
-
+MSG_ERROR_INVALID_WEIGHT_FORMAT = (
+    "Invalid format for CHARFINDER_FUZZY_WEIGHTS: '{raw}'. "
+    "Expected format is key1:val1,key2:val2,... with float values summing to ~1.0."
+)
+MSG_ERROR_INVALID_WEIGHT_TOTAL = (
+    "Parsed weights must sum to approximately 1.0 (got {total:.4f}): {weights}"
+)
+MSG_ERROR_INVALID_WEIGHT_TYPE = (
+    "Invalid type for fuzzy hybrid weights: expected str, dict, or None but got {type}."
+)
 
 # ---------------------------------------------------------------------
 # core/

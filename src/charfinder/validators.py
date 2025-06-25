@@ -20,6 +20,7 @@ Functions:
     validate_color_mode(): Validate and return effective color mode string.
     resolve_effective_color_mode(): Determine color mode from CLI or env.
     validate_fuzzy_match_mode(): Validate and normalize a fuzzy match mode string.
+    validate_fuzzy_hybrid_weights(): Validates hybrid weights given for aggregation of fuzzy algos.
     validate_exact_match_mode(): Validate and normalize an exact match mode string.
     validate_dict_str_keys(): Ensure a nested string-keyed dictionary structure (e.g., name cache).
     validate_cache_rebuild_flag(): Validate that a rebuild flag is a proper boolean.
@@ -70,6 +71,8 @@ from charfinder.config.constants import (
     ENV_NORMALIZATION_PROFILE,
     ENV_SHOW_SCORE,
     FUZZY_ALGO_ALIASES,
+    FUZZY_WEIGHT_MAX_TOTAL,
+    FUZZY_WEIGHT_MIN_TOTAL,
     VALID_COLOR_MODES,
     VALID_EXACT_MATCH_MODES,
     VALID_FUZZY_MATCH_MODES,
@@ -100,12 +103,18 @@ from charfinder.config.messages import (
     MSG_ERROR_INVALID_THRESHOLD,
     MSG_ERROR_INVALID_THRESHOLD_TYPE,
     MSG_ERROR_INVALID_URL,
+    MSG_ERROR_INVALID_WEIGHT_TOTAL,
+    MSG_ERROR_INVALID_WEIGHT_TYPE,
     MSG_ERROR_MISSING_FUZZY_ALGO_VALUE,
     MSG_ERROR_UNSUPPORTED_ALGO_INPUT,
     MSG_ERROR_UNSUPPORTED_URL_SCHEME,
     MSG_ERROR_VALIDATION_FAILED,
 )
-from charfinder.config.settings import get_cache_file
+from charfinder.config.settings import (
+    get_cache_file,
+    get_fuzzy_hybrid_weights,
+    parse_fuzzy_weight_string,
+)
 from charfinder.config.types import (
     FuzzyConfig,
     NameCache,
@@ -497,6 +506,36 @@ def validate_exact_match_mode(exact_match_mode: str) -> ExactMatchMode:
             )
         )
     return cast("ExactMatchMode", exact_match_mode)
+
+
+def validate_fuzzy_hybrid_weights(weights: str | dict[str, float] | None) -> dict[str, float]:
+    """
+    Validate and normalize the fuzzy hybrid weights input.
+
+    Accepts None (defaults to settings), raw string (parses it), or dict (validates sum).
+
+    Args:
+        weights (str | dict | None): User-provided weights.
+
+    Returns:
+        dict[str, float]: Validated weight dictionary.
+
+    Raises:
+        ValueError: If format is invalid or weights do not sum to ~1.0.
+    """
+    if weights is None:
+        return get_fuzzy_hybrid_weights()
+
+    if isinstance(weights, dict):
+        total = sum(weights.values())
+        if not (FUZZY_WEIGHT_MIN_TOTAL <= total <= FUZZY_WEIGHT_MAX_TOTAL):
+            raise ValueError(MSG_ERROR_INVALID_WEIGHT_TOTAL.format(total=total, weights=weights))
+        return weights
+
+    if isinstance(weights, str):
+        return parse_fuzzy_weight_string(weights)
+
+    raise TypeError(MSG_ERROR_INVALID_WEIGHT_TYPE.format(type=type(weights)))
 
 
 # ------------------------------------------------------------------------

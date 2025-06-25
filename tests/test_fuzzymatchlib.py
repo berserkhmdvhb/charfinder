@@ -1,6 +1,7 @@
 """Tests for fuzzymatchlib.py all algorithms, modes, and combinations."""
 
 import re
+from typing import cast
 import pytest
 
 from charfinder.fuzzymatchlib import (
@@ -11,6 +12,7 @@ from charfinder.fuzzymatchlib import (
     normalized_ratio,
     levenshtein_ratio,
     token_sort_ratio_score,
+    token_subset_ratio_score,
     hybrid_score,
     FUZZY_ALGORITHM_REGISTRY,
 )
@@ -22,38 +24,72 @@ from charfinder.config.constants import (
 )
 from charfinder.config.aliases import (
     FuzzyAlgorithm,
-    FuzzyMatchMode,
     HybridAggFunc,
+    FuzzyMatchMode,
 )
+from charfinder.config.types import FuzzyMatchContext
 from charfinder.config.messages import (
     MSG_ERROR_UNSUPPORTED_ALGO_INPUT,
     MSG_ERROR_INVALID_FUZZY_MATCH_MODE,
-    MSG_ERROR_ALGO_NOT_FOUND,
+    MSG_ERROR_INVALID_AGG_FUNC,
     MSG_ERROR_AGG_FN_UNEXPECTED,
 )
 
 # ---------------------------------------------------------------------
 # Parametrized Combinations
 # ---------------------------------------------------------------------
-
 @pytest.mark.parametrize(
     "algorithm,mode,agg_fn",
     [
         *[(algo, "single", None) for algo in FUZZY_ALGORITHM_REGISTRY],
-        *[(algo, "hybrid", agg_fn) for algo in FUZZY_ALGORITHM_REGISTRY
-          if algo == "hybrid_score"
-          for agg_fn in VALID_HYBRID_AGG_FUNCS],
+        *[
+            (algo, "hybrid", agg_fn)
+            for algo in FUZZY_ALGORITHM_REGISTRY
+            if algo == "hybrid_score"
+            for agg_fn in VALID_HYBRID_AGG_FUNCS
+        ],
     ],
 )
+
+
 def test_compute_similarity_combinations(
-    algorithm: FuzzyAlgorithm,
-    mode: FuzzyMatchMode,
-    agg_fn: HybridAggFunc | None,
+    algorithm: str,
+    mode: str,
+    agg_fn: str | None,
 ) -> None:
-    """Test all algorithm * mode * agg_fn combinations."""
-    score = compute_similarity("abc", "abc", algorithm=algorithm, mode=mode, agg_fn=agg_fn or "mean")
+    """Test compute_similarity with all combinations using FuzzyMatchContext."""
+    context = FuzzyMatchContext(
+        threshold=0.5,
+        fuzzy_algo=cast(FuzzyAlgorithm, algorithm),
+        match_mode=cast(FuzzyMatchMode, mode),
+        agg_fn=cast(HybridAggFunc, agg_fn or "mean"),
+        verbose=False,
+        debug=False,
+        use_color=False,
+        query="abc",
+    )
+    score = compute_similarity("abc", "abc", context=context)
     assert isinstance(score, float)
     assert 0.0 <= score <= 1.0
+
+
+
+def test_compute_similarity_hybrid_context_with_weights() -> None:
+    context = FuzzyMatchContext(
+        threshold=0.5,
+        fuzzy_algo="hybrid_score",
+        match_mode="hybrid",
+        agg_fn="mean",
+        verbose=True,
+        debug=True,
+        use_color=True,
+        query="hello",
+        weights={"simple_ratio": 0.3, "token_sort_ratio": 0.7},
+    )
+    score = compute_similarity("hello", "hxllo", context)
+    assert isinstance(score, float)
+    assert 0.0 <= score <= 1.0
+
 
 # ---------------------------------------------------------------------
 # Individual Algorithm Tests
@@ -91,7 +127,7 @@ def test_hybrid_score_agg_functions(agg_fn: HybridAggFunc) -> None:
 
 def test_token_subset_ratio_score_behavior() -> None:
     """Test token_subset_ratio_score on common, no-match, and partial-match cases."""
-    from charfinder.fuzzymatchlib import token_subset_ratio_score
+   
 
     # Full token match (should yield 1.0)
     assert token_subset_ratio_score("face kiss", "kiss face") == pytest.approx(1.0)
@@ -163,8 +199,18 @@ def test_compute_similarity_with_invalid_mode() -> None:
         value=invalid_mode,
         valid_options=", ".join(sorted(VALID_FUZZY_MATCH_MODES)),
     )
+    context = FuzzyMatchContext(
+        threshold=0.5,
+        fuzzy_algo="simple_ratio",
+        match_mode=invalid_mode,  # type: ignore
+        agg_fn="mean",
+        verbose=False,
+        debug=False,
+        use_color=False,
+        query="a",
+    )
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
-        compute_similarity("a", "b", algorithm="simple_ratio", mode=invalid_mode)  # type: ignore
+        compute_similarity("a", "b", context=context)
 
 
 def test_compute_similarity_with_unregistered_algorithm() -> None:
@@ -175,10 +221,19 @@ def test_compute_similarity_with_unregistered_algorithm() -> None:
         name=algorithm,
         valid_options=", ".join(valid_options),
     )
+    context = FuzzyMatchContext(
+        threshold=0.5,
+        fuzzy_algo=algorithm,  # type: ignore
+        match_mode="single",
+        agg_fn="mean",
+        verbose=False,
+        debug=False,
+        use_color=False,
+        query="x",
+    )
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
-        compute_similarity("a", "b", algorithm=algorithm)  # type: ignore
+        compute_similarity("a", "b", context=context)
 
-from charfinder.config.messages import MSG_ERROR_INVALID_AGG_FUNC
 
 def test_hybrid_score_rejects_invalid_agg_fn() -> None:
     """Should raise ValueError for unsupported aggregation function."""
@@ -204,27 +259,42 @@ def test_hybrid_score_runtime_error_on_unreachable_agg_fn(monkeypatch: pytest.Mo
     with pytest.raises(RuntimeError, match=re.escape(expected_msg)):
         hybrid_score("abc", "xyz", agg_fn="mean")  # validator returns FakeAgg("mean")
 
-
-
 def test_compute_similarity_registry_miss(monkeypatch: pytest.MonkeyPatch) -> None:
     """Should raise ValueError if algorithm is removed from registry before validation."""
     monkeypatch.delitem(FUZZY_ALGORITHM_REGISTRY, "simple_ratio", raising=False)
 
-    from charfinder.config.messages import MSG_ERROR_UNSUPPORTED_ALGO_INPUT
+    context = FuzzyMatchContext(
+        threshold=0.5,
+        fuzzy_algo="simple_ratio",
+        match_mode="single",
+        agg_fn="mean",
+        verbose=False,
+        debug=False,
+        use_color=False,
+        query="abc",
+    )
+
     valid_options = sorted(set(FUZZY_ALGO_ALIASES) | set(FUZZY_ALGORITHM_REGISTRY))
     expected_msg = MSG_ERROR_UNSUPPORTED_ALGO_INPUT.format(
         name="simple_ratio", valid_options=", ".join(valid_options)
     )
 
     with pytest.raises(ValueError, match=re.escape(expected_msg)):
-        compute_similarity("abc", "abc", algorithm="simple_ratio")
+        compute_similarity("abc", "abc", context=context)
 
-# ---------------------------------------------------------------------
-# Public API Coverage
-# ---------------------------------------------------------------------
 
 def test_compute_similarity_final_return() -> None:
     """Covers compute_similarity() returning resolved algorithm function call."""
-    score = compute_similarity("abc", "xyz", algorithm="simple_ratio", mode="single")
+    context = FuzzyMatchContext(
+        threshold=0.5,
+        fuzzy_algo="simple_ratio",
+        match_mode="single",
+        agg_fn="mean",
+        verbose=False,
+        debug=False,
+        use_color=False,
+        query="abc",
+    )
+    score = compute_similarity("abc", "xyz", context=context)
     assert isinstance(score, float)
     assert 0.0 <= score <= 1.0

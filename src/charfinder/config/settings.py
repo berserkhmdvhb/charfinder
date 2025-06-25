@@ -33,10 +33,16 @@ from dotenv import load_dotenv
 from charfinder.config.constants import (
     DEFAULT_LOG_ROOT,
     ENV_ENVIRONMENT,
+    ENV_FUZZY_WEIGHT,
     ENV_LOG_BACKUP_COUNT,
     ENV_LOG_MAX_BYTES,
+    FUZZY_HYBRID_WEIGHTS,
+    FUZZY_WEIGHT_MAX_TOTAL,
+    FUZZY_WEIGHT_MIN_TOTAL,
 )
 from charfinder.config.messages import (
+    MSG_ERROR_INVALID_WEIGHT_FORMAT,
+    MSG_ERROR_INVALID_WEIGHT_TOTAL,
     MSG_INFO_NO_DOTENV_LOADED,
     MSG_WARNING_DOTENV_PATH_MISSING,
     MSG_WARNING_INVALID_ENV_INT,
@@ -47,6 +53,7 @@ from charfinder.utils.logger_styles import format_error, format_settings, format
 __all__ = [
     "get_cache_file",
     "get_environment",
+    "get_fuzzy_hybrid_weights",
     "get_log_backup_count",
     "get_log_dir",
     "get_log_max_bytes",
@@ -283,6 +290,35 @@ def get_log_dir() -> Path:
     Example: logs/DEV/, logs/PROD/
     """
     return DEFAULT_LOG_ROOT / get_environment()
+
+
+# ---------------------------------------------------------------------
+# Fuzzy Matching Config (Internal use only)
+# ---------------------------------------------------------------------
+def parse_fuzzy_weight_string(raw: str) -> dict[str, float]:
+    """Parse and validate raw fuzzy weight string like 'a:0.2,b:0.3'."""
+    try:
+        parts = raw.split(",")
+        weights: dict[str, float] = {
+            key.strip(): float(val.strip())
+            for key, val in (part.strip().split(":") for part in parts)
+        }
+    except (ValueError, TypeError) as err:
+        raise ValueError(MSG_ERROR_INVALID_WEIGHT_FORMAT.format(raw=raw)) from err
+
+    total = sum(weights.values())
+    if not (FUZZY_WEIGHT_MIN_TOTAL <= total <= FUZZY_WEIGHT_MAX_TOTAL):
+        raise ValueError(MSG_ERROR_INVALID_WEIGHT_TOTAL.format(total=total, weights=weights))
+
+    return weights
+
+
+def get_fuzzy_hybrid_weights(env_value: str | None = None) -> dict[str, float]:
+    """Return hybrid weights from env or default."""
+    raw = env_value or os.getenv(ENV_FUZZY_WEIGHT)
+    if not raw:
+        return FUZZY_HYBRID_WEIGHTS
+    return parse_fuzzy_weight_string(raw)
 
 
 # ---------------------------------------------------------------------
