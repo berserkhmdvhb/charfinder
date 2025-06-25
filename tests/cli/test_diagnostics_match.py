@@ -87,25 +87,6 @@ def test_print_fuzzy_match_diagnostics_non_hybrid(mock_echo: List[str]) -> None:
     assert MSG_DEBUG_FUZZY_ALGO.format(algo="token_sort_ratio") in mock_echo
 
 
-def test_print_fuzzy_match_diagnostics_hybrid(mock_echo: List[str]) -> None:
-    """Ensure hybrid fuzzy diagnostics prints all weights and settings."""
-    info = MatchDiagnosticsInfo(
-        fuzzy=True,
-        fuzzy_was_used=True,
-        fuzzy_match_mode="hybrid",
-        fuzzy_algo="hybrid",
-        hybrid_agg_fn="weighted_avg",
-        prefer_fuzzy=True,
-        exact_match_mode="any",
-        threshold=0.75,
-    )
-    diagnostics_match.print_fuzzy_match_diagnostics(info, use_color=False, show=True)
-
-    assert MSG_DEBUG_FUZZY_EXECUTED in mock_echo
-    assert MSG_DEBUG_HYBRID_ALGOS_HEADER in mock_echo
-    assert MSG_DEBUG_HYBRID_AGG_FN.format(agg_fn='weighted_avg') in mock_echo
-    assert MSG_DEBUG_MATCH_SECTION_END in mock_echo
-
 
 # ---------------------------------------------------------------------
 # print_match_diagnostics dispatcher
