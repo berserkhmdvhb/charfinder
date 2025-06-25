@@ -30,6 +30,7 @@ from charfinder.cli.utils_runner import (
     resolve_final_query,
 )
 from charfinder.config.constants import EXIT_SUCCESS
+from charfinder.config.settings import load_settings
 from charfinder.validators import (
     apply_fuzzy_defaults,
     resolve_cli_settings,
@@ -72,8 +73,13 @@ def main() -> None:
         parser.print_help()
         sys.exit(EXIT_SUCCESS)
 
+    load_settings(verbose=args.verbose, debug=args.debug)
+
     # Enable debug mode if required by CHARFINDER_DEBUG_ENV_LOAD
     auto_enable_debug(args)
+
+    # Load .env before resolving fuzzy config
+    load_settings(verbose=args.verbose, debug=args.debug)
 
     # Apply fuzzy algorithm/mode defaults (if --fuzzy was enabled)
     config = build_fuzzy_config_from_args(args)

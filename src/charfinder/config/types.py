@@ -68,14 +68,14 @@ class FuzzyMatchContext:
     debug: bool
     use_color: bool
     query: str
-    weights: dict[str, float] | None = None
+    weights: HybridWeights = None
 
 
 @dataclass
 class SearchConfig:
     fuzzy: bool
     threshold: float
-    name_cache: NameCache | None
+    name_cache: dict[str, dict[str, str]] | None
     verbose: bool
     debug: bool
     use_color: bool
@@ -85,6 +85,7 @@ class SearchConfig:
     agg_fn: HybridAggFunc
     prefer_fuzzy: bool
     normalization_profile: NormalizationProfile
+    hybrid_weights: HybridWeights
 
 
 # ---------------------------------------------------------------------
@@ -103,10 +104,6 @@ class CharMatch(TypedDict):
 
 @dataclass
 class MatchDiagnosticsInfo:
-    """
-    Dataclass for structured match diagnostics used in --debug CLI output.
-    """
-
     fuzzy: bool
     fuzzy_was_used: bool
     fuzzy_algo: str
@@ -115,6 +112,7 @@ class MatchDiagnosticsInfo:
     exact_match_mode: str
     threshold: float
     hybrid_agg_fn: str | None = None
+    hybrid_weights: HybridWeights = None
 
 
 CLIResult = tuple[int, dict[str, Any] | MatchDiagnosticsInfo | None]
@@ -210,8 +208,28 @@ class NormalizationProfileDict(TypedDict, total=False):
 # Dataclasses for Fuzzy Configuration
 # ------------------------------------------------------------------------
 
+HybridWeights = dict[str, float] | None
+
 
 @dataclass
 class FuzzyConfig:
     fuzzy_algo: FuzzyAlgorithm
     fuzzy_match_mode: FuzzyMatchMode
+    hybrid_weights: HybridWeights
+
+
+@dataclass
+class SearchParams:
+    query: str
+    fuzzy: bool
+    fuzzy_algo: str
+    fuzzy_match_mode: str
+    exact_match_mode: str
+    agg_fn: str | None
+    prefer_fuzzy: bool
+    verbose: bool
+    debug: bool
+    use_color: bool
+    threshold: float
+    normalization_profile: str
+    hybrid_weights: HybridWeights = None

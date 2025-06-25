@@ -38,7 +38,8 @@ from charfinder.config.messages import (
     MSG_INFO_MATCH_FOUND,
     MSG_INFO_MATCH_NOT_FOUND,
 )
-from charfinder.config.types import FuzzyMatchContext, MatchTuple, SearchConfig
+from charfinder.config.settings import get_fuzzy_hybrid_weights
+from charfinder.config.types import FuzzyMatchContext, HybridWeights, MatchTuple, SearchConfig
 from charfinder.core.matching import find_exact_matches, find_fuzzy_matches
 from charfinder.core.name_cache import BuildCacheOptions, build_name_cache
 from charfinder.fuzzymatchlib import resolve_algorithm_name
@@ -48,6 +49,7 @@ from charfinder.utils.normalizer import normalize
 from charfinder.validators import (
     validate_exact_match_mode,
     validate_fuzzy_algo,
+    validate_fuzzy_hybrid_weights,
     validate_fuzzy_match_mode,
     validate_normalization_profile,
     validate_threshold,
@@ -160,7 +162,9 @@ def _resolve_matches(
 
     fuzzy_matches: list[MatchTuple] = []
     used_fuzzy = False
-
+    hybrid_weights = validate_fuzzy_hybrid_weights(
+        config.hybrid_weights or get_fuzzy_hybrid_weights()
+    )
     should_fuzzy = config.fuzzy and (config.prefer_fuzzy or not exact_matches)
     if should_fuzzy:
         used_fuzzy = True
@@ -173,6 +177,7 @@ def _resolve_matches(
             debug=config.debug,
             use_color=config.use_color,
             query=norm_query,
+            weights=hybrid_weights,
         )
 
         raw_fuzzy_results = find_fuzzy_matches(norm_query, name_cache, context)
@@ -218,6 +223,7 @@ def build_search_config(
     agg_fn: HybridAggFunc,
     prefer_fuzzy: bool,
     normalization_profile: NormalizationProfile,
+    hybrid_weights: HybridWeights,
 ) -> SearchConfig:
     """
     Validate inputs and return a full SearchConfig object.
@@ -227,7 +233,7 @@ def build_search_config(
         threshold (float): Similarity threshold for fuzzy scoring.
         name_cache (dict | None): Cached Unicode name data.
         verbose (bool): Whether to print logs.
-        debug (bool): Wether to print diagnostics.
+        debug (bool): Whether to print diagnostics.
         use_color (bool): Whether to use ANSI color output.
         fuzzy_algo (FuzzyAlgorithm): Selected fuzzy algorithm.
         fuzzy_match_mode (FuzzyMatchMode): 'single' or 'hybrid'.
@@ -235,10 +241,13 @@ def build_search_config(
         agg_fn (HybridAggFunc): Aggregation method for hybrid mode.
         prefer_fuzzy (bool): Whether to include fuzzy even with exact match.
         normalization_profile (Literal): Profile for Unicode normalization.
+        hybrid_weights (HybridWeights): Algorithm weights for hybrid mode;
+            validated and used only when `fuzzy_match_mode` is 'hybrid'.
 
     Returns:
         SearchConfig: Fully validated search configuration object.
     """
+    hybrid_weights = validate_fuzzy_hybrid_weights(hybrid_weights or get_fuzzy_hybrid_weights())
     return SearchConfig(
         fuzzy=fuzzy,
         threshold=validate_threshold(threshold),
@@ -252,6 +261,7 @@ def build_search_config(
         agg_fn=agg_fn,
         prefer_fuzzy=bool(prefer_fuzzy),
         normalization_profile=validate_normalization_profile(normalization_profile),
+        hybrid_weights=hybrid_weights,
     )
 
 
@@ -270,6 +280,7 @@ def _normalize_and_build_config(
     agg_fn: HybridAggFunc,
     prefer_fuzzy: bool,
     normalization_profile: NormalizationProfile,
+    hybrid_weights: HybridWeights,
 ) -> tuple[str, SearchConfig]:
     """
     Normalize the query and return it alongside a validated SearchConfig.
@@ -278,7 +289,7 @@ def _normalize_and_build_config(
         query (str): Raw search string.
         fuzzy (bool): Enable fuzzy matching.
         threshold (float): Similarity threshold for fuzzy scoring.
-        name_cache (dict | None): Cached Unicode name data.
+        name_cache (dict[str, dict[str, str]] | None): Cached Unicode name data.
         verbose (bool): Whether to print logs.
         debug (bool): Whether to print diagnostics.
         use_color (bool): Whether to use ANSI color output.
@@ -287,12 +298,14 @@ def _normalize_and_build_config(
         exact_match_mode (str): 'substring' or 'word-subset'.
         agg_fn (HybridAggFunc): Aggregation method for hybrid mode.
         prefer_fuzzy (bool): Whether to include fuzzy even with exact match.
-        normalization_profile (Literal): Profile for Unicode normalization.
+        normalization_profile (NormalizationProfile): Unicode normalization profile.
+        hybrid_weights (HybridWeights): Weights for hybrid fuzzy mode.
 
     Returns:
-        tuple[str, SearchConfig]: Normalized query, and validated config.
+        tuple[str, SearchConfig]: Normalized query string and fully validated SearchConfig.
     """
     norm_query = normalize(query, profile=normalization_profile)
+    hybrid_weights = validate_fuzzy_hybrid_weights(hybrid_weights or get_fuzzy_hybrid_weights())
     config = build_search_config(
         fuzzy=fuzzy,
         threshold=threshold,
@@ -306,5 +319,6 @@ def _normalize_and_build_config(
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
         normalization_profile=normalization_profile,
+        hybrid_weights=hybrid_weights,
     )
     return norm_query, config

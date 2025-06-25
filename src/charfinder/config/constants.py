@@ -47,7 +47,7 @@ __all__ = [
     "ENV_COLOR_MODE",
     "ENV_DEBUG_ENV_LOAD",
     "ENV_ENVIRONMENT",
-    "ENV_FUZZY_WEIGHT",
+    "ENV_FUZZY_WEIGHTS",
     "ENV_LOG_BACKUP_COUNT",
     "ENV_LOG_LEVEL",
     "ENV_LOG_MAX_BYTES",
@@ -157,7 +157,7 @@ FIELD_WIDTHS = {
 DEFAULT_COLOR_MODE: ColorMode = "auto"
 DEFAULT_EXACT_MATCH_MODE: ExactMatchMode = "word-subset"
 DEFAULT_FUZZY_ALGO: FuzzyAlgorithm = "token_subset_ratio"
-DEFAULT_FUZZY_MATCH_MODE: FuzzyMatchMode = "single"
+DEFAULT_FUZZY_MATCH_MODE: FuzzyMatchMode = "hybrid"
 DEFAULT_HYBRID_AGG_FUNC: HybridAggFunc = "mean"
 DEFAULT_NORMALIZATION_FORM: NormalizationForm = "NFKD"
 DEFAULT_NORMALIZATION_PROFILE: NormalizationProfile = "aggressive"
@@ -170,11 +170,11 @@ DEFAULT_THRESHOLD: float = 0.65
 # ---------------------------------------------------------------------
 
 FUZZY_HYBRID_WEIGHTS: dict[str, float] = {
-    "simple_ratio": 0.10,
-    "normalized_ratio": 0.10,
-    "levenshtein_ratio": 0.10,
-    "token_sort_ratio": 0.50,
-    "token_subset_ratio": 0.20,
+    "simple_ratio": 0.00,
+    "normalized_ratio": 0.00,
+    "levenshtein_ratio": 0.30,
+    "token_sort_ratio": 0.10,
+    "token_subset_ratio": 0.60,
 }
 
 # ---------------------------------------------------------------------
@@ -222,7 +222,7 @@ ENV_MATCH_THRESHOLD = "CHARFINDER_MATCH_THRESHOLD"
 ENV_COLOR_MODE = "CHARFINDER_COLOR_MODE"
 ENV_NORMALIZATION_PROFILE = "CHARFINDER_NORMALIZATION_PROFILE"
 ENV_SHOW_SCORE = "CHARFINDER_SHOW_SCORE"
-ENV_FUZZY_WEIGHT = "CHARFINDER_FUZZY_WEIGHTS"
+ENV_FUZZY_WEIGHTS = "CHARFINDER_FUZZY_WEIGHTS"
 
 FUZZY_WEIGHT_MIN_TOTAL = 0.98
 FUZZY_WEIGHT_MAX_TOTAL = 1.02

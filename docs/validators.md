@@ -45,6 +45,7 @@ It provides these features:
 class FuzzyConfig:
     fuzzy_algo: FuzzyAlgorithm
     fuzzy_match_mode: FuzzyMatchMode
+    hybrid_weights: HybridWeights
 ```
 
 This dataclass bundles two validated fields representing a user's fuzzy search configuration.

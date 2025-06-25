@@ -37,6 +37,7 @@ def sample_config() -> SearchConfig:
         agg_fn="mean",
         prefer_fuzzy=False,
         normalization_profile="aggressive",
+        hybrid_weights=None,
     )
 
 

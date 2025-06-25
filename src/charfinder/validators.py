@@ -67,10 +67,12 @@ from charfinder.config.constants import (
     DEFAULT_SHOW_SCORE,
     DEFAULT_THRESHOLD,
     ENV_COLOR_MODE,
+    ENV_FUZZY_WEIGHTS,
     ENV_MATCH_THRESHOLD,
     ENV_NORMALIZATION_PROFILE,
     ENV_SHOW_SCORE,
     FUZZY_ALGO_ALIASES,
+    FUZZY_HYBRID_WEIGHTS,
     FUZZY_WEIGHT_MAX_TOTAL,
     FUZZY_WEIGHT_MIN_TOTAL,
     VALID_COLOR_MODES,
@@ -112,11 +114,11 @@ from charfinder.config.messages import (
 )
 from charfinder.config.settings import (
     get_cache_file,
-    get_fuzzy_hybrid_weights,
     parse_fuzzy_weight_string,
 )
 from charfinder.config.types import (
     FuzzyConfig,
+    HybridWeights,
     NameCache,
 )
 from charfinder.utils.formatter import echo, should_use_color
@@ -508,23 +510,25 @@ def validate_exact_match_mode(exact_match_mode: str) -> ExactMatchMode:
     return cast("ExactMatchMode", exact_match_mode)
 
 
-def validate_fuzzy_hybrid_weights(weights: str | dict[str, float] | None) -> dict[str, float]:
+def validate_fuzzy_hybrid_weights(weights: str | HybridWeights) -> HybridWeights:
     """
     Validate and normalize the fuzzy hybrid weights input.
 
-    Accepts None (defaults to settings), raw string (parses it), or dict (validates sum).
+    Accepts None (uses settings), raw string (parses it), or dict (validates sum).
 
     Args:
-        weights (str | dict | None): User-provided weights.
+        weights: User-provided weights string, dict, or None.
 
     Returns:
-        dict[str, float]: Validated weight dictionary.
+        HybridWeights: Validated weight dictionary.
 
     Raises:
         ValueError: If format is invalid or weights do not sum to ~1.0.
+        TypeError: If input type is unsupported.
     """
     if weights is None:
-        return get_fuzzy_hybrid_weights()
+        raw_env_value = os.getenv(ENV_FUZZY_WEIGHTS)
+        return parse_fuzzy_weight_string(raw_env_value) if raw_env_value else FUZZY_HYBRID_WEIGHTS
 
     if isinstance(weights, dict):
         total = sum(weights.values())

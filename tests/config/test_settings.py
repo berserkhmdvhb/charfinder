@@ -20,7 +20,7 @@ from charfinder.config.constants import (
     DEFAULT_LOG_ROOT,
     ENV_ENVIRONMENT,
     ENV_LOG_MAX_BYTES,
-    ENV_FUZZY_WEIGHT,
+    ENV_FUZZY_WEIGHTS,
     FUZZY_HYBRID_WEIGHTS,
 )    
 from charfinder.config.messages import MSG_ERROR_INVALID_WEIGHT_FORMAT
@@ -239,13 +239,13 @@ def test_parse_fuzzy_weight_string_invalid_total() -> None:
 
 def test_get_fuzzy_hybrid_weights_env_missing(monkeypatch: pytest.MonkeyPatch) -> None:
     """Should return default weights when env var is missing."""
-    monkeypatch.delenv(ENV_FUZZY_WEIGHT, raising=False)
+    monkeypatch.delenv(ENV_FUZZY_WEIGHTS, raising=False)
     result = settings.get_fuzzy_hybrid_weights()
     assert result == FUZZY_HYBRID_WEIGHTS
 
 
 def test_get_fuzzy_hybrid_weights_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """Should parse fuzzy weights from valid env var."""
-    monkeypatch.setenv(ENV_FUZZY_WEIGHT, "a:0.4,b:0.3,c:0.3")
+    monkeypatch.setenv(ENV_FUZZY_WEIGHTS, "a:0.4,b:0.3,c:0.3")
     result = settings.get_fuzzy_hybrid_weights()
     assert result == {"a": 0.4, "b": 0.3, "c": 0.3}

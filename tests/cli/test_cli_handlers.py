@@ -10,7 +10,7 @@ from io import StringIO
 from unittest.mock import patch, MagicMock
 import pytest
 
-from charfinder.config.types import MatchDiagnosticsInfo, MatchResult
+from charfinder.config.types import MatchDiagnosticsInfo, MatchResult, SearchParams
 from charfinder.cli.handlers import (
     get_version,
     handle_empty_query,
@@ -19,7 +19,6 @@ from charfinder.cli.handlers import (
     _run_query_and_return,
     handle_find_chars,
     get_version,
-    SearchParams,
 )
 from charfinder.config.constants import (
     EXIT_CANCELLED,

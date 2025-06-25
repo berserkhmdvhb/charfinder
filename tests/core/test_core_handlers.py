@@ -36,6 +36,7 @@ def test_validate_query_rejects_non_string() -> None:
         agg_fn="mean",
         prefer_fuzzy=False,
         normalization_profile="aggressive",
+        hybrid_weights=None,
     )
     with pytest.raises(TypeError, match="Query must be a string"):
         H._validate_query(cast(Any, 123), config=config)
@@ -56,6 +57,7 @@ def test_validate_query_rejects_empty_string() -> None:
         agg_fn="max",
         prefer_fuzzy=False,
         normalization_profile="aggressive",
+        hybrid_weights=None,
     )
     with pytest.raises(ValueError, match="Query string must not be empty"):
         H._validate_query("   ", config=config)
@@ -80,6 +82,7 @@ def test_build_search_config_valid_threshold() -> None:
         agg_fn="mean",
         prefer_fuzzy=True,
         normalization_profile="aggressive",
+        hybrid_weights=None,
     )
     assert isinstance(cfg, SearchConfig)
     assert cfg.threshold == 0.9
@@ -103,6 +106,7 @@ def test_build_search_config_invalid_threshold() -> None:
             agg_fn="max",
             prefer_fuzzy=False,
             normalization_profile="aggressive",
+            hybrid_weights=None,
         )
 
 
@@ -138,6 +142,7 @@ def test_resolve_matches_exact_only(
         agg_fn="max",
         prefer_fuzzy=False,
         normalization_profile="aggressive",
+        hybrid_weights=None,
     )
     matches, used_fuzzy = H._resolve_matches("grin", config=config)
     assert not used_fuzzy
@@ -172,6 +177,7 @@ def test_resolve_matches_fuzzy_added(
         agg_fn="mean",
         prefer_fuzzy=True,
         normalization_profile="aggressive",
+        hybrid_weights=None,
     )
     matches, used_fuzzy = H._resolve_matches("check", config=config)
     assert used_fuzzy is True
@@ -196,6 +202,7 @@ def test_resolve_matches_invalid_algo(mock_cache: MagicMock) -> None:
         agg_fn="mean",
         prefer_fuzzy=False,
         normalization_profile="aggressive",
+        hybrid_weights=None,
     )
     with pytest.raises(ValueError, match="Invalid fuzzy algorithm"):
         H._resolve_matches("abc", config=config)
@@ -234,6 +241,7 @@ def test_resolve_matches_logs_removed_duplicates(
         agg_fn="mean",
         prefer_fuzzy=True,
         normalization_profile="aggressive",
+        hybrid_weights=None,
     )
     matches, used_fuzzy = H._resolve_matches("check", config=config)
     assert used_fuzzy is True
@@ -263,6 +271,7 @@ def test_normalize_and_build_config_normalizes_and_returns_config() -> None:
         agg_fn="mean",
         prefer_fuzzy=False,
         normalization_profile="medium",
+        hybrid_weights=None,
     )
     assert isinstance(norm, str)
     assert "CAFE" in norm.upper()

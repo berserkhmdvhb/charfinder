@@ -39,7 +39,12 @@ from charfinder.config.messages import (
     MSG_WARNING_INTERRUPTED,
     MSG_WARNING_PROD_ENV,
 )
-from charfinder.config.settings import get_environment, is_prod, load_settings
+from charfinder.config.settings import (
+    get_environment,
+    get_fuzzy_hybrid_weights,
+    is_prod,
+    load_settings,
+)
 from charfinder.config.types import (
     FuzzyConfig,
     MatchResult,
@@ -53,7 +58,7 @@ from charfinder.utils.logger_styles import (
     format_success,
     format_warning,
 )
-from charfinder.validators import resolve_effective_color_mode
+from charfinder.validators import resolve_effective_color_mode, validate_fuzzy_hybrid_weights
 
 if TYPE_CHECKING:
     from charfinder.config.types import MatchResult
@@ -111,9 +116,11 @@ def auto_enable_debug(args: Namespace) -> None:
 
 
 def build_fuzzy_config_from_args(args: Namespace) -> FuzzyConfig:
+    weights = validate_fuzzy_hybrid_weights(get_fuzzy_hybrid_weights())
     return FuzzyConfig(
         fuzzy_algo=args.fuzzy_algo,
         fuzzy_match_mode=args.fuzzy_match_mode,
+        hybrid_weights=weights,
     )
 
 

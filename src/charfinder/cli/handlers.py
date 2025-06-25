@@ -14,7 +14,6 @@ Functions:
 import json
 import sys
 from argparse import Namespace
-from dataclasses import dataclass
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError, version
 
@@ -30,7 +29,8 @@ from charfinder.config.messages import (
     MSG_ERROR_UNKNOWN_VERSION,
     MSG_INFO_SEARCH_CANCELLED,
 )
-from charfinder.config.types import MatchDiagnosticsInfo, MatchResult
+from charfinder.config.settings import get_fuzzy_hybrid_weights
+from charfinder.config.types import HybridWeights, MatchDiagnosticsInfo, MatchResult, SearchParams
 from charfinder.core.core_main import find_chars_raw, find_chars_with_info
 from charfinder.utils.formatter import (
     display_result_lines,
@@ -43,6 +43,7 @@ from charfinder.utils.logger_styles import format_error, format_warning
 from charfinder.validators import (
     resolve_cli_settings,
     validate_exact_match_mode,
+    validate_fuzzy_hybrid_weights,
     validate_fuzzy_match_mode,
     validate_normalization_profile,
     validate_output_format,
@@ -54,26 +55,6 @@ __all__ = [
 ]
 
 logger = get_logger()
-
-# ---------------------------------------------------------------------
-# Dataclasses
-# ---------------------------------------------------------------------
-
-
-@dataclass
-class SearchParams:
-    query: str
-    fuzzy: bool
-    fuzzy_algo: str
-    fuzzy_match_mode: str
-    exact_match_mode: str
-    agg_fn: str | None
-    prefer_fuzzy: bool
-    verbose: bool
-    debug: bool
-    use_color: bool
-    threshold: float
-    normalization_profile: str
 
 
 # ---------------------------------------------------------------------
@@ -124,7 +105,11 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
         normalization_profile = validate_normalization_profile(args.normalization_profile)
         if not query_str:
             return handle_empty_query(use_color=use_color)
-
+        weights = (
+            validate_fuzzy_hybrid_weights(get_fuzzy_hybrid_weights())
+            if fuzzy_mode == "hybrid"
+            else None
+        )
         params = SearchParams(
             query=query_str,
             fuzzy=args.fuzzy,
@@ -138,6 +123,7 @@ def handle_find_chars(args: Namespace, query_str: str) -> MatchResult:
             use_color=use_color,
             threshold=threshold,
             normalization_profile=normalization_profile,
+            hybrid_weights=weights,
         )
 
         return _run_query_and_return(params, output_format=args.format, args=args)
@@ -251,14 +237,18 @@ def build_match_result(args: Namespace, *, fuzzy_used: bool, exit_code: int) -> 
     Returns:
         MatchResult: Structured result including exit code and optional diagnostics.
     """
+    hybrid_weights: HybridWeights = (
+        get_fuzzy_hybrid_weights() if args.fuzzy_match_mode == "hybrid" else None
+    )
     match_info = MatchDiagnosticsInfo(
         fuzzy=args.fuzzy,
         fuzzy_was_used=fuzzy_used,
         fuzzy_algo=args.fuzzy_algo,
         fuzzy_match_mode=args.fuzzy_match_mode,
-        hybrid_agg_fn=args.hybrid_agg_fn if args.fuzzy_match_mode == "hybrid" else None,
         prefer_fuzzy=args.prefer_fuzzy,
         exact_match_mode=args.exact_match_mode,
         threshold=args.threshold,
+        hybrid_agg_fn=args.hybrid_agg_fn if args.fuzzy_match_mode == "hybrid" else None,
+        hybrid_weights=hybrid_weights,
     )
     return MatchResult(exit_code=exit_code, match_info=match_info)

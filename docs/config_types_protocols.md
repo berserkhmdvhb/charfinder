@@ -47,7 +47,7 @@ class FuzzyMatchContext:
     verbose: bool
     use_color: bool
     query: str
-    weights: dict[FuzzyAlgorithm, float] | None = None
+    weights: HybridWeights = None
     
 ```
 
@@ -60,9 +60,9 @@ Configuration used during a character search:
 class SearchConfig:
     fuzzy: bool
     threshold: float
-    name_cache: NameCache | None
+    name_cache: dict[str, dict[str, str]] | None
     verbose: bool
-    deubg: bool
+    debug: bool
     use_color: bool
     fuzzy_algo: FuzzyAlgorithm
     fuzzy_match_mode: FuzzyMatchMode
@@ -70,6 +70,7 @@ class SearchConfig:
     agg_fn: HybridAggFunc
     prefer_fuzzy: bool
     normalization_profile: NormalizationProfile
+    hybrid_weights: HybridWeights
 ```
 
 #### `MatchDiagnosticsInfo`
@@ -87,6 +88,7 @@ class MatchDiagnosticsInfo:
     exact_match_mode: str
     threshold: float
     hybrid_agg_fn: str | None = None
+    hybrid_weights: HybridWeights = None
 ```
 
 #### `MatchResult`

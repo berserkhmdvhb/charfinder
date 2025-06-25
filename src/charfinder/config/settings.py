@@ -26,14 +26,14 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import TextIO
+from typing import TYPE_CHECKING, TextIO
 
 from dotenv import load_dotenv
 
 from charfinder.config.constants import (
     DEFAULT_LOG_ROOT,
     ENV_ENVIRONMENT,
-    ENV_FUZZY_WEIGHT,
+    ENV_FUZZY_WEIGHTS,
     ENV_LOG_BACKUP_COUNT,
     ENV_LOG_MAX_BYTES,
     FUZZY_HYBRID_WEIGHTS,
@@ -49,6 +49,9 @@ from charfinder.config.messages import (
 )
 from charfinder.utils.formatter import echo
 from charfinder.utils.logger_styles import format_error, format_settings, format_warning
+
+if TYPE_CHECKING:
+    from charfinder.config.types import HybridWeights
 
 __all__ = [
     "get_cache_file",
@@ -295,14 +298,25 @@ def get_log_dir() -> Path:
 # ---------------------------------------------------------------------
 # Fuzzy Matching Config (Internal use only)
 # ---------------------------------------------------------------------
-def parse_fuzzy_weight_string(raw: str) -> dict[str, float]:
-    """Parse and validate raw fuzzy weight string like 'a:0.2,b:0.3'."""
+def parse_fuzzy_weight_string(raw: str) -> HybridWeights:
+    """
+    Parse and validate a fuzzy weight string like 'a:0.2,b:0.3'.
+
+    Args:
+        raw (str): Raw string of algorithm:weight pairs.
+
+    Returns:
+        HybridWeights: Parsed algorithm-weight map.
+
+    Raises:
+        ValueError: On bad format or invalid total.
+    """
     try:
         parts = raw.split(",")
-        weights: dict[str, float] = {
-            key.strip(): float(val.strip())
-            for key, val in (part.strip().split(":") for part in parts)
-        }
+        weights = {}
+        for part in parts:
+            key, val = part.strip().split(":")
+            weights[key.strip()] = float(val.strip())
     except (ValueError, TypeError) as err:
         raise ValueError(MSG_ERROR_INVALID_WEIGHT_FORMAT.format(raw=raw)) from err
 
@@ -313,12 +327,20 @@ def parse_fuzzy_weight_string(raw: str) -> dict[str, float]:
     return weights
 
 
-def get_fuzzy_hybrid_weights(env_value: str | None = None) -> dict[str, float]:
-    """Return hybrid weights from env or default."""
-    raw = env_value or os.getenv(ENV_FUZZY_WEIGHT)
-    if not raw:
-        return FUZZY_HYBRID_WEIGHTS
-    return parse_fuzzy_weight_string(raw)
+def get_fuzzy_hybrid_weights(env_value: str | None = None) -> HybridWeights:
+    """
+    Return hybrid fuzzy weights parsed from environment variable or default.
+
+    Args:
+        env_value (str | None): Optional override for raw weights string.
+
+    Returns:
+        HybridWeights: Parsed and validated fuzzy weight dictionary.
+    """
+    raw_value = env_value if env_value is not None else os.getenv(ENV_FUZZY_WEIGHTS)
+    if raw_value:
+        return parse_fuzzy_weight_string(raw_value)
+    return FUZZY_HYBRID_WEIGHTS
 
 
 # ---------------------------------------------------------------------

@@ -32,6 +32,7 @@ from charfinder.config.constants import (
     DEFAULT_NORMALIZATION_PROFILE,
     DEFAULT_THRESHOLD,
 )
+from charfinder.config.settings import get_fuzzy_hybrid_weights
 from charfinder.core.finders import (
     find_chars as _find_chars_impl,
 )
@@ -45,7 +46,7 @@ from charfinder.core.handlers import _normalize_and_build_config
 
 if TYPE_CHECKING:
     from charfinder.config.aliases import FuzzyAlgorithm, FuzzyMatchMode, HybridAggFunc
-    from charfinder.config.types import CharMatch
+    from charfinder.config.types import CharMatch, HybridWeights
 
 ExactMatchMode = Literal["substring", "word-subset"]
 NormalizationProfile = Literal["raw", "light", "medium", "aggressive"]
@@ -68,6 +69,7 @@ def find_chars(
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
     normalization_profile: NormalizationProfile = DEFAULT_NORMALIZATION_PROFILE,
+    hybrid_weights: HybridWeights = None,
 ) -> Generator[str, None, None]:
     """
     Perform character search and yield CLI-formatted output lines.
@@ -93,6 +95,7 @@ def find_chars(
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
         normalization_profile=normalization_profile,
+        hybrid_weights=hybrid_weights or get_fuzzy_hybrid_weights(),
     )
     return _find_chars_impl(query=norm_query, config=config)
 
@@ -112,6 +115,7 @@ def find_chars_raw(
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
     normalization_profile: NormalizationProfile = DEFAULT_NORMALIZATION_PROFILE,
+    hybrid_weights: HybridWeights = None,
 ) -> list[CharMatch]:
     """
     Perform character search and return raw match result objects.
@@ -134,6 +138,7 @@ def find_chars_raw(
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
         normalization_profile=normalization_profile,
+        hybrid_weights=hybrid_weights or get_fuzzy_hybrid_weights(),
     )
     return _find_chars_raw_impl(query=norm_query, config=config)
 
@@ -153,6 +158,7 @@ def find_chars_with_info(
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
     prefer_fuzzy: bool = False,
     normalization_profile: NormalizationProfile = DEFAULT_NORMALIZATION_PROFILE,
+    hybrid_weights: HybridWeights = None,
 ) -> tuple[list[CharMatch], bool]:
     """
     Perform character search and return raw match results and fuzzy-used flag.
@@ -174,5 +180,6 @@ def find_chars_with_info(
         agg_fn=agg_fn,
         prefer_fuzzy=prefer_fuzzy,
         normalization_profile=normalization_profile,
+        hybrid_weights=hybrid_weights or get_fuzzy_hybrid_weights(),
     )
     return _find_chars_info_impl(query=norm_query, config=config)

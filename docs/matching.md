@@ -117,15 +117,18 @@ If `--fuzzy-match-mode hybrid` is selected:
 @dataclass
 class SearchConfig:
     fuzzy: bool
-    prefer_fuzzy: bool
     threshold: float
+    name_cache: dict[str, dict[str, str]] | None
+    verbose: bool
+    debug: bool
+    use_color: bool
     fuzzy_algo: FuzzyAlgorithm
     fuzzy_match_mode: FuzzyMatchMode
-    exact_match_mode: ExactMatchMode
+    exact_match_mode: str
     agg_fn: HybridAggFunc
-    use_color: bool
-    verbose: bool
-    name_cache: NameCache | None
+    prefer_fuzzy: bool
+    normalization_profile: NormalizationProfile
+    hybrid_weights: HybridWeights
 ```
 
 ---

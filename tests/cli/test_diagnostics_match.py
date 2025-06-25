@@ -19,6 +19,7 @@ from charfinder.config.messages import (
     MSG_DEBUG_FUZZY_ALGO,
     MSG_DEBUG_PREFER_FUZZY_USED_EXACT,
     MSG_DEBUG_FUZZY_SKIPPED_DUE_TO_EXACT,
+    MSG_DEBUG_HYBRID_ALGO_WEIGHT,
 )
 
 # ---------------------------------------------------------------------
@@ -188,3 +189,26 @@ def test_print_match_diagnostics_fuzzy_skipped_not_preferred(mock_echo: List[str
     diagnostics_match.print_match_diagnostics(args, info, use_color=False, show=True)
 
     assert MSG_DEBUG_FUZZY_SKIPPED_DUE_TO_EXACT in mock_echo
+
+
+def test_print_fuzzy_match_diagnostics_hybrid(mock_echo: List[str]) -> None:
+    """Ensure hybrid fuzzy diagnostics prints all weights and settings."""
+    info = MatchDiagnosticsInfo(
+        fuzzy=True,
+        fuzzy_was_used=True,
+        fuzzy_match_mode="hybrid",
+        fuzzy_algo="hybrid",
+        hybrid_agg_fn="weighted_avg",
+        hybrid_weights={"token_subset_ratio": 0.6, "levenshtein_ratio": 0.4},
+        prefer_fuzzy=True,
+        exact_match_mode="any",
+        threshold=0.75,
+    )
+    diagnostics_match.print_fuzzy_match_diagnostics(info, use_color=False, show=True)
+
+    assert MSG_DEBUG_FUZZY_EXECUTED in mock_echo
+    assert MSG_DEBUG_HYBRID_ALGOS_HEADER in mock_echo
+    assert MSG_DEBUG_HYBRID_AGG_FN.format(agg_fn='weighted_avg') in mock_echo
+    assert MSG_DEBUG_HYBRID_ALGO_WEIGHT.format(algo="token_subset_ratio", weight=0.6) in mock_echo
+    assert MSG_DEBUG_HYBRID_ALGO_WEIGHT.format(algo="levenshtein_ratio", weight=0.4) in mock_echo
+    assert MSG_DEBUG_MATCH_SECTION_END in mock_echo

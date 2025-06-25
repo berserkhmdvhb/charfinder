@@ -19,7 +19,6 @@ from __future__ import annotations
 from argparse import Namespace
 from typing import TYPE_CHECKING
 
-from charfinder.config.constants import FUZZY_HYBRID_WEIGHTS
 from charfinder.config.messages import (
     MSG_DEBUG_EXACT_EXECUTED,
     MSG_DEBUG_EXACT_MODE,
@@ -172,7 +171,7 @@ def print_fuzzy_match_diagnostics(
             show=show,
         )
         _debug_echo(msg=MSG_DEBUG_HYBRID_ALGOS_HEADER, use_color=use_color, show=show)
-        for algo, weight in FUZZY_HYBRID_WEIGHTS.items():
+        for algo, weight in (match_info.hybrid_weights or {}).items():
             _debug_echo(
                 msg=MSG_DEBUG_HYBRID_ALGO_WEIGHT.format(algo=algo, weight=weight),
                 use_color=use_color,

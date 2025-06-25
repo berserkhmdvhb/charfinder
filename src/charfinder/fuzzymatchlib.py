@@ -67,7 +67,7 @@ if TYPE_CHECKING:
         HybridAggFunc,
         NormalizationForm,
     )
-    from charfinder.config.types import AlgorithmFn, FuzzyMatchContext
+    from charfinder.config.types import AlgorithmFn, FuzzyMatchContext, HybridWeights
 
 
 __all__ = ["compute_similarity"]
@@ -141,14 +141,16 @@ def token_sort_ratio_score(a: str, b: str) -> float:
     return float(fuzz.token_sort_ratio(a, b)) / 100.0
 
 
-def token_subset_ratio_score(a: str, b: str) -> float:
+def token_subset_ratio_score(a: str, b: str, top_n: int = 3) -> float:
     """
-    Compute a score based on whether tokens from 'a' are a fuzzy subset of tokens in 'b'.
-    Each token in 'a' must have a good match in 'b'.
+    Fuzzy token subset scoring with top-N strongest matches retained.
+
+    This helps ignore junk tokens in verbose queries.
 
     Args:
-        a: Normalized query string (already normalized externally).
-        b: Normalized candidate string (already normalized externally).
+        a: Normalized query string.
+        b: Normalized candidate string.
+        top_n: Max number of top token matches to consider in score.
 
     Returns:
         float: Similarity score in range [0.0, 1.0]
@@ -159,21 +161,22 @@ def token_subset_ratio_score(a: str, b: str) -> float:
     if not a_tokens or not b_tokens:
         return 0.0
 
-    matched_scores = []
-    for a_token in a_tokens:
-        # Find best match for this query token in the candidate tokens
-        best_score = max(fuzz.ratio(a_token, b_token) for b_token in b_tokens)
-        matched_scores.append(best_score)
+    token_scores = [
+        max(fuzz.ratio(a_token, b_token) for b_token in b_tokens) for a_token in a_tokens
+    ]
 
-    # Final score = average normalized match quality of all query tokens
-    return sum(matched_scores) / (100.0 * len(matched_scores))
+    # Keep only the top-N strongest matches
+    top_scores = sorted(token_scores, reverse=True)[:top_n]
+    normalized: list[float] = [(s / 100.0) ** 1.5 for s in top_scores]
+
+    return sum(normalized) / len(normalized)
 
 
 def hybrid_score(
     a: str,
     b: str,
     agg_fn: HybridAggFunc = DEFAULT_HYBRID_AGG_FUNC,
-    weights: dict[str, float] | None = None,
+    weights: HybridWeights = None,
 ) -> float:
     """
     Hybrid score combining multiple algorithms with a chosen aggregate function.
@@ -181,17 +184,17 @@ def hybrid_score(
     Args:
         a: First string.
         b: Second string.
-        agg_fn: Aggregation function to combine scores ("mean", "median", "max", "min").
-        weights: Optional dict of algorithm names to weights. If None, uses env/default.
+        agg_fn: Aggregation function to combine scores.
+        weights: Optional dict of algorithm weights. If None, uses default.
 
     Returns:
-        float: Hybrid similarity score in the range [0.0, 1.0].
+        float: Final hybrid score in the range [0.0, 1.0].
 
     Raises:
-        ValueError: If agg_fn is not supported or weights are invalid.
+        ValueError: If weights or agg_fn are invalid.
     """
-    agg_fn = validate_hybrid_agg_fn(agg_fn)
-    weights = validate_fuzzy_hybrid_weights(weights)
+    agg_fn_validated = validate_hybrid_agg_fn(agg_fn)
+    validated_weights = cast("dict[str, float]", validate_fuzzy_hybrid_weights(weights))
 
     components = {
         "simple_ratio": simple_ratio(a, b),
@@ -201,19 +204,22 @@ def hybrid_score(
         "token_subset_ratio": token_subset_ratio_score(a, b),
     }
 
-    if agg_fn == "mean":
-        return sum(components[name] * weights.get(name, 0.0) for name in weights)
+    if agg_fn_validated == "mean":
+        return sum(
+            components.get(name, 0.0) * validated_weights.get(name, 0.0)
+            for name in validated_weights
+        )
 
     scores = list(components.values())
 
-    if agg_fn == "median":
+    if agg_fn_validated == "median":
         return statistics.median(scores)
-    if agg_fn == "max":
+    if agg_fn_validated == "max":
         return max(scores)
-    if agg_fn == "min":
+    if agg_fn_validated == "min":
         return min(scores)
 
-    raise RuntimeError(MSG_ERROR_AGG_FN_UNEXPECTED.format(agg_fn=agg_fn))
+    raise RuntimeError(MSG_ERROR_AGG_FN_UNEXPECTED.format(agg_fn=agg_fn_validated))
 
 
 # ---------------------------------------------------------------------

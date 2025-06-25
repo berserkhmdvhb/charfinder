@@ -84,7 +84,7 @@ def test_validate_fuzzy_algo_action_direct_list_value() -> None:
 def test_apply_fuzzy_defaults_applies_when_missing() -> None:
     """Should apply fuzzy_algo and match_mode from config when missing."""
     args = argparse.Namespace(fuzzy=True)
-    config = FuzzyConfig(fuzzy_algo="token_sort_ratio", fuzzy_match_mode="single")
+    config = FuzzyConfig(fuzzy_algo="token_sort_ratio", fuzzy_match_mode="single", hybrid_weights=None)
     V.apply_fuzzy_defaults(args, config)
     assert args.fuzzy_algo == "token_sort_ratio"
     assert args.fuzzy_match_mode == "single"
@@ -95,7 +95,7 @@ def test_apply_fuzzy_defaults_does_not_override_existing() -> None:
     args = argparse.Namespace(
         fuzzy=True, fuzzy_algo="custom", fuzzy_match_mode="hybrid"
     )
-    config = FuzzyConfig(fuzzy_algo="token_sort_ratio", fuzzy_match_mode="hybrid")
+    config = FuzzyConfig(fuzzy_algo="token_sort_ratio", fuzzy_match_mode="hybrid", hybrid_weights=None)
     V.apply_fuzzy_defaults(args, config)
     assert args.fuzzy_algo == "custom"
     assert args.fuzzy_match_mode == "hybrid"
@@ -560,7 +560,7 @@ def test_validate_fuzzy_hybrid_weights_dict_invalid_total() -> None:
 
 def test_validate_fuzzy_hybrid_weights_str_parsing(monkeypatch: pytest.MonkeyPatch) -> None:
     """Should parse string weights via validate_fuzzy_hybrid_weights()."""
-    monkeypatch.delenv("CHARFINDER_FUZZY_WEIGHT", raising=False)
+    monkeypatch.delenv("CHARFINDER_FUZZY_WEIGHTS", raising=False)
     raw = "x:0.6,y:0.4"
     expected = {"x": 0.6, "y": 0.4}
     result = V.validate_fuzzy_hybrid_weights(raw)

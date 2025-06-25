@@ -35,7 +35,9 @@ def test_search_config_instantiation() -> None:
         agg_fn="mean",
         prefer_fuzzy=True,
         normalization_profile="aggressive",
+        hybrid_weights=None,
     )
+    
     assert config.fuzzy
     assert config.threshold == 0.7
     assert config.name_cache is None
