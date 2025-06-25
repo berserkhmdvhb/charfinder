@@ -16,7 +16,7 @@ CharFinder searches Unicode character names using **exact** and/or **fuzzy** mat
 graph TD
     A[Input Query] --> B[Normalize using selected profile]
     B --> C{Exact match found?}
-    C -- Yes --> D[Return exact match(es)]
+    C -- Yes --> D[Return exact matches]
     D --> E{--prefer-fuzzy AND --fuzzy set?}
     E -- Yes --> F[Also run fuzzy match]
     E -- No --> G[Return results]
