@@ -340,24 +340,32 @@ CharFinder correctly matches Unicode emoji and symbols. For example:
 CharFinder uses a layered and configurable matching strategy to identify Unicode characters by name. It starts with **exact matching** for speed and precision, then optionally falls back to **fuzzy matching** if no exact hits are found or if `--prefer-fuzzy` is enabled.
 
 ### 🔹 Exact Matching
-- Fast string comparisons using `substring` or `word-subset` logic.
-- Ideal for full or partial queries that directly appear in character names.
-- Controlled via `--exact-match-mode` (default: `word-subset`).
+
+* Fast string comparisons using two match modes `substring` or `word-subset`.
+* Controlled via `--exact-match-mode` (default: `word-subset`).
+* Ideal for full or partial queries that directly appear in character names.
 
 ### 🔸 Fuzzy Matching
-Fuzzy matching recovers from typos, partial input, or scrambled tokens. It supports:
-- **Single-algorithm matching** (e.g., `simple_ratio`, `levenshtein_ratio`, `token_sort_ratio`, `token_subset_ratio` [default]):
-- **Hybrid mode** combining multiple algorithms, with configurable aggregation (`mean`, `max` [defaut], etc.):
-- Fine-grained control via:
-  - `--fuzzy`, `--prefer-fuzzy`
-  - `--fuzzy-algo` (including `hybrid`)
-  - `--fuzzy-match-mode` (`single`, `all`, `hybrid`)
-  - `--threshold` for similarity filtering
+
+Fuzzy matching recovers from typos, partial input, or scrambled tokens. It supports following match modes:
+
+* **Single-algorithm mode** (`--fuzzy-match-mode=single`): uses the algorithm specified by `--fuzzy-algo` (e.g., `token_subset_ratio`, `token_sort_ratio`, `levenshtein_ratio`, etc.)
+* **Hybrid mode** (`--fuzzy-match-mode=hybrid`): combines multiple algorithms using weighted scores and an aggregation function (`mean` \[default], `median`, `max`, `min`)
+* Controlled via `--fuzzy-match-mode` (default: `hybrid`).
+#### Fuzzy control options:
+
+* `--fuzzy`, `--prefer-fuzzy` — enable fallback or hybrid behavior
+* `--fuzzy-algo` — select algorithm for single mode
+* `--fuzzy-match-mode {single, hybrid}` — control fuzzy strategy
+* `--threshold` — set minimum similarity score
+
+> Matching behavior can also be influenced by environment variables. See [sample.env](https://github.com/berserkhmdvhb/charfinder/blob/main/sample.env)
 
 ### ⚙️ Normalization
-Input and character names are normalized by default using configurable profiles (`--normalization-profile`) to ensure consistency across scripts, cases, accents, and formatting.
 
-📚 See [`matching.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/matching.md).
+Matching is applied after Unicode normalization, which includes case folding, accent removal, and Unicode normalization. This is configurable via `--normalization-profile`.
+
+📚 See [`matching.md`](https://github.com/berserkhmdvhb/charfinder/blob/main/docs/matching.md) for full logic, algorithm details, and internal representation.
 
 ---
 
