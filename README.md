@@ -288,7 +288,6 @@ CharFinder implements a **layered architecture** with clear boundaries:
 ---
 
 ### 🔄 Normalization
-### 🔄 Normalization
 
 Characters that look the same can be encoded in different ways. For example:
 
