@@ -50,7 +50,8 @@ Designed for both technical and non-technical users, CharFinder enables reliable
 10. [⚡ Performance](#-10-performance)
 11. [🚧 Limitations and Known Issues](#-11-limitations-and-known-issues)
 12. [📖 Documentation](#-12-documentation)
-13. [🧾 License](#-13-license)
+13. [🙏 Acknowledgments](#-13-Acknowledgments)
+14. [🧾 License](#-14-license)
 
 ---
 
@@ -877,7 +878,15 @@ The following documents are located in the [`docs/`](https://github.com/berserkh
 
 ---
 
-## 🧾 13. License
+## 🙏 13. Acknowledgments
+
+Special thanks to Luciano Ramalho [@ramalho](https://github.com/ramalho), author of Fluent Python.
+The original `charfinder` function in his book (Chapter 4: Unicode Text Versus Bytes) directly inspired the creation of this project — both in concept and in name.
+
+Luciano also provided critical early feedback through GitHub issues, which shaped major improvements, and evolution of release [v1.1.6](https://github.com/berserkhmdvhb/charfinder/releases/tag/v1.1.6). His insights on alternate Unicode names, query flexibility, and CLI UX were invaluable.
+
+
+## 🧾 14. License
 
 MIT License © 2025 [berserkhmdvhb](https://github.com/berserkhmdvhb)
 
