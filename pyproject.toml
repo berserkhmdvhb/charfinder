@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "A CLI and library for normalized Unicode character search with fuzzy matching."
 authors = [{ name = "Hamed VAHEB", email = "hamed.vaheb@protonmail.com" }]
 keywords = ["unicode", "cli", "fuzzy", "search", "character", "text"]
-readme = "README.md"
+readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "MIT" }
 requires-python = ">=3.10"
 
@@ -18,17 +18,18 @@ dependencies = [
 ]
 
 classifiers = [
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
   "Environment :: Console",
   "Intended Audience :: Developers",
   "Topic :: Text Processing",
   "Topic :: Utilities",
   "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent"
+  "Operating System :: OS Independent",
+  "Typing :: Typed",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13"
 ]
 
 [project.optional-dependencies]
@@ -52,13 +53,13 @@ charfinder = "charfinder.cli.cli_main:main"
 
 [project.urls]
 Homepage = "https://github.com/berserkhmdvhb/charfinder"
-Repository = "https://github.com/berserkhmdvhb/charfinder"
+Source = "https://github.com/berserkhmdvhb/charfinder"
 Issues = "https://github.com/berserkhmdvhb/charfinder/issues"
 Changelog = "https://github.com/berserkhmdvhb/charfinder/releases"
 CI = "https://github.com/berserkhmdvhb/charfinder/actions"
 
 [build-system]
-requires = ["setuptools>=61.0,<70"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -73,6 +74,7 @@ version = { attr = "charfinder.__version__" }
 # ----------------------------
 # Mypy Configuration
 # ----------------------------
+
 [tool.mypy]
 files = ["src", "tests"]
 exclude = "(\\.ipynb$|tests/helpers/.*$)"
@@ -84,6 +86,7 @@ pretty = true
 # ----------------------------
 # Ruff Configuration
 # ----------------------------
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
@@ -105,6 +108,7 @@ per-file-ignores = {"tests/*" = ["S101", "S603"], "src/charfinder/cli/handlers.p
 # ----------------------------
 # Pytest Configuration
 # ----------------------------
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--maxfail=1 -v"
@@ -119,6 +123,7 @@ markers = [
 # ----------------------------
 # Coverage Configuration
 # ----------------------------
+
 [tool.coverage.report]
 exclude_lines = [
   "pragma: no cover",
