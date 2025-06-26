@@ -8,7 +8,7 @@ from .core import find_chars, find_chars_raw
 from .core.name_cache import build_name_cache
 from .utils.normalizer import normalize
 
-__version__ = "1.1.7"
+__version__ = "1.1.8"
 
 __all__ = [
     "build_name_cache",
