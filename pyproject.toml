@@ -5,7 +5,7 @@ description = "A CLI and library for normalized Unicode character search with fu
 authors = [{ name = "Hamed VAHEB", email = "hamed.vaheb@protonmail.com" }]
 keywords = ["unicode", "cli", "fuzzy", "search", "character", "text"]
 readme = "README.md"
-license = { file = "LICENSE.txt" }
+license = { text = "MIT" }
 requires-python = ">=3.10"
 
 dependencies = [
@@ -49,6 +49,13 @@ dev = [
 
 [project.scripts]
 charfinder = "charfinder.cli.cli_main:main"
+
+[project.urls]
+Homepage = "https://github.com/berserkhmdvhb/charfinder"
+Repository = "https://github.com/berserkhmdvhb/charfinder"
+Issues = "https://github.com/berserkhmdvhb/charfinder/issues"
+Changelog = "https://github.com/berserkhmdvhb/charfinder/releases"
+CI = "https://github.com/berserkhmdvhb/charfinder/actions"
 
 [build-system]
 requires = ["setuptools>=61.0,<70"]
