@@ -50,7 +50,7 @@ Designed for both technical and non-technical users, CharFinder enables reliable
 10. [⚡ Performance](#-10-performance)
 11. [🚧 Limitations and Known Issues](#-11-limitations-and-known-issues)
 12. [📖 Documentation](#-12-documentation)
-13. [🙏 Acknowledgments](#-13-Acknowledgments)
+13. [🙏 Acknowledgments](#-13-acknowledgments)
 14. [🧾 License](#-14-license)
 
 ---
@@ -187,8 +187,6 @@ The project is structured for ease of contribution and for flexible usage as bot
 * An **importable Python library**.
 
 ### 3.1 📂 Structure
-
-### 3.1 Structure
 
 The project is organized as follows:
 
