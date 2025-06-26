@@ -886,6 +886,7 @@ The original `charfinder` function in his book (Chapter 4: Unicode Text Versus B
 
 Luciano also provided critical early feedback through GitHub issues, which shaped major improvements, and the overall evolution of release [v1.1.6](https://github.com/berserkhmdvhb/charfinder/releases/tag/v1.1.6). His insights on alternate Unicode names, query flexibility, and CLI UX were invaluable.
 
+---
 
 ## 🧾 14. License
 
