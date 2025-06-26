@@ -66,11 +66,11 @@ graph TD
 
 | Algorithm            | Description                                                          | Used in Hybrid? |
 | -------------------- | -------------------------------------------------------------------- | --------------- |
-| `simple_ratio`       | SequenceMatcher-based ratio (fast character overlap).                | ✅               |
-| `normalized_ratio`   | Normalized ratio accounting for case and space differences.          | ✅               |
+| `simple_ratio`       | SequenceMatcher-based ratio (fast character overlap).                | ❌               |
+| `normalized_ratio`   | Normalized ratio accounting for case and space differences.          | ❌               |
 | `levenshtein_ratio`  | Edit-distance based similarity (more expensive).                     | ✅               |
 | `token_sort_ratio`   | Token-based sort before comparison (handles word reordering well).   | ✅               |
-| `token_subset_ratio` | Token subset matching; penalizes extra or missing words. *(default)* | ❌               |
+| `token_subset_ratio` | Token subset matching; penalizes extra or missing words. *(default)* | ✅               |
 | `hybrid_score`       | Internal alias; not directly available via CLI.                      | N/A             |
 
 > Note: If `--fuzzy-match-mode=hybrid` is selected, the `--fuzzy-algo` value is ignored.
