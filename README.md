@@ -880,7 +880,7 @@ The following documents are located in the [`docs/`](https://github.com/berserkh
 
 ## 🙏 13. Acknowledgments
 
-Special thanks to Luciano Ramalho [@ramalho](https://github.com/ramalho), author of Fluent Python.
+Special thanks to Luciano Ramalho [@ramalho](https://github.com/ramalho), author of *Fluent Python*.
 The original `charfinder` function in his book (Chapter 4: Unicode Text Versus Bytes) directly inspired the creation of this project — both in concept and in name.
 
 Luciano also provided critical early feedback through GitHub issues, which shaped major improvements, and evolution of release [v1.1.6](https://github.com/berserkhmdvhb/charfinder/releases/tag/v1.1.6). His insights on alternate Unicode names, query flexibility, and CLI UX were invaluable.
