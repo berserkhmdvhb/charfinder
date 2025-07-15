@@ -1,7 +1,7 @@
 [![PyPI](https://img.shields.io/pypi/v/charfinder)](https://pypi.org/project/charfinder/)
 [![Python](https://img.shields.io/pypi/pyversions/charfinder)](https://pypi.org/project/charfinder/)
 [![License](https://img.shields.io/github/license/berserkhmdvhb/charfinder)](LICENSE)
-[![Downloads](https://static.pepy.tech/badge/charfinder/month)](https://pepy.tech/project/charfinder)
+[![PyPI Downloads](https://static.pepy.tech/badge/charfinder)](https://pepy.tech/projects/charfinder)
 [![Tests](https://github.com/berserkhmdvhb/charfinder/actions/workflows/tests.yml/badge.svg)](https://github.com/berserkhmdvhb/charfinder/actions/workflows/tests.yml)
 [![Coverage](https://img.shields.io/coveralls/github/berserkhmdvhb/charfinder/main?cacheSeconds=300)](https://coveralls.io/github/berserkhmdvhb/charfinder?branch=main)
 
